@@ -1,0 +1,150 @@
+services:
+
+  # ---------------------------------------------------------------------------
+  # Postgres — shared database for n8n and the filter service
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: xnoria_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: xnoria
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-xnoria}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./packages/orchestration/filter/db/migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5433:5432"                         # exposed for local DB inspection only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U xnoria -d ${POSTGRES_DB:-xnoria}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - xnoria_internal
+
+  # ---------------------------------------------------------------------------
+  # n8n — workflow orchestration engine
+  # ---------------------------------------------------------------------------
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: xnoria_n8n
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Database
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB:-xnoria}
+      DB_POSTGRESDB_USER: xnoria
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+      # Encryption
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      # Host config
+      N8N_HOST: ${N8N_HOST:-localhost}
+      N8N_PORT: 5678
+      N8N_PROTOCOL: ${N8N_PROTOCOL:-http}
+      WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://localhost:5678}
+      # Execution settings
+      EXECUTIONS_DATA_SAVE_ON_ERROR: all
+      EXECUTIONS_DATA_SAVE_ON_SUCCESS: all
+      EXECUTIONS_DATA_SAVE_MANUAL_EXECUTIONS: true
+      # Disable telemetry
+      N8N_DIAGNOSTICS_ENABLED: false
+      N8N_VERSION_NOTIFICATIONS_ENABLED: false
+    volumes:
+      - n8n_data:/home/node/.n8n
+    ports:
+      - "5678:5678"
+    networks:
+      - xnoria_internal
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5678/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Filter service — deterministic allowlist enforcement
+  # Uncomment when packages/orchestration/filter/ is ready (Phase 3)
+  # ---------------------------------------------------------------------------
+  # filter:
+  #   build:
+  #     context: ./packages/orchestration/filter
+  #     dockerfile: Dockerfile
+  #   container_name: xnoria_filter
+  #   restart: unless-stopped
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     n8n:
+  #       condition: service_healthy
+  #   environment:
+  #     FILTER_PORT: ${FILTER_PORT:-3000}
+  #     POSTGRES_URL: postgresql://xnoria:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-xnoria}
+  #     N8N_BASE_URL: http://n8n:5678
+  #   ports:
+  #     - "${FILTER_PORT:-3000}:3000"
+  #   networks:
+  #     - xnoria_internal
+
+  # ---------------------------------------------------------------------------
+  # Cognitive layer — OpenClaw agentic core
+  # Uncomment when packages/cognitive/ is ready (Phase 4)
+  # ---------------------------------------------------------------------------
+  # cognitive:
+  #   build:
+  #     context: ./packages/cognitive
+  #     dockerfile: Dockerfile
+  #   container_name: xnoria_cognitive
+  #   restart: unless-stopped
+  #   depends_on:
+  #     filter:
+  #       condition: service_healthy
+  #   environment:
+  #     ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+  #     FILTER_URL: http://filter:3000
+  #   networks:
+  #     - xnoria_internal
+
+  # ---------------------------------------------------------------------------
+  # Dashboard — execution layer, CX Tool Dock
+  # Uncomment when packages/dashboard/ is ready
+  # ---------------------------------------------------------------------------
+  # dashboard:
+  #   build:
+  #     context: ./packages/dashboard
+  #     dockerfile: Dockerfile
+  #   container_name: xnoria_dashboard
+  #   restart: unless-stopped
+  #   depends_on:
+  #     filter:
+  #       condition: service_healthy
+  #   environment:
+  #     DASHBOARD_PORT: ${DASHBOARD_PORT:-4000}
+  #     FILTER_URL: http://filter:3000
+  #   ports:
+  #     - "${DASHBOARD_PORT:-4000}:4000"
+  #   networks:
+  #     - xnoria_internal
+
+# -----------------------------------------------------------------------------
+# Volumes — persistent data survives container restarts
+# -----------------------------------------------------------------------------
+volumes:
+  postgres_data:
+    driver: local
+  n8n_data:
+    driver: local
+
+# -----------------------------------------------------------------------------
+# Networks — all services communicate on an isolated internal network
+# No service reaches another except through declared dependencies
+# -----------------------------------------------------------------------------
+networks:
+  xnoria_internal:
+    driver: bridge

@@ -191,7 +191,39 @@ Explicitly out of scope until the above is proven end-to-end:
 
 - Docker and Docker Compose
 - Node.js 20+
-- An Anthropic API key
+- An LLM API key
+
+### First-time setup
+Before running the stack for the first time, two values in .env must be set manually.
+
+1. Copy the example file
+```bash
+cp .env.example .env
+```
+
+2. Set a Postgres password
+
+Open .env and fill in POSTGRES_PASSWORD with any strong password of your choice.
+
+3. Generate the n8n encryption key
+```bash
+openssl rand -hex 32
+```
+Copy the output and paste it as the value of N8N_ENCRYPTION_KEY in .env.
+> This key encrypts all credentials stored inside n8n (API keys, webhooks, etc.).
+> Generate it once and never change it. If it changes after n8n has stored 
+> credentials, those credentials become permanently unreadable.
+> Back it up in a password manager or secrets vault.
+
+Your .env should look like this before proceeding:
+```bash
+POSTGRES_PASSWORD=your-strong-password-here
+POSTGRES_DB=xnoria
+N8N_ENCRYPTION_KEY=a1b2c3d4e5f6...  ← 64 hex characters
+N8N_HOST=localhost
+N8N_PROTOCOL=http
+N8N_WEBHOOK_URL=http://localhost:5678
+```
 
 ### Running the full stack
 

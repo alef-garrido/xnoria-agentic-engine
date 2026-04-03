@@ -1,4 +1,4 @@
-# Xnoria — CX Intelligence Engine
+# exnoria — CX Intelligence Engine
 Especialized Agentic Engine for customer experience operations. Interprets signals, diagnoses problems, generates prioritized actions, executes safely
 
 > Intelligence Engine for customer experience operations.  
@@ -8,7 +8,7 @@ Especialized Agentic Engine for customer experience operations. Interprets signa
 
 ## What this is
 
-Xnoria is not an automation tool. It is an **operational intelligence layer** that sits above existing business systems — CRM, support, marketing — and coordinates three things that most companies do separately and badly: diagnosis, prioritization, and controlled execution.
+Exnoria is not an automation tool. It is an **operational intelligence layer** that sits above existing business systems — CRM, support, marketing — and coordinates three things that most companies do separately and badly: diagnosis, prioritization, and controlled execution.
 
 The system follows one rule above all others:
 
@@ -19,7 +19,7 @@ The system follows one rule above all others:
 ## Repository structure
 
 ```
-xnoria/
+exnoria/
 ├── packages/
 │   │
 │   ├── dashboard/                        # Execution layer — CX Tool Dock
@@ -218,7 +218,7 @@ Copy the output and paste it as the value of N8N_ENCRYPTION_KEY in .env.
 Your .env should look like this before proceeding:
 ```bash
 POSTGRES_PASSWORD=your-strong-password-here
-POSTGRES_DB=xnoria
+POSTGRES_DB=exnoria
 N8N_ENCRYPTION_KEY=a1b2c3d4e5f6...  ← 64 hex characters
 N8N_HOST=localhost
 N8N_PROTOCOL=http
@@ -229,8 +229,8 @@ N8N_WEBHOOK_URL=http://localhost:5678
 
 ```bash
 # 1. Clone and enter the repo
-git clone https://github.com/your-org/xnoria.git
-cd xnoria
+git clone https://github.com/your-org/exnoria.git
+cd exnoria
 
 # 2. Set up environment
 cp .env.example .env
@@ -287,7 +287,7 @@ All variables are documented in `.env.example`. Required for the MVP:
 | Variable | Used by | Description |
 |---|---|---|
 | `POSTGRES_PASSWORD` | orchestration | Postgres password shared by n8n and filter |
-| `POSTGRES_DB` | orchestration | Database name (default: `xnoria`) |
+| `POSTGRES_DB` | orchestration | Database name (default: `exnoria`) |
 | `N8N_ENCRYPTION_KEY` | orchestration | n8n credential encryption — generate once, never rotate |
 | `ANTHROPIC_API_KEY` | cognitive | API key for LLM calls |
 | `FILTER_PORT` | orchestration | Filter HTTP service port (default: `3000`) |
@@ -367,4 +367,4 @@ The `enabled` flag can be toggled in the database at runtime without redeploying
 
 ## License
 
-Private — Xnoria / Oscar Armando Perez Garrido. All rights reserved.
+Private — exnoria / Oscar Armando Perez Garrido. All rights reserved.

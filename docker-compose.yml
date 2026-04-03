@@ -5,31 +5,31 @@ services:
   # ---------------------------------------------------------------------------
   postgres:
     image: postgres:16-alpine
-    container_name: xnoria_postgres
+    container_name: exnoria_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: xnoria
+      POSTGRES_USER: exnoria
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB:-xnoria}
+      POSTGRES_DB: ${POSTGRES_DB:-exnoria}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./packages/orchestration/filter/db/migrations:/docker-entrypoint-initdb.d
     ports:
       - "5433:5432"                         # exposed for local DB inspection only
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U xnoria -d ${POSTGRES_DB:-xnoria}"]
+      test: ["CMD-SHELL", "pg_isready -U exnoria -d ${POSTGRES_DB:-exnoria}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - xnoria_internal
+      - exnoria_internal
 
   # ---------------------------------------------------------------------------
   # n8n — workflow orchestration engine
   # ---------------------------------------------------------------------------
   n8n:
     image: n8nio/n8n:latest
-    container_name: xnoria_n8n
+    container_name: exnoria_n8n
     restart: unless-stopped
     depends_on:
       postgres:
@@ -39,8 +39,8 @@ services:
       DB_TYPE: postgresdb
       DB_POSTGRESDB_HOST: postgres
       DB_POSTGRESDB_PORT: 5432
-      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB:-xnoria}
-      DB_POSTGRESDB_USER: xnoria
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB:-exnoria}
+      DB_POSTGRESDB_USER: exnoria
       DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
       # Encryption
       N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
@@ -56,12 +56,28 @@ services:
       # Disable telemetry
       N8N_DIAGNOSTICS_ENABLED: false
       N8N_VERSION_NOTIFICATIONS_ENABLED: false
+      # -------------------------------------------------------------------------
+      # Meta WhatsApp Business API
+      # W3 · sal.contact.prioritize — readable inside workflows via $env
+      # -------------------------------------------------------------------------
+      META_WA_TOKEN: ${META_WA_TOKEN}
+      META_PHONE_NUMBER_ID: ${META_PHONE_NUMBER_ID}
+      SDR_WHATSAPP_NUMBER: ${SDR_WHATSAPP_NUMBER}
+      # -------------------------------------------------------------------------
+      # HubSpot
+      # W1 · acq.lead.score  W2 · sal.sequence.enroll  W3 · sal.contact.prioritize
+      # readable inside workflows via $env
+      # -------------------------------------------------------------------------
+      HUBSPOT_PRIVATE_APP_TOKEN: ${HUBSPOT_PRIVATE_APP_TOKEN}
+      HUBSPOT_PORTAL_ID: ${HUBSPOT_PORTAL_ID}
+      HUBSPOT_DEVELOPER_API_KEY: ${HUBSPOT_DEVELOPER_API_KEY}
+      HUBSPOT_PERSONAL_ACCESS_KEY: ${HUBSPOT_PERSONAL_ACCESS_KEY}
     volumes:
       - n8n_data:/home/node/.n8n
     ports:
       - "5678:5678"
     networks:
-      - xnoria_internal
+      - exnoria_internal
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:5678/healthz || exit 1"]
       interval: 15s
@@ -76,7 +92,7 @@ services:
   #   build:
   #     context: ./packages/orchestration/filter
   #     dockerfile: Dockerfile
-  #   container_name: xnoria_filter
+  #   container_name: exnoria_filter
   #   restart: unless-stopped
   #   depends_on:
   #     postgres:
@@ -85,12 +101,12 @@ services:
   #       condition: service_healthy
   #   environment:
   #     FILTER_PORT: ${FILTER_PORT:-3000}
-  #     POSTGRES_URL: postgresql://xnoria:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-xnoria}
+  #     POSTGRES_URL: postgresql://exnoria:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
   #     N8N_BASE_URL: http://n8n:5678
   #   ports:
   #     - "${FILTER_PORT:-3000}:3000"
   #   networks:
-  #     - xnoria_internal
+  #     - exnoria_internal
 
   # ---------------------------------------------------------------------------
   # Cognitive layer — OpenClaw agentic core
@@ -100,7 +116,7 @@ services:
   #   build:
   #     context: ./packages/cognitive
   #     dockerfile: Dockerfile
-  #   container_name: xnoria_cognitive
+  #   container_name: exnoria_cognitive
   #   restart: unless-stopped
   #   depends_on:
   #     filter:
@@ -109,7 +125,7 @@ services:
   #     ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
   #     FILTER_URL: http://filter:3000
   #   networks:
-  #     - xnoria_internal
+  #     - exnoria_internal
 
   # ---------------------------------------------------------------------------
   # Dashboard — execution layer, CX Tool Dock
@@ -119,7 +135,7 @@ services:
   #   build:
   #     context: ./packages/dashboard
   #     dockerfile: Dockerfile
-  #   container_name: xnoria_dashboard
+  #   container_name: exnoria_dashboard
   #   restart: unless-stopped
   #   depends_on:
   #     filter:
@@ -130,7 +146,7 @@ services:
   #   ports:
   #     - "${DASHBOARD_PORT:-4000}:4000"
   #   networks:
-  #     - xnoria_internal
+  #     - exnoria_internal
 
 # -----------------------------------------------------------------------------
 # Volumes — persistent data survives container restarts
@@ -146,5 +162,5 @@ volumes:
 # No service reaches another except through declared dependencies
 # -----------------------------------------------------------------------------
 networks:
-  xnoria_internal:
+  exnoria_internal:
     driver: bridge

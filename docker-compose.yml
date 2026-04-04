@@ -90,25 +90,25 @@ services:
   # Filter service — deterministic allowlist enforcement
   # Uncomment when packages/orchestration/filter/ is ready (Phase 3)
   # ---------------------------------------------------------------------------
-  # filter:
-  #   build:
-  #     context: ./packages/orchestration/filter
-  #     dockerfile: Dockerfile
-  #   container_name: exnoria_filter
-  #   restart: unless-stopped
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     n8n:
-  #       condition: service_healthy
-  #   environment:
-  #     FILTER_PORT: ${FILTER_PORT:-3000}
-  #     POSTGRES_URL: postgresql://exnoria:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
-  #     N8N_BASE_URL: http://n8n:5678
-  #   ports:
-  #     - "${FILTER_PORT:-3000}:3000"
-  #   networks:
-  #     - exnoria_internal
+  filter:
+    build:
+      context: ./packages/orchestration/filter
+      dockerfile: Dockerfile
+    container_name: exnoria_filter
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      n8n:
+        condition: service_healthy
+    environment:
+      FILTER_PORT: ${FILTER_PORT:-3000}
+      POSTGRES_URL: postgresql://exnoria:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
+      N8N_BASE_URL: http://n8n:5678
+    ports:
+      - "${FILTER_PORT:-3000}:3000"
+    networks:
+      - exnoria_internal
 
   # ---------------------------------------------------------------------------
   # Cognitive layer — OpenClaw agentic core

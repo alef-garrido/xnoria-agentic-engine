@@ -107,6 +107,11 @@ services:
       N8N_BASE_URL: http://n8n:5678
     ports:
       - "${FILTER_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - exnoria_internal
 
@@ -114,20 +119,22 @@ services:
   # Cognitive layer — OpenClaw agentic core
   # Uncomment when packages/cognitive/ is ready (Phase 4)
   # ---------------------------------------------------------------------------
-  # cognitive:
-  #   build:
-  #     context: ./packages/cognitive
-  #     dockerfile: Dockerfile
-  #   container_name: exnoria_cognitive
-  #   restart: unless-stopped
-  #   depends_on:
-  #     filter:
-  #       condition: service_healthy
-  #   environment:
-  #     ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-  #     FILTER_URL: http://filter:3000
-  #   networks:
-  #     - exnoria_internal
+  cognitive:
+    build:
+      context: ./packages/cognitive
+      dockerfile: Dockerfile
+    container_name: exnoria_cognitive
+    restart: "no"
+    depends_on:
+      filter:
+        condition: service_healthy
+    environment:
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://generativelanguage.googleapis.com/v1beta/openai}
+      LLM_API_KEY: ${LLM_API_KEY}
+      LLM_MODEL: ${LLM_MODEL:-gemini-2.0-flash}
+      FILTER_URL: http://filter:3000
+    networks:
+      - exnoria_internal
 
   # ---------------------------------------------------------------------------
   # Dashboard — execution layer, CX Tool Dock

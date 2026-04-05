@@ -4,7 +4,7 @@ services:
   # Postgres — shared database for n8n and the filter service
   # ---------------------------------------------------------------------------
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     container_name: exnoria_postgres
     restart: unless-stopped
     environment:
@@ -116,15 +116,21 @@ services:
       - exnoria_internal
 
   # ---------------------------------------------------------------------------
-  # Cognitive layer — OpenClaw agentic core
-  # Uncomment when packages/cognitive/ is ready (Phase 4)
+  # Cognitive layer — OpenClaw agentic core (persistent runtime)
   # ---------------------------------------------------------------------------
   cognitive:
     build:
       context: ./packages/cognitive
       dockerfile: Dockerfile
     container_name: exnoria_cognitive
-    restart: "no"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     depends_on:
       filter:
         condition: service_healthy
@@ -132,7 +138,10 @@ services:
       LLM_BASE_URL: ${LLM_BASE_URL:-https://generativelanguage.googleapis.com/v1beta/openai}
       LLM_API_KEY: ${LLM_API_KEY}
       LLM_MODEL: ${LLM_MODEL:-gemini-2.0-flash}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY}
       FILTER_URL: http://filter:3000
+      POSTGRES_URL: postgresql://exnoria:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
     networks:
       - exnoria_internal
 

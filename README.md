@@ -67,7 +67,7 @@ exnoria/
 
 ## The three layers
 
-### Execution layer — `packages/dashboard/`
+### Execution layer (CX Tool Dock) — `packages/dashboard/`
 
 The surface the outside world and human operators touch. Captures events and data from external systems, transforms them into structured CX signals, and feeds them into the cognitive layer. Also owns the HITL approval queue — the interface through which humans intervene in the agent's action plan before execution.
 
@@ -78,7 +78,7 @@ Organized by domain concept:
 - `dispatch/` — outbound triggers pushed to the orchestration layer
 - `hitl/` — approval queue, human intervention interface
 
-### Orchestration layer — `packages/orchestration/`
+### Orchestration layer (Deterministic Filter) — `packages/orchestration/`
 
 The system's nervous system. Coordinates all flows between the cognitive layer and external systems. Owns two things: the **filter service**, which is the enforcement boundary between intent and execution, and the **n8n workflow definitions**, which are the actual execution units.
 
@@ -92,7 +92,7 @@ Organized by domain concept:
 - `workflows/` — n8n workflow JSON exports, versioned in source control
 - `contracts/` — the action ID registry, the single source of truth for what actions exist
 
-### Cognitive layer — `packages/cognitive/`
+### Cognitive layer (Agentic Core) — `packages/cognitive/`
 
 The intelligence core. Receives business signals, reasons about them using an LLM (OpenClaw), and produces structured action plans. Has no direct access to any external system — its only output channel is `POST /filter/execute`. This is enforced by architecture, not by convention.
 

@@ -149,22 +149,25 @@ services:
   # Dashboard — execution layer, CX Tool Dock
   # Uncomment when packages/dashboard/ is ready
   # ---------------------------------------------------------------------------
-  # dashboard:
-  #   build:
-  #     context: ./packages/dashboard
-  #     dockerfile: Dockerfile
-  #   container_name: exnoria_dashboard
-  #   restart: unless-stopped
-  #   depends_on:
-  #     filter:
-  #       condition: service_healthy
-  #   environment:
-  #     DASHBOARD_PORT: ${DASHBOARD_PORT:-4000}
-  #     FILTER_URL: http://filter:3000
-  #   ports:
-  #     - "${DASHBOARD_PORT:-4000}:4000"
-  #   networks:
-  #     - exnoria_internal
+  dashboard:
+    build:
+      context: ./layers/dashboard
+      dockerfile: Dockerfile
+    container_name: exnoria_dashboard
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_URL: postgresql://exnoria:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
+      ADMIN_PASSWORD: ${DASHBOARD_ADMIN_PASSWORD}
+      AUTH_SECRET: ${DASHBOARD_AUTH_SECRET}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "${DASHBOARD_PORT:-4000}:4000"
+    networks:
+      - exnoria_internal
 
 # -----------------------------------------------------------------------------
 # Volumes — persistent data survives container restarts

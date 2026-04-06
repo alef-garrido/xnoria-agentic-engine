@@ -88,11 +88,11 @@ services:
 
   # ---------------------------------------------------------------------------
   # Filter service — deterministic allowlist enforcement
-  # Uncomment when packages/orchestration/filter/ is ready (Phase 3)
+  # Uncomment when layers/orchestration/filter/ is ready (Phase 3)
   # ---------------------------------------------------------------------------
   filter:
     build:
-      context: ./packages/orchestration/filter
+      context: ./layers/orchestration/filter
       dockerfile: Dockerfile
     container_name: exnoria_filter
     restart: unless-stopped
@@ -120,7 +120,7 @@ services:
   # ---------------------------------------------------------------------------
   cognitive:
     build:
-      context: ./packages/cognitive
+      context: ./layers/cognitive
       dockerfile: Dockerfile
     container_name: exnoria_cognitive
     restart: unless-stopped

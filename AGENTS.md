@@ -37,11 +37,18 @@ External systems / events
 1. **The cognitive layer never calls external systems directly.** All actions exit through the filter.
 2. **Every action is logged**, whether executed, rejected, or pending human approval.
 3. **The filter allowlist is managed at runtime** via the database, not by redeploying code.
+## Layer-Specific AGENTS.md Files
+Each layer has its own AGENTS.md with detailed implementation guidance. Reference these when working on layer-specific tasks:
+- **Cognitive Layer:** [layers/cognitive/AGENTS.md](layers/cognitive/AGENTS.md) — Agentic core, LLM reasoning, tool definitions
+- **Filter Service:** [layers/orchestration/filter/AGENTS.md](layers/orchestration/filter/AGENTS.md) — Allowlist, audit, n8n dispatch
+- **Dashboard:** [layers/dashboard/AGENTS.md](layers/dashboard/AGENTS.md) — Next.js UI, HITL interface, reporting
+
 ## Directory Structure
 ```
 xnoria-agentic-engine/
 ├── layers/
 │   ├── cognitive/                    # Agentic core
+│   │   ├── AGENTS.md                 # Layer-specific guidance
 │   │   ├── src/
 │   │   │   ├── index.ts              # Entry: init DB, channels, event loop
 │   │   │   ├── agent/reason.ts       # LLM reasoning cycle
@@ -54,6 +61,7 @@ xnoria-agentic-engine/
 │   │
 │   ├── orchestration/
 │   │   └── filter/
+│   │       ├── AGENTS.md             # Layer-specific guidance
 │   │       ├── src/
 │   │       │   ├── index.ts          # Express: POST /filter/execute, GET /health
 │   │       │   ├── allowlist/        # DB allowlist lookup
@@ -65,6 +73,7 @@ xnoria-agentic-engine/
 │   │           └── seed.sql          # MVP action seed data
 │   │
 │   └── dashboard/                    # Next.js 16 dashboard
+│       ├── AGENTS.md                 # Layer-specific guidance
 │       ├── src/
 │       │   ├── app/
 │       │   │   ├── (dashboard)/      # Dashboard pages
@@ -174,14 +183,14 @@ Services:
 - **Domain language over technical language** — use signals, plans, actions, stages
 - **Explainability over magic** — trace every output back to its cause
 ## Full Roadmap
-### Phase 1 — Hardening (now)
+### Phase 1 — Hardening ✅ COMPLETE
 **Goal:** Close technical debt before any client touches the system
-| Track | Item | Description |
-|---|---|---|
-| A1 | Export working workflows | Version-control W1/W2/W3 in source control |
-| B1 | HITL queue implementation | Approval flow, dashboard integration |
-| C1 | Allowlist manager UI | Enable/disable actions from dashboard |
-### Phase 2 — Journey Expansion
+| Track | Item | Description | Status |
+|---|---|---|---|
+| A1 | Export working workflows | Version-control W1/W2/W3 in source control | ✅ Done |
+| B1 | HITL queue implementation | Approval flow, dashboard integration | ✅ Done |
+| C1 | Allowlist manager UI | Enable/disable actions from dashboard | ✅ Done |
+### Phase 2 — Journey Expansion (next)
 **Goal:** SUP and RET workflows — where the money is (support escalation, churn prevention)
 | Track | Item | Description |
 |---|---|---|
@@ -215,8 +224,8 @@ Services:
 - **Phase 4 requires Phase 3 complete**
 - **A1 must ship before B2** — execution layer must exist before toolset expansion
 ### Dependency Chain
-Phase 1 (A1, B1, C1)
-  └── Phase 2 (A2 → B2, C2)
+Phase 1 (A1, B1, C1) ✅
+  └── Phase 2 (A2 → B2, C2) ← NEXT
         └── Phase 3 (A3, B3, C3)
               └── Phase 4 (A4, B4, C4)
                     └── Phase 5 (Instance templating, Deployment guides)

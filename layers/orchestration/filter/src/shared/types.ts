@@ -13,7 +13,8 @@ export type RejectionCode =
   | 'ACTION_DISABLED'
   | 'STAGE_MISMATCH'
   | 'PAYLOAD_INVALID'
-  | 'WORKFLOW_UNREACHABLE';
+  | 'WORKFLOW_UNREACHABLE'
+  | 'HITL_REJECTED';
 
 export interface FilterRequest {
   action_id:  string;
@@ -45,4 +46,17 @@ export interface FilterAction {
   requires_hitl:   boolean;
   enabled:         boolean;
   description:     string | null;
+  created_at?:     string;
+  updated_at?:     string;
 }
+
+export interface HITLPendingAction {
+  log_id:      string;
+  action_id:   string;
+  stage:       string;
+  session_id:  string;
+  payload_in:  Record<string, unknown>;
+  meta:        Record<string, unknown>;
+  created_at:  string;
+}
+

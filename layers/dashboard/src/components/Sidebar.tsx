@@ -12,10 +12,14 @@ import {
   LogOut,
   Menu,
   X,
+  ShieldCheck,
+  ListChecks,
 } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/hitl", label: "Approvals", icon: ShieldCheck },
+  { href: "/allowlist", label: "Allowlist", icon: ListChecks },
   { href: "/activity", label: "Activity", icon: Activity },
   { href: "/sessions", label: "Sessions", icon: History },
   { href: "/system", label: "System", icon: Server },

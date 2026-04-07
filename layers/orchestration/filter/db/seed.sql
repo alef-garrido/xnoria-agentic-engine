@@ -30,7 +30,7 @@ VALUES
     'sal.contact.prioritize',
     'SAL',
     'sal-contact-prioritize',
-    false,
+    true,
     true,
     'Flag a contact for immediate SDR follow-up and send WhatsApp notification'
   )

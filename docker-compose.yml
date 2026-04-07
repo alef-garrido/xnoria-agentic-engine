@@ -13,7 +13,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-exnoria}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./packages/orchestration/filter/db/migrations:/docker-entrypoint-initdb.d
+      - ./layers/orchestration/filter/db/migrations:/docker-entrypoint-initdb.d
     ports:
       - "5433:5432"                         # exposed for local DB inspection only
     healthcheck:
@@ -105,6 +105,9 @@ services:
       FILTER_PORT: ${FILTER_PORT:-3000}
       POSTGRES_URL: postgresql://exnoria:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
       N8N_BASE_URL: http://n8n:5678
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_OPERATOR_CHAT_ID: ${TELEGRAM_OPERATOR_CHAT_ID}
+      DASHBOARD_URL: ${DASHBOARD_URL:-http://localhost:4000}
     ports:
       - "${FILTER_PORT:-3000}:3000"
     healthcheck:
@@ -162,6 +165,7 @@ services:
       POSTGRES_URL: postgresql://exnoria:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
       ADMIN_PASSWORD: ${DASHBOARD_ADMIN_PASSWORD}
       AUTH_SECRET: ${DASHBOARD_AUTH_SECRET}
+      FILTER_URL: http://filter:3000
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     ports:

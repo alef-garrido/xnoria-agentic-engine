@@ -420,6 +420,11 @@ FodyWeavers.xsd
 
 # Next.js build output
 layers/dashboard/.next/
+
+#workspace specific
 .next/
 .plan/
+.agents/
+
+
 

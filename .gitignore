@@ -421,3 +421,5 @@ FodyWeavers.xsd
 # Next.js build output
 layers/dashboard/.next/
 .next/
+.plan/
+

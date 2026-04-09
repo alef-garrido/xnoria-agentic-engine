@@ -1,0 +1,136 @@
+{
+  "name": "W-ONB-3 - Onb.contact.nudge",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "onb-contact-nudge",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-onb-contact-nudge",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "onb-contact-nudge"
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "operation": "get",
+        "contactId": "={{ $json.body.contact_id }}",
+        "additionalFields": {}
+      },
+      "id": "hubspot-get-contact-onb3",
+      "name": "HubSpot -- get contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Exnoria - onb.contact.nudge\n// Branch on cause_code to select message template\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, signal_id, cause_code, interventions } = webhook;\n\nconst firstname = contact.properties?.firstname?.value ?? 'there';\nconst email     = contact.properties?.email?.value     ?? '';\nconst phone     = contact.properties?.phone?.value     ?? '';\n\nconst cleanPhone = phone.replace(/[^\\d]/g, '');\n\nlet message = '';\n\nif (cause_code === 'ONB-FRC') {\n  // ONB_FRC_01 — abandoned setup\n  message = [\n    'Hi ' + firstname + ',',\n    '',\n    'We noticed you haven\\'t completed your setup yet — and we want to make sure you get the most out of your account.',\n    '',\n    'It only takes a few minutes to finish. Click here to pick up where you left off:',\n    '[Setup Link]',\n    '',\n    'If you ran into any issues, just reply to this message and we\\'ll help you out.',\n    '',\n    '-- Exnoria Onboarding Team'\n  ].join('\\n');\n} else if (cause_code === 'ONB-CLR') {\n  // ONB_CLR_01 — confused about next steps\n  message = [\n    'Hi ' + firstname + ',',\n    '',\n    'Here\\'s a quick reminder of your next onboarding steps:',\n    '',\n    '1. Complete your profile setup',\n    '2. Connect your first integration',\n    '3. Run your first workflow',\n    '',\n    'Need help? Check out our getting started guide: [Guide Link]',\n    '',\n    '-- Exnoria Onboarding Team'\n  ].join('\\n');\n} else {\n  message = 'Hi ' + firstname + ', we noticed your onboarding may need a boost. Reply if you need help!';\n}\n\nconst whatsapp_payload = cleanPhone ? {\n  messaging_product: 'whatsapp',\n  to: cleanPhone,\n  type: 'text',\n  text: { body: message }\n} : null;\n\nconst nudgedAt = new Date(new Date().setUTCHours(0,0,0,0)).getTime();\n\nreturn [{\n  json: {\n    contact_id,\n    signal_id,\n    cause_code,\n    email,\n    firstname,\n    phone: cleanPhone,\n    whatsapp_payload,\n    message_template: cause_code === 'ONB-FRC' ? 'abandoned_setup' : cause_code === 'ONB-CLR' ? 'next_steps_checklist' : 'generic_nudge',\n    nudged_at: nudgedAt\n  }\n}];"
+      },
+      "id": "code-nudge-logic-onb3",
+      "name": "Code -- nudge logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/{{ $env.META_PHONE_NUMBER_ID }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($(\"Code -- nudge logic\").item.json.whatsapp_payload) }}",
+        "options": {}
+      },
+      "id": "http-meta-whatsapp-onb3",
+      "name": "Meta WA -- send nudge",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [960, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Meta WhatsApp Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "email": "={{ $(\"Code -- nudge logic\").item.json.email }}",
+        "additionalFields": {},
+        "options": {}
+      },
+      "id": "hubspot-update-contact-onb3",
+      "name": "HubSpot -- update contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [1200, 300],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"onb.contact.nudge\",\n  \"contact_id\": \"{{ $(\"Code -- nudge logic\").item.json.contact_id }}\",\n  \"signal_id\": \"{{ $(\"Code -- nudge logic\").item.json.signal_id }}\",\n  \"cause_code\": \"{{ $(\"Code -- nudge logic\").item.json.cause_code }}\",\n  \"message_template\": \"{{ $(\"Code -- nudge logic\").item.json.message_template }}\",\n  \"nudged_at\": {{ $(\"Code -- nudge logic\").item.json.nudged_at }}\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-onb3",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1440, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{"node": "HubSpot -- get contact", "type": "main", "index": 0}]]
+    },
+    "HubSpot -- get contact": {
+      "main": [[{"node": "Code -- nudge logic", "type": "main", "index": 0}]]
+    },
+    "Code -- nudge logic": {
+      "main": [[{"node": "Meta WA -- send nudge", "type": "main", "index": 0}]]
+    },
+    "Meta WA -- send nudge": {
+      "main": [[{"node": "HubSpot -- update contact", "type": "main", "index": 0}]]
+    },
+    "HubSpot -- update contact": {
+      "main": [[{"node": "Respond", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  }
+}

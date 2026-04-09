@@ -1,0 +1,93 @@
+{
+  "name": "W-PRD-3 - Prd.feedback.log",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "prd-feedback-log",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-prd-feedback-log",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "prd-feedback-log"
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "operation": "get",
+        "contactId": "={{ $json.body.contact_id }}",
+        "additionalFields": {}
+      },
+      "id": "hubspot-get-contact-prd3",
+      "name": "HubSpot -- get contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Exnoria - prd.feedback.log\n// Build enriched feature request payload for HubSpot product feedback pipeline\n// No contact-facing action — internal logging only\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, signal_id, signal_severity, interventions } = webhook;\nconst feature_request = webhook.payload?.feature_request ?? webhook.feature_request ?? 'No description provided';\n\nconst firstname = contact.properties?.firstname?.value ?? 'Contact';\nconst lastname  = contact.properties?.lastname?.value  ?? '';\nconst email     = contact.properties?.email?.value     ?? '';\nconst company   = contact.properties?.company?.value   ?? '';\n\nconst loggedAt = new Date(new Date().setUTCHours(0,0,0,0)).getTime();\n\nconst ticketTitle = '[Feature Request] ' + feature_request.substring(0, 80);\n\nconst enrichedNote = [\n  'Signal: ' + signal_id + ' (severity: ' + signal_severity + ')',\n  'Contact: ' + firstname + ' ' + lastname + (company ? ' — ' + company : ''),\n  'Email: ' + email,\n  'Contact ID: ' + contact_id,\n  '',\n  'Feature request:',\n  feature_request,\n  '',\n  'Compass interventions: ' + (interventions || []).join(', ')\n].join('\\n');\n\nreturn [{\n  json: {\n    contact_id,\n    signal_id,\n    signal_severity,\n    email,\n    firstname,\n    lastname,\n    company,\n    feature_request,\n    ticket_title: ticketTitle,\n    enriched_note: enrichedNote,\n    logged_at: loggedAt\n  }\n}];"
+      },
+      "id": "code-feedback-logic-prd3",
+      "name": "Code -- feedback logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simulate -- HubSpot ticket/deal creation in product feedback pipeline\n// Replace with real HubSpot API when pipeline is configured\n\nconst data = $(\"Code -- feedback logic\").first().json;\n\nreturn [{\n  json: {\n    ...data,\n    feedback_logged: true,\n    ticket_id: 'feedback_sim_' + Date.now(),\n    simulated: true\n  }\n}];"
+      },
+      "id": "simulate-log-feedback-prd3",
+      "name": "Simulate -- log to pipeline",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"prd.feedback.log\",\n  \"contact_id\": \"{{ $(\"Code -- feedback logic\").item.json.contact_id }}\",\n  \"signal_id\": \"{{ $(\"Code -- feedback logic\").item.json.signal_id }}\",\n  \"feedback_logged\": {{ $(\"Simulate -- log to pipeline\").item.json.feedback_logged }},\n  \"ticket_id\": \"{{ $(\"Simulate -- log to pipeline\").item.json.ticket_id }}\",\n  \"logged_at\": {{ $(\"Code -- feedback logic\").item.json.logged_at }},\n  \"simulated\": {{ $(\"Simulate -- log to pipeline\").item.json.simulated }}\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-prd3",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1200, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{"node": "HubSpot -- get contact", "type": "main", "index": 0}]]
+    },
+    "HubSpot -- get contact": {
+      "main": [[{"node": "Code -- feedback logic", "type": "main", "index": 0}]]
+    },
+    "Code -- feedback logic": {
+      "main": [[{"node": "Simulate -- log to pipeline", "type": "main", "index": 0}]]
+    },
+    "Simulate -- log to pipeline": {
+      "main": [[{"node": "Respond", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  }
+}

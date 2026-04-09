@@ -100,7 +100,7 @@ Use these terms consistently across all code, files, and database tables:
 | **Allowlist** | Actions currently permitted to execute (filter_action table) |
 | **Audit log** | Immutable record of every action attempted (filter_log table) |
 | **HITL** | Human-in-the-loop — action requiring human approval |
-## Current Scope (Phase 2.5 Complete)
+## Current Scope (Phase 3 A3 Complete)
 Eight journey stages with registered actions:
 | Action ID | Stage | Description |
 |---|---|---|
@@ -112,17 +112,21 @@ Eight journey stages with registered actions:
 | `sal.contact.message` | SAL | Send pre-composed WhatsApp message to contact |
 | `onb.document.request` | ONB | Initiate document collection request |
 | `onb.document.validate` | ONB | Validate submitted document, update CRM |
+| `onb.contact.nudge` | ONB | Send re-engagement nudge to stalled onboarding contact |
+| `onb.contact.assist` | ONB | Offer white-glove CSM assist to blocked onboarding contact (HITL) |
+| `onb.ticket.escalate` | ONB | Escalate technical onboarding blocker to support queue |
 | `sup.ticket.escalate` | SUP | Escalate ticket to senior support |
 | `sup.contact.notify` | SUP | Send resolution update to contact (HITL) |
 | `com.content.publish` | COM | Publish scheduled content to social media |
+| `prd.friction.flag` | PRD | Send adoption nudge to low-engagement contact (supersedes placeholder) |
+| `prd.adoption.nudge` | PRD | Send feature education message to workaround-using contact (supersedes placeholder) |
+| `prd.feedback.log` | PRD | Log enriched feature request to HubSpot product pipeline |
 | `ret.contact.winback` | RET | Enroll contact in winback sequence (HITL) |
 | `ret.account.flag` | RET | Flag account for CSM review |
 
 Placeholder actions (disabled):
 | Action ID | Stage | Description |
 |---|---|---|
-| `prd.friction.flag` | PRD | Placeholder: Flag product friction |
-| `prd.adoption.nudge` | PRD | Placeholder: Send adoption nudge |
 | `exp.account.flag` | EXP | Placeholder: Flag expansion-ready account |
 ## Development Workflows
 ### Adding a New Action (End-to-End)
@@ -176,7 +180,7 @@ Placeholder actions (disabled):
 | `POSTGRES_PASSWORD` | orchestration | Postgres password |
 | `POSTGRES_DB` | orchestration | Database name (default: exnoria) |
 | `N8N_ENCRYPTION_KEY` | orchestration | n8n encryption key (generate once, never rotate) |
-| `ANTHROPIC_API_KEY` | cognitive | LLM API key |
+| `LLM_API_KEY` | cognitive | LLM API key |
 | `FILTER_PORT` | orchestration | Filter port (default: 3000) |
 | `N8N_BASE_URL` | orchestration | Internal URL for n8n webhooks |
 | `DASHBOARD_PORT` | dashboard | Dashboard port (default: 4000) |
@@ -224,11 +228,25 @@ Services:
 | C2.5 | PRD + EXP placeholders | Placeholder stubs for future phases | ✅ Done |
 ### Phase 3 — Intelligence Deepening
 **Goal:** Complete remaining journey stages + domain knowledge grounding
-| Track | Item | Description |
-|---|---|---|
-| A3 | ONB + PRD workflows | Onboarding drop-off, product friction |
-| B3 | MCP context grounding | NotebookLM, domain knowledge base |
-| C3 | Memory browser | Contact history, semantic search UI |
+| Track | Item | Description | Status |
+|---|---|---|---|
+| A3 | ONB + PRD workflows | Onboarding drop-off, product friction | ✅ Done |
+| B3 | MCP context grounding | NotebookLM, domain knowledge base | |
+| C3 | Memory browser | Contact history, semantic search UI | |
+
+#### B3 Tool Recommendations (for evaluation before scoping B3)
+
+The following tools are recommended for evaluation before PRD and ONB signal detection becomes more sophisticated. These are not required for A3 — HubSpot is sufficient. They are candidates for B3 (MCP context grounding) and the signal monitoring infrastructure.
+
+**Onboarding platforms:**
+- **Appcues** — in-app onboarding flows, step completion tracking, maps directly to `ONB_FRC` and `ONB_CLR` indicators (`time_to_first_value`, `drop_off_rate`, `help_article_views_in_onboarding`). Native HubSpot integration.
+- **Userflow** — lighter alternative to Appcues, better suited for smaller teams; webhooks on step abandonment map cleanly to `ONB_FRC_01` trigger conditions.
+
+**Product analytics:**
+- **PostHog** — open-source, self-hostable, tracks `feature_adoption_rate` and task completion directly. Maps to `PRD_FRC_01`, `PRD_FRC_02`, `PRD_CAP_01` indicators. Self-hosted option fits the architecture's control philosophy.
+- **Mixpanel** — stronger for `feature_request_volume` and funnel analysis (`PRD_CAP_02`). Better reporting than PostHog but hosted-only.
+
+**Why these matter for B3:** When MCP context grounding is scoped, these tools are the natural signal sources that would feed structured `CXEvent` payloads into the cognitive layer — replacing the current pattern where signals must be manually constructed or inferred from CRM tags alone. Choosing a tool before B3 is scoped will determine the shape of the MCP integration.
 ### Phase 4 — Multi-Operator
 **Goal:** Role-based access + multi-agent coordination for client handoff
 | Track | Item | Description |

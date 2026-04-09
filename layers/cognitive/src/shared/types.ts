@@ -10,6 +10,13 @@ export interface CXEvent {
   channel:    Channel;
   input:      string;
   stage?:     JourneyStage;
+
+  // Compass signal vocabulary bridge (Phase 2)
+  signal_id?:       string;       // e.g. "SUP_RES_01" — Compass signal ID
+  signal_severity?: number;       // 0–1 from Compass signal.severity
+  cause_code?:      string;       // e.g. "SUP-RES" — Compass cause code
+  interventions?:   string[];     // e.g. ["INT_SUP_RES_01_A", "INT_SUP_RES_01_B"]
+
   meta?:      Record<string, unknown>;
 }
 

@@ -94,16 +94,17 @@ data/                     # Example data files
 3. **Follow existing auth patterns** — all dashboard routes should be protected.
 4. **Use TenacitOS components** for consistency.
 
-## Key Pages (Phase 1 Complete)
+## Key Pages (Phase 2.5 Complete)
 - **Dashboard home** — overview of signals, actions, system health
 - **HITL queue** (`/hitl`) — `HITLQueue` component, 10s polling, approve/reject buttons, empty state
 - **Allowlist manager** (`/allowlist`) — `AllowlistManager` component, table with toggle switches for `enabled`/`requires_hitl`, Add modal, delete confirm
-- **Journey health map** — CX health per stage (Phase 2)
+- **Journey health map** (`/health`) — CX health per stage with metrics dashboard
 
 ### Sidebar Navigation
 `Sidebar.tsx` includes nav items:
 - ⚡ **Approvals** (`/hitl`) — `ShieldCheck` icon
 - ☑ **Allowlist** (`/allowlist`) — `ListChecks` icon
+- 📊 **Health** (`/health`) — `Activity` icon (Phase 2)
 
 ## Environment Variables
 | Variable | Description |
@@ -111,3 +112,4 @@ data/                     # Example data files
 | `DASHBOARD_PORT` | Dashboard port (default: 4000) |
 | `FILTER_URL` | Filter service URL (default: `http://filter:3000` in compose) |
 | `POSTGRES_*` | Database connection (inherited from docker-compose) |
+| `COM_CONTENT_SHEET_ID` | Google Sheets ID for content calendar (COM workflow) |

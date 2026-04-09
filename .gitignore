@@ -425,6 +425,6 @@ layers/dashboard/.next/
 .next/
 .plan/
 .agents/
-
-
+.opencode/
+.gemini/
 

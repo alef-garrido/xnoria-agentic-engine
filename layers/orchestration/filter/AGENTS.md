@@ -42,6 +42,7 @@ db/
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/health` | Health check |
+| `GET` | `/filter/health` | Aggregated per-stage metrics (Phase 2) |
 | `POST` | `/filter/execute` | Execute an action (main entry point) |
 
 ### Allowlist CRUD
@@ -158,6 +159,20 @@ Partial index on `status = 'pending_hitl'` for fast queue queries.
 | `TELEGRAM_BOT_TOKEN` | Telegram bot token (for HITL notifications) |
 | `TELEGRAM_OPERATOR_CHAT_ID` | Operator chat ID for HITL notifications |
 | `DASHBOARD_URL` | Dashboard URL for HITL deep links (default: `http://localhost:4000`) |
+| `COM_CONTENT_SHEET_ID` | Google Sheets ID for content calendar (COM workflow) |
+
+## Current Action Coverage (Phase 2.5 Complete)
+All 8 journey stages have at least one active action:
+| Stage | Active Actions |
+|---|---|
+| ACQ | `acq.lead.engage`, `acq.lead.nurture`, `acq.contact.outreach` |
+| SAL | `sal.sequence.enroll`, `sal.contact.prioritize`, `sal.contact.message` |
+| ONB | `onb.document.request`, `onb.document.validate` |
+| PRD | (placeholder, disabled) |
+| SUP | `sup.ticket.escalate`, `sup.contact.notify` |
+| COM | `com.content.publish` |
+| RET | `ret.contact.winback`, `ret.account.flag` |
+| EXP | (placeholder, disabled) |
 
 ## HITL Implementation Details
 

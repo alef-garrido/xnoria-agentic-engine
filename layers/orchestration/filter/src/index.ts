@@ -201,6 +201,97 @@ app.post('/filter/hitl/:log_id/reject', async (req: Request, res: Response) => {
 });
 
 // ==============================================================================
+// Health Metrics API (Phase 2)
+// ==============================================================================
+
+// GET /filter/health — aggregated per-stage metrics from filter_log
+app.get('/filter/health', async (req: Request, res: Response) => {
+  const days = parseInt(req.query.days as string) || 30;
+
+  try {
+    const result = await db.query(`
+      WITH period_logs AS (
+        SELECT *
+        FROM filter_log
+        WHERE created_at >= now() - make_interval(days => $1)
+      ),
+      stage_stats AS (
+        SELECT
+          stage,
+          COUNT(*)::int                                              AS total_actions,
+          COUNT(*) FILTER (WHERE status = 'executed')::int           AS executed,
+          COUNT(*) FILTER (WHERE status = 'rejected')::int           AS rejected,
+          COUNT(*) FILTER (WHERE status = 'pending_hitl')::int       AS pending_hitl,
+          -- HITL metrics (actions that went through HITL flow)
+          COUNT(*) FILTER (WHERE status IN ('pending_hitl', 'executed', 'rejected')
+                            AND reviewed_at IS NOT NULL)::int        AS hitl_total,
+          COUNT(*) FILTER (WHERE status = 'executed'
+                            AND reviewed_at IS NOT NULL)::int        AS hitl_approved,
+          COUNT(*) FILTER (WHERE status = 'rejected'
+                            AND rejection_code = 'HITL_REJECTED')::int AS hitl_rejected,
+          -- Average review time in minutes
+          AVG(
+            EXTRACT(EPOCH FROM (reviewed_at - created_at)) / 60.0
+          ) FILTER (WHERE reviewed_at IS NOT NULL)                   AS avg_review_minutes
+        FROM period_logs
+        GROUP BY stage
+      ),
+      top_rejections AS (
+        SELECT DISTINCT ON (stage)
+          stage,
+          rejection_code
+        FROM period_logs
+        WHERE rejection_code IS NOT NULL
+        GROUP BY stage, rejection_code
+        ORDER BY stage, COUNT(*) DESC
+      )
+      SELECT
+        s.stage,
+        s.total_actions,
+        s.executed,
+        s.rejected,
+        s.pending_hitl,
+        CASE WHEN s.total_actions > 0
+          THEN ROUND(s.executed::numeric / s.total_actions, 4)
+          ELSE 0 END                                                 AS execution_rate,
+        s.hitl_total,
+        s.hitl_approved,
+        s.hitl_rejected,
+        CASE WHEN s.hitl_total > 0
+          THEN ROUND(s.hitl_approved::numeric / s.hitl_total, 4)
+          ELSE 0 END                                                 AS hitl_approval_rate,
+        ROUND(s.avg_review_minutes::numeric, 1)                      AS avg_review_minutes,
+        t.rejection_code                                             AS top_rejection_code
+      FROM stage_stats s
+      LEFT JOIN top_rejections t ON t.stage = s.stage
+      ORDER BY s.stage;
+    `, [days]);
+
+    const metrics = result.rows.map((row: any) => ({
+      stage:              row.stage,
+      period_days:        days,
+      total_actions:      row.total_actions,
+      executed:           row.executed,
+      rejected:           row.rejected,
+      pending_hitl:       row.pending_hitl,
+      execution_rate:     parseFloat(row.execution_rate),
+      hitl_total:         row.hitl_total,
+      hitl_approved:      row.hitl_approved,
+      hitl_rejected:      row.hitl_rejected,
+      hitl_approval_rate: parseFloat(row.hitl_approval_rate),
+      avg_review_minutes: row.avg_review_minutes ? parseFloat(row.avg_review_minutes) : null,
+      top_rejection_code: row.top_rejection_code ?? null
+    }));
+
+    return res.json({ metrics, period_days: days });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('[filter] Failed to compute health metrics:', message);
+    return res.status(500).json({ error: 'Failed to compute health metrics', message });
+  }
+});
+
+// ==============================================================================
 // Allowlist CRUD API
 // ==============================================================================
 

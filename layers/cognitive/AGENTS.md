@@ -96,7 +96,7 @@ The `reply` tool is special — it bypasses the filter and is handled by the eve
 ## Environment Variables
 | Variable | Description |
 |---|---|
-| `ANTHROPIC_API_KEY` | LLM API key |
+| `LLM_API_KEY` | LLM API key |
 | `TELEGRAM_BOT_TOKEN` | Telegram bot token |
 | `TELEGRAM_OPERATOR_CHAT_ID` | Operator chat for HITL notifications |
 

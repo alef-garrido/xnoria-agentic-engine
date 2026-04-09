@@ -159,6 +159,144 @@ export const TOOLS: ToolDefinition[] = [
   },
 
   // ---------------------------------------------------------------------------
+  // Phase 3 — ONB (Onboarding) tools
+  // ---------------------------------------------------------------------------
+  {
+    type: 'function',
+    function: {
+      name: 'onb_contact_nudge',
+      description:
+        'Send a re-engagement nudge to a contact who has stalled in onboarding. ' +
+        'Use when signal_id is ONB_FRC_01 (abandoned setup) OR ONB_CLR_01 (confused about next steps), ' +
+        'signal_severity >= 0.6. Do not use if the contact has already received a nudge in the last 48 hours.',
+      parameters: {
+        type: 'object',
+        properties: {
+          contact_id:    { type: 'string', description: 'CRM contact ID' },
+          signal_id:     { type: 'string', description: 'Compass signal ID (ONB_FRC_01 or ONB_CLR_01)' },
+          cause_code:    { type: 'string', description: 'Compass cause code (ONB-FRC or ONB-CLR)' },
+          interventions: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Compass intervention IDs to apply'
+          }
+        },
+        required: ['contact_id', 'signal_id', 'cause_code', 'interventions']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'onb_contact_assist',
+      description:
+        'Offer direct CSM white-glove assistance to a contact blocked in onboarding. ' +
+        'Use when signal_id is ONB_FRC_02 (complaints about effort) OR ONB_CAP_01 (unable to complete setup), ' +
+        'signal_severity >= 0.6. Prefer over nudge when signal_severity >= 0.8 or contact has already received a nudge. ' +
+        'Requires HITL — routes through human approval before sending.',
+      parameters: {
+        type: 'object',
+        properties: {
+          contact_id:      { type: 'string', description: 'CRM contact ID' },
+          signal_id:       { type: 'string', description: 'Compass signal ID (ONB_FRC_02 or ONB_CAP_01)' },
+          signal_severity: { type: 'number', description: 'Signal severity 0–1 from Compass' }
+        },
+        required: ['contact_id', 'signal_id', 'signal_severity']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'onb_ticket_escalate',
+      description:
+        'Escalate a technical onboarding blocker to the support queue in HubSpot. ' +
+        'Use when signal_id is ONB_CAP_02 (technical blockers), signal_severity >= 0.6.',
+      parameters: {
+        type: 'object',
+        properties: {
+          contact_id:           { type: 'string', description: 'CRM contact ID' },
+          signal_id:            { type: 'string', description: 'Compass signal ID (ONB_CAP_02)' },
+          signal_severity:      { type: 'number', description: 'Signal severity 0–1 from Compass' },
+          blocker_description:  { type: 'string', description: 'Description of the technical blocker from payload' }
+        },
+        required: ['contact_id', 'signal_id', 'signal_severity', 'blocker_description']
+      }
+    }
+  },
+
+  // ---------------------------------------------------------------------------
+  // Phase 3 — PRD (Product) tools
+  // ---------------------------------------------------------------------------
+  {
+    type: 'function',
+    function: {
+      name: 'prd_contact_nudge',
+      description:
+        'Send an adoption nudge to a contact showing low product engagement. ' +
+        'Use when signal_id is PRD_FRC_01 (task abandonment) OR PRD_FRC_02 (low usage of core features), ' +
+        'signal_severity >= 0.7. Note: PRD_FRC_02 has critical severity (0.9) — always act on this signal.',
+      parameters: {
+        type: 'object',
+        properties: {
+          contact_id:    { type: 'string', description: 'CRM contact ID' },
+          signal_id:     { type: 'string', description: 'Compass signal ID (PRD_FRC_01 or PRD_FRC_02)' },
+          cause_code:    { type: 'string', description: 'Compass cause code (PRD-FRC)' },
+          interventions: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Compass intervention IDs to apply'
+          }
+        },
+        required: ['contact_id', 'signal_id', 'cause_code', 'interventions']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'prd_contact_educate',
+      description:
+        'Send a targeted feature education message to a contact using workarounds instead of native features. ' +
+        'Use when signal_id is PRD_CAP_01 (workarounds used), signal_severity >= 0.6.',
+      parameters: {
+        type: 'object',
+        properties: {
+          contact_id:    { type: 'string', description: 'CRM contact ID' },
+          signal_id:     { type: 'string', description: 'Compass signal ID (PRD_CAP_01)' },
+          feature_area:  { type: 'string', description: 'Product feature area the contact is working around' }
+        },
+        required: ['contact_id', 'signal_id', 'feature_area']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'prd_feedback_log',
+      description:
+        'Log an enriched feature request signal to the product feedback pipeline in HubSpot. ' +
+        'Use when signal_id is PRD_CAP_02 (feature requests), signal_severity >= 0.7. ' +
+        'No contact-facing action — this is a logging operation only.',
+      parameters: {
+        type: 'object',
+        properties: {
+          contact_id:      { type: 'string', description: 'CRM contact ID' },
+          signal_id:       { type: 'string', description: 'Compass signal ID (PRD_CAP_02)' },
+          signal_severity: { type: 'number', description: 'Signal severity 0–1 from Compass' },
+          feature_request: { type: 'string', description: 'Feature request description from payload' },
+          interventions:   {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Compass intervention IDs'
+          }
+        },
+        required: ['contact_id', 'signal_id', 'signal_severity', 'feature_request', 'interventions']
+      }
+    }
+  },
+
+  // ---------------------------------------------------------------------------
   // Reply — local handler, not dispatched to filter
   // ---------------------------------------------------------------------------
   {
@@ -190,6 +328,14 @@ export const TOOL_TO_ACTION: Record<string, { action_id: string; stage: string }
   sup_contact_notify:     { action_id: 'sup.contact.notify',     stage: 'SUP' },
   ret_contact_winback:    { action_id: 'ret.contact.winback',    stage: 'RET' },
   ret_account_flag:       { action_id: 'ret.account.flag',       stage: 'RET' },
+
+  // Phase 3 — ONB + PRD
+  onb_contact_nudge:      { action_id: 'onb.contact.nudge',      stage: 'ONB' },
+  onb_contact_assist:     { action_id: 'onb.contact.assist',     stage: 'ONB' },
+  onb_ticket_escalate:    { action_id: 'onb.ticket.escalate',    stage: 'ONB' },
+  prd_contact_nudge:      { action_id: 'prd.contact.nudge',      stage: 'PRD' },
+  prd_contact_educate:    { action_id: 'prd.contact.educate',    stage: 'PRD' },
+  prd_feedback_log:       { action_id: 'prd.feedback.log',       stage: 'PRD' },
 
   reply:                  null  // handled locally, not dispatched to filter
 };

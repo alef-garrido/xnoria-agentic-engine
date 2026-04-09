@@ -94,7 +94,7 @@ data/                     # Example data files
 3. **Follow existing auth patterns** — all dashboard routes should be protected.
 4. **Use TenacitOS components** for consistency.
 
-## Key Pages (Phase 2.5 Complete)
+## Key Pages (Phase 3 A3 Complete)
 - **Dashboard home** — overview of signals, actions, system health
 - **HITL queue** (`/hitl`) — `HITLQueue` component, 10s polling, approve/reject buttons, empty state
 - **Allowlist manager** (`/allowlist`) — `AllowlistManager` component, table with toggle switches for `enabled`/`requires_hitl`, Add modal, delete confirm

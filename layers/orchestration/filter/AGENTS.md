@@ -161,14 +161,14 @@ Partial index on `status = 'pending_hitl'` for fast queue queries.
 | `DASHBOARD_URL` | Dashboard URL for HITL deep links (default: `http://localhost:4000`) |
 | `COM_CONTENT_SHEET_ID` | Google Sheets ID for content calendar (COM workflow) |
 
-## Current Action Coverage (Phase 2.5 Complete)
+## Current Action Coverage (Phase 3 A3 Complete)
 All 8 journey stages have at least one active action:
 | Stage | Active Actions |
 |---|---|
 | ACQ | `acq.lead.engage`, `acq.lead.nurture`, `acq.contact.outreach` |
 | SAL | `sal.sequence.enroll`, `sal.contact.prioritize`, `sal.contact.message` |
-| ONB | `onb.document.request`, `onb.document.validate` |
-| PRD | (placeholder, disabled) |
+| ONB | `onb.document.request`, `onb.document.validate`, `onb.contact.nudge`, `onb.contact.assist`, `onb.ticket.escalate` |
+| PRD | `prd.friction.flag`, `prd.adoption.nudge`, `prd.feedback.log` |
 | SUP | `sup.ticket.escalate`, `sup.contact.notify` |
 | COM | `com.content.publish` |
 | RET | `ret.contact.winback`, `ret.account.flag` |

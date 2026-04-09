@@ -1,0 +1,115 @@
+{
+  "name": "W-ONB-5 - Onb.ticket.escalate",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "onb-ticket-escalate",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-onb-ticket-escalate",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "onb-ticket-escalate"
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "operation": "get",
+        "contactId": "={{ $json.body.contact_id }}",
+        "additionalFields": {}
+      },
+      "id": "hubspot-get-contact-onb5",
+      "name": "HubSpot -- get contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Exnoria - onb.ticket.escalate\n// Build HubSpot ticket payload for technical blocker escalation\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, signal_id, signal_severity } = webhook;\nconst blocker_description = webhook.payload?.blocker_description ?? webhook.blocker_description ?? 'No description provided';\n\nconst firstname = contact.properties?.firstname?.value ?? 'Contact';\nconst lastname  = contact.properties?.lastname?.value  ?? '';\nconst email     = contact.properties?.email?.value     ?? '';\nconst company   = contact.properties?.company?.value   ?? '';\n\nconst escalatedAt = new Date(new Date().setUTCHours(0,0,0,0)).getTime();\n\nconst ticketTitle = 'Technical onboarding blocker — ' + firstname + ' ' + lastname + (company ? ' (' + company + ')' : '');\n\nconst ticketNote = [\n  'Escalated by Xnoria — signal ' + signal_id + ', severity ' + signal_severity,\n  '',\n  'Blocker description:',\n  blocker_description,\n  '',\n  'Contact: ' + email,\n  'Contact ID: ' + contact_id\n].join('\\n');\n\nreturn [{\n  json: {\n    contact_id,\n    signal_id,\n    signal_severity,\n    email,\n    firstname,\n    lastname,\n    company,\n    blocker_description,\n    ticket_title: ticketTitle,\n    ticket_note: ticketNote,\n    ticket_priority: 'HIGH',\n    escalated_at: escalatedAt\n  }\n}];"
+      },
+      "id": "code-escalation-logic-onb5",
+      "name": "Code -- escalation logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simulate -- HubSpot ticket creation\n// Replace with real HubSpot ticket API when ready\n\nconst data = $(\"Code -- escalation logic\").first().json;\n\nreturn [{\n  json: {\n    ...data,\n    ticket_created: true,\n    ticket_id: 'ticket_sim_' + Date.now(),\n    simulated: true\n  }\n}];"
+      },
+      "id": "simulate-create-ticket-onb5",
+      "name": "Simulate -- create ticket",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "email": "={{ $(\"Code -- escalation logic\").item.json.email }}",
+        "additionalFields": {},
+        "options": {}
+      },
+      "id": "hubspot-update-contact-onb5",
+      "name": "HubSpot -- update contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [1200, 300],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"onb.ticket.escalate\",\n  \"contact_id\": \"{{ $(\"Code -- escalation logic\").item.json.contact_id }}\",\n  \"signal_id\": \"{{ $(\"Code -- escalation logic\").item.json.signal_id }}\",\n  \"ticket_created\": {{ $(\"Simulate -- create ticket\").item.json.ticket_created }},\n  \"ticket_id\": \"{{ $(\"Simulate -- create ticket\").item.json.ticket_id }}\",\n  \"ticket_priority\": \"{{ $(\"Code -- escalation logic\").item.json.ticket_priority }}\",\n  \"escalated_at\": {{ $(\"Code -- escalation logic\").item.json.escalated_at }},\n  \"simulated\": {{ $(\"Simulate -- create ticket\").item.json.simulated }}\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-onb5",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1440, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{"node": "HubSpot -- get contact", "type": "main", "index": 0}]]
+    },
+    "HubSpot -- get contact": {
+      "main": [[{"node": "Code -- escalation logic", "type": "main", "index": 0}]]
+    },
+    "Code -- escalation logic": {
+      "main": [[{"node": "Simulate -- create ticket", "type": "main", "index": 0}]]
+    },
+    "Simulate -- create ticket": {
+      "main": [[{"node": "HubSpot -- update contact", "type": "main", "index": 0}]]
+    },
+    "HubSpot -- update contact": {
+      "main": [[{"node": "Respond", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "status": "placeholder — no workflow built",
+  "name": "W-PRD-1 - Prd.friction.flag",
+  "action_id": "prd.friction.flag",
+  "stage": "PRD",
+  "n8n_workflow_id": "PLACEHOLDER_WEBHOOK_PRD_01",
+  "requires_hitl": false,
+  "enabled": false,
+  "description": "PLACEHOLDER: Flag contact experiencing product friction for CSM or product team review",
+  "note": "Build in Phase 3 — A3 track. Trigger: product usage signal indicating friction. CRM write: set xnoria_prd_friction_flag = true on contact."
+}

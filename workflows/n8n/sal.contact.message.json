@@ -1,0 +1,84 @@
+{
+  "name": "W-SAL-1 - Sal.contact.message",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sal-contact-message",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-sal-contact-message",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "sal-contact-message"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Exnoria - sal.contact.message\n// Send a pre-composed WhatsApp message to a SAL stage contact.\n// message_content is supplied by the cognitive layer — no decision logic here.\n\nconst body = $json.body;\n\nconst contact_id     = body.contact_id;\nconst phone          = (body.phone ?? '').replace(/[^\\d]/g, '');\nconst message_content = body.message_content ?? '';\nconst signal_id      = body.signal_id ?? '';\n\nif (!phone || !message_content) {\n  return [{ json: { contact_id, signal_id, sent: false, reason: phone ? 'no_message_content' : 'no_phone_number' } }];\n}\n\nconst whatsapp_payload = {\n  messaging_product: 'whatsapp',\n  to: phone,\n  type: 'text',\n  text: { body: message_content }\n};\n\nreturn [{ json: { contact_id, signal_id, phone, whatsapp_payload, sent: true } }];"
+      },
+      "id": "code-build-message-sal-1",
+      "name": "Code -- build message payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/{{ $env.META_PHONE_NUMBER_ID }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [{ "name": "Content-Type", "value": "application/json" }]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Code -- build message payload').item.json.whatsapp_payload) }}",
+        "options": {}
+      },
+      "id": "http-send-whatsapp-sal-1",
+      "name": "Meta WA -- send message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 300],
+      "credentials": {
+        "httpHeaderAuth": { "name": "Meta WhatsApp Token" }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'executed', action_id: 'sal.contact.message', contact_id: $('Code -- build message payload').item.json.contact_id, sent: true, channel: 'whatsapp' }) }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respond-sal-contact-message",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [960, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Code -- build message payload", "type": "main", "index": 0 }]]
+    },
+    "Code -- build message payload": {
+      "main": [[{ "node": "Meta WA -- send message", "type": "main", "index": 0 }]]
+    },
+    "Meta WA -- send message": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "tags": ["exnoria", "sal"]
+}

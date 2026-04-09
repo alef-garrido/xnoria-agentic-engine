@@ -14,10 +14,12 @@ import {
   X,
   ShieldCheck,
   ListChecks,
+  HeartPulse,
 } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/health", label: "Health", icon: HeartPulse },
   { href: "/hitl", label: "Approvals", icon: ShieldCheck },
   { href: "/allowlist", label: "Allowlist", icon: ListChecks },
   { href: "/activity", label: "Activity", icon: Activity },

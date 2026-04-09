@@ -60,3 +60,20 @@ export interface HITLPendingAction {
   created_at:  string;
 }
 
+// Phase 2 — Health metrics aggregation per stage
+export interface StageHealthMetrics {
+  stage:               JourneyStage;
+  period_days:         number;
+  total_actions:       number;
+  executed:            number;
+  rejected:            number;
+  pending_hitl:        number;
+  execution_rate:      number;        // executed / total_actions
+  hitl_total:          number;
+  hitl_approved:       number;
+  hitl_rejected:       number;
+  hitl_approval_rate:  number;
+  avg_review_minutes:  number | null;
+  top_rejection_code:  string | null;
+}
+

@@ -100,13 +100,30 @@ Use these terms consistently across all code, files, and database tables:
 | **Allowlist** | Actions currently permitted to execute (filter_action table) |
 | **Audit log** | Immutable record of every action attempted (filter_log table) |
 | **HITL** | Human-in-the-loop — action requiring human approval |
-## MVP Scope
-Three workflows targeting ACQ/SAL journey stage:
+## Current Scope (Phase 2.5 Complete)
+Eight journey stages with registered actions:
 | Action ID | Stage | Description |
 |---|---|---|
-| `acq.lead.score` | ACQ | Score incoming lead, apply CRM tags |
+| `acq.lead.engage` | ACQ | Send immediate WhatsApp acknowledgment to inbound lead |
+| `acq.lead.nurture` | ACQ | AI nurture conversation for out-of-hours contacts |
+| `acq.contact.outreach` | ACQ | Cold outreach via WhatsApp + email, sync to HubSpot |
 | `sal.sequence.enroll` | SAL | Enroll contact in sales sequence |
 | `sal.contact.prioritize` | SAL | Flag contact for immediate SDR follow-up |
+| `sal.contact.message` | SAL | Send pre-composed WhatsApp message to contact |
+| `onb.document.request` | ONB | Initiate document collection request |
+| `onb.document.validate` | ONB | Validate submitted document, update CRM |
+| `sup.ticket.escalate` | SUP | Escalate ticket to senior support |
+| `sup.contact.notify` | SUP | Send resolution update to contact (HITL) |
+| `com.content.publish` | COM | Publish scheduled content to social media |
+| `ret.contact.winback` | RET | Enroll contact in winback sequence (HITL) |
+| `ret.account.flag` | RET | Flag account for CSM review |
+
+Placeholder actions (disabled):
+| Action ID | Stage | Description |
+|---|---|---|
+| `prd.friction.flag` | PRD | Placeholder: Flag product friction |
+| `prd.adoption.nudge` | PRD | Placeholder: Send adoption nudge |
+| `exp.account.flag` | EXP | Placeholder: Flag expansion-ready account |
 ## Development Workflows
 ### Adding a New Action (End-to-End)
 1. **Build n8n workflow** in n8n UI at `localhost:5678`
@@ -165,6 +182,7 @@ Three workflows targeting ACQ/SAL journey stage:
 | `DASHBOARD_PORT` | dashboard | Dashboard port (default: 4000) |
 | `TELEGRAM_BOT_TOKEN` | cognitive | Telegram bot token |
 | `TELEGRAM_OPERATOR_CHAT_ID` | cognitive | Operator chat for HITL notifications |
+| `COM_CONTENT_SHEET_ID` | orchestration | Google Sheets ID for content calendar (COM workflow) |
 ### Running the Stack
 ```bash
 cp .env.example .env
@@ -190,13 +208,20 @@ Services:
 | A1 | Export working workflows | Version-control W1/W2/W3 in source control | ✅ Done |
 | B1 | HITL queue implementation | Approval flow, dashboard integration | ✅ Done |
 | C1 | Allowlist manager UI | Enable/disable actions from dashboard | ✅ Done |
-### Phase 2 — Journey Expansion (next)
+### Phase 2 — Journey Expansion ✅ COMPLETE
 **Goal:** SUP and RET workflows — where the money is (support escalation, churn prevention)
-| Track | Item | Description |
-|---|---|---|
-| A2 | SUP + RET workflows | Ticket escalation, churn winback |
-| B2 | Expand agent toolset | SUP + RET tools, stage-aware routing |
-| C2 | Journey health map | CX health per stage, visual overview |
+| Track | Item | Description | Status |
+|---|---|---|---|
+| A2 | SUP + RET workflows | Ticket escalation, churn winback | ✅ Done |
+| B2 | Expand agent toolset | SUP + RET tools, stage-aware routing | ✅ Done |
+| C2 | Journey health map | CX health per stage, visual overview | ✅ Done |
+### Phase 2.5 — Workflow Integration ✅ COMPLETE
+**Goal:** Integrate existing CX Engine workflows into filter architecture, full stage coverage
+| Track | Item | Description | Status |
+|---|---|---|---|
+| A2.5 | ACQ workflows | engage, nurture, outreach | ✅ Done |
+| B2.5 | SAL + ONB + COM | Additional stage coverage | ✅ Done |
+| C2.5 | PRD + EXP placeholders | Placeholder stubs for future phases | ✅ Done |
 ### Phase 3 — Intelligence Deepening
 **Goal:** Complete remaining journey stages + domain knowledge grounding
 | Track | Item | Description |
@@ -225,7 +250,8 @@ Services:
 - **A1 must ship before B2** — execution layer must exist before toolset expansion
 ### Dependency Chain
 Phase 1 (A1, B1, C1) ✅
-  └── Phase 2 (A2 → B2, C2) ← NEXT
-        └── Phase 3 (A3, B3, C3)
-              └── Phase 4 (A4, B4, C4)
-                    └── Phase 5 (Instance templating, Deployment guides)
+  └── Phase 2 (A2 → B2, C2) ✅
+        └── Phase 2.5 (A2.5 → B2.5, C2.5) ✅
+              └── Phase 3 (A3, B3, C3)
+                    └── Phase 4 (A4, B4, C4)
+                          └── Phase 5 (Instance templating, Deployment guides)

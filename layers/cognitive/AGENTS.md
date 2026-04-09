@@ -40,6 +40,15 @@ db/
 
 ## Key Concepts
 
+### Signal Vocabulary Bridge
+The cognitive layer receives `CXEvent` with optional Compass signal fields:
+- `signal_id` — Compass signal ID (e.g. `SUP_RES_01`)
+- `signal_severity` — 0–1 severity score
+- `cause_code` — e.g. `SUP-RES`
+- `interventions` — available intervention IDs
+
+These fields enable the agent to reason about severity and select appropriate actions.
+
 ### Reasoning Cycle
 1. CXEvent arrives from channel (Telegram)
 2. Memory retrieval: read recent history + semantic search

@@ -33,6 +33,38 @@ VALUES
     true,
     true,
     'Flag a contact for immediate SDR follow-up and send WhatsApp notification'
+  ),
+  (
+    'sup.ticket.escalate',
+    'SUP',
+    'sup-ticket-escalate',
+    false,
+    true,
+    'Escalate ticket to senior support queue'
+  ),
+  (
+    'sup.contact.notify',
+    'SUP',
+    'sup-contact-notify',
+    true,
+    true,
+    'Send resolution update to contact'
+  ),
+  (
+    'ret.contact.winback',
+    'RET',
+    'ret-contact-winback',
+    true,
+    true,
+    'Enroll contact in winback sequence'
+  ),
+  (
+    'ret.account.flag',
+    'RET',
+    'ret-account-flag',
+    false,
+    true,
+    'Flag account for CSM review'
   )
 ON CONFLICT (action_id) DO UPDATE
   SET

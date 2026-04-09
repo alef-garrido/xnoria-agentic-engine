@@ -108,6 +108,8 @@ services:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       TELEGRAM_OPERATOR_CHAT_ID: ${TELEGRAM_OPERATOR_CHAT_ID}
       DASHBOARD_URL: ${DASHBOARD_URL:-http://localhost:4000}
+      # COM_CONTENT_SHEET_ID — used by W-COM-1 · com.content.publish
+      COM_CONTENT_SHEET_ID: ${COM_CONTENT_SHEET_ID}
     ports:
       - "${FILTER_PORT:-3000}:3000"
     healthcheck:

@@ -1,0 +1,11 @@
+{
+  "status": "placeholder — no workflow built",
+  "name": "W-EXP-1 - Exp.account.flag",
+  "action_id": "exp.account.flag",
+  "stage": "EXP",
+  "n8n_workflow_id": "PLACEHOLDER_WEBHOOK_EXP_01",
+  "requires_hitl": false,
+  "enabled": false,
+  "description": "PLACEHOLDER: Flag account as expansion-ready for AE or CSM review based on usage signals",
+  "note": "Build in Phase 4 — A4 track. Internal flag only, reversible. CRM write: set xnoria_expansion_ready = true on company/account."
+}

@@ -1,0 +1,11 @@
+{
+  "status": "placeholder — no workflow built",
+  "name": "W-PRD-2 - Prd.adoption.nudge",
+  "action_id": "prd.adoption.nudge",
+  "stage": "PRD",
+  "n8n_workflow_id": "PLACEHOLDER_WEBHOOK_PRD_02",
+  "requires_hitl": true,
+  "enabled": false,
+  "description": "PLACEHOLDER: Send adoption nudge (tip, tutorial, or check-in) to contact showing low product engagement",
+  "note": "Build in Phase 3 — A3 track. Requires HITL: external comms to contact. Channel: WhatsApp or email."
+}

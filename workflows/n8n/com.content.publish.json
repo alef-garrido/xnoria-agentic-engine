@@ -109,6 +109,12 @@
         "contentType": "json",
         "bodyParametersUi": {
           "parameter": [{ "name": "text", "value": "={{ $json.Content }}" }]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "Bearer {{$env.THREADS_ACCESS_TOKEN}}" }
+          ]
         }
       },
       "id": "threads-post-com-1",

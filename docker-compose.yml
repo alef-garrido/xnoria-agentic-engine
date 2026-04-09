@@ -65,6 +65,8 @@ services:
       META_WA_TOKEN: ${META_WA_TOKEN}
       META_PHONE_NUMBER_ID: ${META_PHONE_NUMBER_ID}
       SDR_WHATSAPP_NUMBER: ${SDR_WHATSAPP_NUMBER}
+      # COM Publish variables
+      THREADS_ACCESS_TOKEN: ${THREADS_ACCESS_TOKEN}
       # -------------------------------------------------------------------------
       # HubSpot
       # W1 · acq.lead.score  W2 · sal.sequence.enroll  W3 · sal.contact.prioritize

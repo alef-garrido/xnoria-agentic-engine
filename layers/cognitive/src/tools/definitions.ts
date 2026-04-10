@@ -314,10 +314,103 @@ export const TOOLS: ToolDefinition[] = [
         required: ['message']
       }
     }
+  },
+
+  // ---------------------------------------------------------------------------
+  // Phase 3 B3 — Compass context retrieval (read-only, MCP routed)
+  // ---------------------------------------------------------------------------
+  {
+    type: 'function',
+    function: {
+      name: 'compass_get_signal',
+      description:
+        'Look up a Compass signal by ID to retrieve its severity, cause, indicators, and available interventions. ' +
+        'Use when you need to reason about which intervention to recommend for a specific signal. ' +
+        'Read-only — does not dispatch to filter.',
+      parameters: {
+        type: 'object',
+        properties: {
+          signal_id: { type: 'string', description: 'Compass signal ID, e.g. PRD_FRC_02' }
+        },
+        required: ['signal_id']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'compass_get_interventions',
+      description:
+        'Get the three intervention options (A/B/C) for a Compass signal. ' +
+        'Option A is typically the quick win, B is mid-level investment, C is strategic. ' +
+        'Use to inform which action payload to send. ' +
+        'Read-only — does not dispatch to filter.',
+      parameters: {
+        type: 'object',
+        properties: {
+          signal_id: { type: 'string', description: 'Compass signal ID' }
+        },
+        required: ['signal_id']
+      }
+    }
+  },
+
+  // ---------------------------------------------------------------------------
+  // Phase 3 B3 — PostHog context retrieval (read-only, MCP routed)
+  // requires posthog_distinct_id = contact_id mapping to be configured
+  // ---------------------------------------------------------------------------
+  {
+    type: 'function',
+    function: {
+      name: 'posthog_get_contact_events',
+      description:
+        'Retrieve recent PostHog events for a contact to confirm or contextualize a Compass signal. ' +
+        'Use before acting on PRD or ONB signals to verify live usage data. ' +
+        'Read-only — does not dispatch to filter. ' +
+        'NOTE: Requires PostHog distinct_id = contact_id mapping to be configured.',
+      parameters: {
+        type: 'object',
+        properties: {
+          contact_id:  { type: 'string', description: 'Contact ID (maps to PostHog distinct_id)' },
+          event_names: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Specific PostHog events to query, e.g. ["feature_used", "task_abandoned"]'
+          },
+          days: { type: 'number', description: 'Lookback window in days, default 30' }
+        },
+        required: ['contact_id', 'event_names']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'posthog_get_feature_adoption',
+      description:
+        'Get feature adoption metrics for a contact. ' +
+        'Maps to PRD_FRC indicators (feature_adoption_rate). ' +
+        'Use when signal_id is PRD_FRC_01 or PRD_FRC_02 to verify signal before acting. ' +
+        'Read-only — does not dispatch to filter. ' +
+        'NOTE: Requires PostHog distinct_id = contact_id mapping to be configured.',
+      parameters: {
+        type: 'object',
+        properties: {
+          contact_id:    { type: 'string', description: 'Contact ID (maps to PostHog distinct_id)' },
+          feature_names: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Feature names to check adoption for'
+          }
+        },
+        required: ['contact_id', 'feature_names']
+      }
+    }
   }
 ];
 
 // Map from LLM function name → filter action_id + stage
+// null = handled locally (reply) or routed to MCP client (context retrieval tools)
 export const TOOL_TO_ACTION: Record<string, { action_id: string; stage: string } | null> = {
   acq_lead_score:         { action_id: 'acq.lead.score',        stage: 'ACQ' },
   sal_sequence_enroll:    { action_id: 'sal.sequence.enroll',    stage: 'SAL' },
@@ -333,10 +426,22 @@ export const TOOL_TO_ACTION: Record<string, { action_id: string; stage: string }
   onb_contact_nudge:      { action_id: 'onb.contact.nudge',      stage: 'ONB' },
   onb_contact_assist:     { action_id: 'onb.contact.assist',     stage: 'ONB' },
   onb_ticket_escalate:    { action_id: 'onb.ticket.escalate',    stage: 'ONB' },
-  prd_contact_nudge:      { action_id: 'prd.contact.nudge',      stage: 'PRD' },
+  prd_contact_nudge:      { action_id: 'prd.adoption.nudge',      stage: 'PRD' },
   prd_contact_educate:    { action_id: 'prd.contact.educate',    stage: 'PRD' },
   prd_feedback_log:       { action_id: 'prd.feedback.log',       stage: 'PRD' },
 
-  reply:                  null  // handled locally, not dispatched to filter
+  // Local handler — not dispatched to filter
+  reply:                  null,
+
+  // Phase 3 B3 — Compass context retrieval (MCP routed, not filter dispatched)
+  compass_get_signal:           null,
+  compass_get_interventions:    null,
+
+  // Phase 3 B3 — PostHog context retrieval (MCP routed, optional)
+  // requires posthog_distinct_id = contact_id mapping to be configured
+  posthog_get_contact_events:   null,
+  posthog_get_feature_adoption: null,
+
+  // Phase 3 C3 — MemPalace contact memory (MCP routed)
 };
 

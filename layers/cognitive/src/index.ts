@@ -1,10 +1,11 @@
 // ==============================================================================
 // Exnoria · Cognitive layer · Entry point
-// Initializes DB, channels, and the event loop — runs persistently
+// Initializes DB, MCP clients, channels, and the event loop — runs persistently
 // ==============================================================================
 import { Pool }           from 'pg';
 import { initTelegram }   from './channels/telegram';
 import { createEventLoop } from './events/loop';
+import { initMcpClients, shutdownMcpClients } from './mcp/client';
 
 const db = new Pool({
   connectionString: process.env.POSTGRES_URL,
@@ -24,6 +25,11 @@ async function main() {
   await db.connect();
   console.log('[cognitive] Connected to Postgres');
 
+  // Initialize MCP clients (Compass, MemPalace, PostHog)
+  console.log('[cognitive] Initializing MCP clients...');
+  await initMcpClients();
+  console.log('[cognitive] MCP clients ready');
+
   // Create event loop
   const { processEvent } = createEventLoop(db);
 
@@ -33,6 +39,21 @@ async function main() {
   console.log('[cognitive] Event loop running — waiting for signals');
   console.log('================================================================\n');
 }
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('[cognitive] SIGTERM received — shutting down');
+  await shutdownMcpClients();
+  await db.end();
+  process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+  console.log('[cognitive] SIGINT received — shutting down');
+  await shutdownMcpClients();
+  await db.end();
+  process.exit(0);
+});
 
 main().catch((err) => {
   console.error('[cognitive] Fatal error:', err);

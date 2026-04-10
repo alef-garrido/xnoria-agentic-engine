@@ -100,7 +100,15 @@ Use these terms consistently across all code, files, and database tables:
 | **Allowlist** | Actions currently permitted to execute (filter_action table) |
 | **Audit log** | Immutable record of every action attempted (filter_log table) |
 | **HITL** | Human-in-the-loop — action requiring human approval |
-## Current Scope (Phase 3 A3 Complete)
+## Current Scope (Phase 3 Complete)
+
+Phase 3 delivers:
+- ✅ All 8 journey stages with n8n workflows
+- ✅ Engram persistent memory via MCP stdio transport
+- ✅ Token optimization (~3.5k tokens vs 15k+)
+- ✅ Stage-aware tool filtering (8 tools instead of 19+)
+- ✅ Memory persistence across container restarts
+
 Eight journey stages with registered actions:
 | Action ID | Stage | Description |
 |---|---|---|
@@ -231,8 +239,16 @@ Services:
 | Track | Item | Description | Status |
 |---|---|---|---|
 | A3 | ONB + PRD workflows | Onboarding drop-off, product friction | ✅ Done |
-| B3 | MCP context grounding | NotebookLM, domain knowledge base | |
-| C3 | Memory browser | Contact history, semantic search UI | |
+| B3 | MCP context grounding | PostHog, domain knowledge integration | ✅ Done |
+| C3 | Engram memory | Contact history, semantic search, cooldown logic | ✅ Done |
+
+**Phase 3 Summary:**
+- ✅ Full Stage Coverage: All 8 journey stages with n8n workflows
+- ✅ Engram Memory: Persistent contact memory via MCP stdio transport
+- ✅ Token Optimization: Reasoning reduced from ~15k to ~3.5k tokens
+- ✅ Stage-Aware Tool Filtering: Only 8 tools shown instead of 19+
+- ✅ Memory Persistence: Engram survives container restarts
+- ✅ Cooldown Logic: Avoids retrying same action within 48 hours
 
 #### B3 Tool Recommendations (for evaluation before scoping B3)
 
@@ -270,6 +286,6 @@ The following tools are recommended for evaluation before PRD and ONB signal det
 Phase 1 (A1, B1, C1) ✅
   └── Phase 2 (A2 → B2, C2) ✅
         └── Phase 2.5 (A2.5 → B2.5, C2.5) ✅
-              └── Phase 3 (A3, B3, C3)
+              └── Phase 3 (A3, B3, C3) ✅
                     └── Phase 4 (A4, B4, C4)
                           └── Phase 5 (Instance templating, Deployment guides)

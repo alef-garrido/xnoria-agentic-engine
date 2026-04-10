@@ -17,6 +17,12 @@ npm run build   # tsc
 npm run start   # node dist/index.js
 ```
 
+### Development Workflow
+When making changes to the cognitive layer:
+1. Run `npm run build` to compile TypeScript to `dist/`.
+2. Restart the `cognitive` container via `docker compose restart cognitive`.
+The container mounts the host `dist/` directory as a volume, allowing changes to be picked up without a full image rebuild.
+
 ## Directory Structure
 ```
 src/

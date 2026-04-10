@@ -123,6 +123,10 @@ services:
       - exnoria_internal
 
   # ---------------------------------------------------------------------------
+  # MemPalace — Contact memory & semantic search (C3)
+  # ---------------------------------------------------------------------------
+
+  # ---------------------------------------------------------------------------
   # Cognitive layer — OpenClaw agentic core (persistent runtime)
   # ---------------------------------------------------------------------------
   cognitive:
@@ -138,6 +142,9 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    volumes:
+      - engram_data:/root/.engram
+      - ./layers/cognitive/dist:/app/dist
     depends_on:
       filter:
         condition: service_healthy
@@ -149,12 +156,17 @@ services:
       FILTER_URL: http://filter:3000
       POSTGRES_URL: postgresql://exnoria:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      # Phase 3 B3 — MemPalace MCP sidecar (temporarily disabled)
+      # MEMPALACE_MCP_URL: http://mempalace:8080/sse
+      # Phase 3 B3 — PostHog MCP (optional — cognitive degrades gracefully if not set)
+      POSTHOG_AUTH_HEADER: ${POSTHOG_AUTH_HEADER:-Bearer phx_your_api_key_here}
+      POSTHOG_HOST: ${POSTHOG_HOST:-https://app.posthog.com}
+      POSTHOG_PROJECT_ID: ${POSTHOG_PROJECT_ID:-}
     networks:
       - exnoria_internal
 
   # ---------------------------------------------------------------------------
   # Dashboard — execution layer, CX Tool Dock
-  # Uncomment when packages/dashboard/ is ready
   # ---------------------------------------------------------------------------
   dashboard:
     build:
@@ -184,6 +196,8 @@ volumes:
   postgres_data:
     driver: local
   n8n_data:
+    driver: local
+  engram_data:
     driver: local
 
 # -----------------------------------------------------------------------------

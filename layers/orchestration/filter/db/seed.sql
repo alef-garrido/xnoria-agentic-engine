@@ -65,6 +65,54 @@ VALUES
     false,
     true,
     'Flag account for CSM review'
+  ),
+  (
+    'onb.contact.nudge',
+    'ONB',
+    'onb-contact-nudge',
+    false,
+    true,
+    'Send re-engagement nudge to stalled onboarding contact'
+  ),
+  (
+    'onb.contact.assist',
+    'ONB',
+    'onb-contact-assist',
+    true,
+    true,
+    'Offer white-glove CSM assist to blocked onboarding contact'
+  ),
+  (
+    'onb.ticket.escalate',
+    'ONB',
+    'onb-ticket-escalate',
+    false,
+    true,
+    'Escalate technical onboarding blocker to support queue'
+  ),
+  (
+    'prd.adoption.nudge',
+    'PRD',
+    'prd-adoption-nudge',
+    false,
+    true,
+    'Send adoption nudge to low-engagement contact'
+  ),
+  (
+    'prd.contact.educate',
+    'PRD',
+    'prd-contact-educate',
+    false,
+    true,
+    'Send feature education message to workaround-using contact'
+  ),
+  (
+    'prd.feedback.log',
+    'PRD',
+    'prd-feedback-log',
+    false,
+    true,
+    'Log enriched feature request to HubSpot product pipeline'
   )
 ON CONFLICT (action_id) DO UPDATE
   SET

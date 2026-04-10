@@ -3,12 +3,33 @@
 // Bidirectional: receives messages → emits CXEvents, sends replies
 // ==============================================================================
 import TelegramBot from 'node-telegram-bot-api';
-import { CXEvent } from '../shared/types';
+import { CXEvent, JourneyStage } from '../shared/types';
 
 let bot: TelegramBot | null = null;
 
 // Active chat IDs — maps contact_id to Telegram chat ID for replies
 const chatMap = new Map<string, number>();
+
+// Stage detection from natural language messages
+const STAGE_PATTERNS: Array<{ pattern: RegExp; stage: JourneyStage }> = [
+  { pattern: /\bACQ(?:uisition)?\b/i, stage: 'ACQ' },
+  { pattern: /\bSAL(?:es)?\b/i, stage: 'SAL' },
+  { pattern: /\bONB(?:oarding)?\b/i, stage: 'ONB' },
+  { pattern: /\bPRD(?:uct)?\b/i, stage: 'PRD' },
+  { pattern: /\bSUP(?:port)?\b/i, stage: 'SUP' },
+  { pattern: /\bCOM(?:munications?|munication)?\b/i, stage: 'COM' },
+  { pattern: /\bRET(?:ention)?\b/i, stage: 'RET' },
+  { pattern: /\bEXP(?:ansion)?\b/i, stage: 'EXP' },
+];
+
+function extractStage(text: string): JourneyStage | undefined {
+  for (const { pattern, stage } of STAGE_PATTERNS) {
+    if (pattern.test(text)) {
+      return stage;
+    }
+  }
+  return undefined;
+}
 
 export function initTelegram(
   onEvent: (event: CXEvent) => Promise<void>
@@ -32,9 +53,12 @@ export function initTelegram(
 
     console.log(`[telegram] Inbound from ${contactId}: ${msg.text}`);
 
+    const stage = extractStage(msg.text);
+
     const event: CXEvent = {
       contact_id: contactId,
       channel:    'telegram',
+      stage,      // May be undefined for non-structured messages
       input:      msg.text,
       meta: {
         chat_id:    chatId,

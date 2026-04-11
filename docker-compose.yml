@@ -14,6 +14,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./layers/orchestration/filter/db/migrations:/docker-entrypoint-initdb.d
+      - ./layers/cognitive/db/migrations:/docker-entrypoint-initdb.d/cognitive
     ports:
       - "5433:5432"                         # exposed for local DB inspection only
     healthcheck:
@@ -145,14 +146,18 @@ services:
     volumes:
       - engram_data:/root/.engram
       - ./layers/cognitive/dist:/app/dist
+      - ./backups:/backups  # bind mount — survives docker compose down -v
     depends_on:
       filter:
         condition: service_healthy
+    ports:
+      - "${COGNITIVE_MEMORY_PORT:-3001}:3001"
     environment:
       LLM_BASE_URL: ${LLM_BASE_URL:-https://generativelanguage.googleapis.com/v1beta/openai}
       LLM_API_KEY: ${LLM_API_KEY}
       LLM_MODEL: ${LLM_MODEL:-gemini-2.0-flash}
       EMBEDDING_API_KEY: ${EMBEDDING_API_KEY}
+      COGNITIVE_MEMORY_PORT: ${COGNITIVE_MEMORY_PORT:-3001}
       FILTER_URL: http://filter:3000
       POSTGRES_URL: postgresql://exnoria:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
@@ -182,8 +187,10 @@ services:
       ADMIN_PASSWORD: ${DASHBOARD_ADMIN_PASSWORD}
       AUTH_SECRET: ${DASHBOARD_AUTH_SECRET}
       FILTER_URL: http://filter:3000
+      COGNITIVE_MEMORY_URL: http://cognitive:3001
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./backups:/backups  # bind mount — survives docker compose down -v
     ports:
       - "${DASHBOARD_PORT:-4000}:4000"
     networks:
@@ -193,10 +200,18 @@ services:
 # Volumes — persistent data survives container restarts
 # -----------------------------------------------------------------------------
 volumes:
+  # CRITICAL VOLUMES — NEVER DESTROY WITH docker compose down -v IN PRODUCTION
+  # Contains irreplaceable customer data, audit logs, and CRM records
   postgres_data:
     driver: local
+  
+  # MANAGED VOLUMES — Can be recreated but contains operational configuration
+  # Export all workflows to source control before destroying
   n8n_data:
     driver: local
+  
+  # SEMI-EPHEMERAL — Contact memory can be regenerated but loses context
+  # Recoverable from filter_log but loses session-specific context
   engram_data:
     driver: local
 

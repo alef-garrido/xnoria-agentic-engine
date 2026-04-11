@@ -6,6 +6,7 @@ import { Pool }           from 'pg';
 import { initTelegram }   from './channels/telegram';
 import { createEventLoop } from './events/loop';
 import { initMcpClients, shutdownMcpClients } from './mcp/client';
+import * as memoryServer from './memory/server';
 
 const db = new Pool({
   connectionString: process.env.POSTGRES_URL,
@@ -29,6 +30,12 @@ async function main() {
   console.log('[cognitive] Initializing MCP clients...');
   await initMcpClients();
   console.log('[cognitive] MCP clients ready');
+
+  // Start memory search HTTP endpoint (if enabled)
+  const memoryPort = parseInt(process.env.COGNITIVE_MEMORY_PORT ?? '0', 10);
+  if (memoryPort > 0) {
+    memoryServer.startServer(db);
+  }
 
   // Create event loop
   const { processEvent } = createEventLoop(db);

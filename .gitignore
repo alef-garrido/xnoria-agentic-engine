@@ -428,3 +428,7 @@ layers/dashboard/.next/
 .opencode/
 .gemini/
 
+# Backup files — keep directory but not contents
+backups/*.sql
+backups/*.backup
+

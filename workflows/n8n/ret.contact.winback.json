@@ -143,7 +143,7 @@
       "main": [
         [
           {
-            "node": "Code -- winback logic",
+            "node": "Code -- build winback payload",
             "type": "main",
             "index": 0
           }

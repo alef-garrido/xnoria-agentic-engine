@@ -198,13 +198,16 @@ Placeholder actions (disabled):
 ### Running the Stack
 ```bash
 cp .env.example .env
-# Edit .env — set POSTGRES_PASSWORD, ANTHROPIC_API_KEY, N8N_ENCRYPTION_KEY
-docker compose up -d
+# Edit .env — set POSTGRES_PASSWORD, LLM_API_KEY, N8N_ENCRYPTION_KEY
+make up
 ```
+
 Services:
 - n8n: http://localhost:5678
 - Filter: http://localhost:3000/health
 - Dashboard: http://localhost:4000
+
+**Important:** Use `make` targets only — never run `docker compose down -v` directly. See "Critical Docker Safety Procedures" section below.
 ## Design Principles
 - **Separation of decision and execution** — cognitive decides, orchestration executes
 - **Security by architecture** — agent is not trusted, filter enforces permissions
@@ -212,6 +215,50 @@ Services:
 - **Modular and replaceable** — cognitive core is swappable, LLM provider changeable
 - **Domain language over technical language** — use signals, plans, actions, stages
 - **Explainability over magic** — trace every output back to its cause
+
+## Critical Docker Safety Procedures
+**🚨 NEVER use `docker compose down -v` directly — DATA LOSS IS PERMANENT**
+
+After incident 2026-04-10 where `docker compose down -v` destroyed all volumes including:
+- All filter_log audit history
+- All n8n workflows built in UI but not exported
+- All Engram contact memory and session history
+
+### Mandatory Command Wrapper
+Use `Makefile` targets ONLY — never raw `docker compose` commands:
+
+```bash
+# Safe operations (preserve data)
+make up        # Start services
+make down      # Stop services (SAFE — preserves volumes)
+make restart   # Restart services
+make rebuild   # Rebuild and restart
+
+# Data protection
+make export-all      # Backup filter_log and critical data
+make verify-workflows # Check all enabled workflows are exported
+
+# ⚠️  DESTRUCTIVE operations (LAST RESORT ONLY)
+make down-hard # ⚠️  NUCLEAR OPTION — completely wipes system
+```
+
+### Before Any Shutdown (Mandatory Checklist)
+1. **Export all n8n workflows:** Open n8n at `localhost:5678` → Settings → Export All Workflows → JSON → Save each to `workflows/n8n/{action_id}.json`
+2. **Verify exports:** Run `make verify-workflows` — must return all green
+3. **Backup audit log:** Run `make export-all` to backup filter_log
+4. **Only then:** Use `make down` (safe) or `make down-hard` (destructive — requires DESTROY confirmation)
+
+### The Rule: If It's Not In Source Control, It Doesn't Exist
+- Workflows built in n8n UI but never exported = LOST FOREVER on `docker compose down -v`
+- Audit log entries in filter_log = LOST FOREVER unless backed up
+- Engram contact memory = LOST FOREVER (recoverable context from filter_log but loses session state)
+
+### Volume Classification
+| Volume | Criticality | Content | Recovery |
+|---|---|---|---|
+| `postgres_data` | 🔴 CRITICAL | filter_log, CRM data | Manual backup only |
+| `n8n_data` | 🟡 MANAGED | Workflow configs | Must be exported to source control |
+| `engram_data` | 🟠 EPHEMERAL | Contact memory | Regeneratable but loses context |
 ## Full Roadmap
 ### Phase 1 — Hardening ✅ COMPLETE
 **Goal:** Close technical debt before any client touches the system
@@ -282,6 +329,21 @@ The following tools are recommended for evaluation before PRD and ONB signal det
 - **C1 (allowlist UI)** unblocks client handoff
 - **Phase 4 requires Phase 3 complete**
 - **A1 must ship before B2** — execution layer must exist before toolset expansion
+
+### Architecture Guardrails — Safety by Design
+
+The following measures are in place to prevent catastrophic data loss like 2026-04-10:
+
+| Layer | Measure | Purpose |
+|---|---|---|
+| **Layer 1** | Makefile wrapper | Prevents bare `docker compose down -v` usage, forces safe commands |
+| **Layer 2** | Volume classification | CRITICAL vs RECOVERABLE labels in docker-compose.yml |
+| **Layer 3** | Pre-flight checks | `make verify-workflows` ensures all workflows exported before shutdown |
+| **Layer 4** | Nightly backups | n8n scheduled workflow backs up filter_log to bind-mounted `./backups/` |
+| **Layer 5** | Source control rule | "If it's not in source control, it doesn't exist" enforced by process |
+
+See "Critical Docker Safety Procedures" section for detailed usage instructions.
+
 ### Dependency Chain
 Phase 1 (A1, B1, C1) ✅
   └── Phase 2 (A2 → B2, C2) ✅

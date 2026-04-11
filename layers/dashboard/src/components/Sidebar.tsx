@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   ListChecks,
   HeartPulse,
+  BrainCog,
 } from "lucide-react";
 
 const navItems = [
@@ -22,6 +23,7 @@ const navItems = [
   { href: "/health", label: "Health", icon: HeartPulse },
   { href: "/hitl", label: "Approvals", icon: ShieldCheck },
   { href: "/allowlist", label: "Allowlist", icon: ListChecks },
+  { href: "/memory", label: "Memory", icon: BrainCog },
   { href: "/activity", label: "Activity", icon: Activity },
   { href: "/sessions", label: "Sessions", icon: History },
   { href: "/system", label: "System", icon: Server },

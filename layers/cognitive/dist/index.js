@@ -57,7 +57,7 @@ async function main() {
     // Connect to Postgres
     await db.connect();
     console.log('[cognitive] Connected to Postgres');
-    // Initialize MCP clients (Compass, MemPalace, PostHog)
+    // Initialize MCP clients (Compass, Engram, PostHog)
     console.log('[cognitive] Initializing MCP clients...');
     await (0, client_1.initMcpClients)();
     console.log('[cognitive] MCP clients ready');

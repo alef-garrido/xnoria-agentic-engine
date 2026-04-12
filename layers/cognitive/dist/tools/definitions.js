@@ -406,5 +406,5 @@ exports.TOOL_TO_ACTION = {
     // requires posthog_distinct_id = contact_id mapping to be configured
     posthog_get_contact_events: null,
     posthog_get_feature_adoption: null,
-    // Phase 3 C3 — MemPalace contact memory (MCP routed)
+    // Phase 3 C3 — Engram contact memory (MCP routed)
 };

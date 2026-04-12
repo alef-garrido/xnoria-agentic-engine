@@ -12,7 +12,10 @@
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "webhookId": "onb-document-validate"
     },
     {
@@ -23,7 +26,10 @@
       "name": "Code -- normalize submission",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [480, 300]
+      "position": [
+        480,
+        300
+      ]
     },
     {
       "parameters": {
@@ -33,11 +39,18 @@
             {
               "id": "has-media-url",
               "leftValue": "={{ !!$json.media_url }}",
-              "operator": { "operation": "equals", "type": "boolean" },
+              "operator": {
+                "operation": "equals",
+                "type": "boolean"
+              },
               "rightValue": true
             }
           ],
-          "options": { "version": 2, "caseSensitive": true, "typeValidation": "strict" }
+          "options": {
+            "version": 2,
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          }
         },
         "options": {}
       },
@@ -45,7 +58,10 @@
       "name": "ValidateDoc",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [720, 300]
+      "position": [
+        720,
+        300
+      ]
     },
     {
       "parameters": {
@@ -56,9 +72,18 @@
         "additionalFields": {
           "customPropertiesUi": {
             "customPropertiesValues": [
-              { "property": "xnoria_document_status", "value": "approved" },
-              { "property": "xnoria_document_type", "value": "={{ $('Code -- normalize submission').item.json.document_type }}" },
-              { "property": "xnoria_document_validated_at", "value": "={{ new Date(new Date().setUTCHours(0,0,0,0)).getTime() }}" }
+              {
+                "property": "xnoria_document_status",
+                "value": "approved"
+              },
+              {
+                "property": "xnoria_document_type",
+                "value": "={{ $('Code -- normalize submission').item.json.document_type }}"
+              },
+              {
+                "property": "xnoria_document_validated_at",
+                "value": "={{ new Date(new Date().setUTCHours(0,0,0,0)).getTime() }}"
+              }
             ]
           }
         }
@@ -67,9 +92,14 @@
       "name": "HubSpot -- write approved",
       "type": "n8n-nodes-base.hubspot",
       "typeVersion": 2,
-      "position": [960, 180],
+      "position": [
+        960,
+        180
+      ],
       "credentials": {
-        "hubspotAppToken": { "name": "HubSpot Private App" }
+        "hubspotAppToken": {
+          "name": "HubSpot Private App"
+        }
       }
     },
     {
@@ -81,9 +111,18 @@
         "additionalFields": {
           "customPropertiesUi": {
             "customPropertiesValues": [
-              { "property": "xnoria_document_status", "value": "rejected" },
-              { "property": "xnoria_document_type", "value": "={{ $('Code -- normalize submission').item.json.document_type }}" },
-              { "property": "xnoria_document_validated_at", "value": "={{ new Date(new Date().setUTCHours(0,0,0,0)).getTime() }}" }
+              {
+                "property": "xnoria_document_status",
+                "value": "rejected"
+              },
+              {
+                "property": "xnoria_document_type",
+                "value": "={{ $('Code -- normalize submission').item.json.document_type }}"
+              },
+              {
+                "property": "xnoria_document_validated_at",
+                "value": "={{ new Date(new Date().setUTCHours(0,0,0,0)).getTime() }}"
+              }
             ]
           }
         }
@@ -92,54 +131,113 @@
       "name": "HubSpot -- write rejected",
       "type": "n8n-nodes-base.hubspot",
       "typeVersion": 2,
-      "position": [960, 420],
+      "position": [
+        960,
+        420
+      ],
       "credentials": {
-        "hubspotAppToken": { "name": "HubSpot Private App" }
+        "hubspotAppToken": {
+          "name": "HubSpot Private App"
+        }
       }
     },
     {
       "parameters": {
         "respondWith": "json",
         "responseBody": "={{ JSON.stringify({ status: 'executed', action_id: 'onb.document.validate', contact_id: $('Code -- normalize submission').item.json.contact_id, document_type: $('Code -- normalize submission').item.json.document_type, document_status: 'approved', crm_updated: true }) }}",
-        "options": { "responseCode": 200 }
+        "options": {
+          "responseCode": 200
+        }
       },
       "id": "respond-approved",
       "name": "Respond -- approved",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1200, 180]
+      "position": [
+        1200,
+        180
+      ]
     },
     {
       "parameters": {
         "respondWith": "json",
         "responseBody": "={{ JSON.stringify({ status: 'executed', action_id: 'onb.document.validate', contact_id: $('Code -- normalize submission').item.json.contact_id, document_type: $('Code -- normalize submission').item.json.document_type, document_status: 'rejected', crm_updated: true }) }}",
-        "options": { "responseCode": 200 }
+        "options": {
+          "responseCode": 200
+        }
       },
       "id": "respond-rejected",
       "name": "Respond -- rejected",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1200, 420]
+      "position": [
+        1200,
+        420
+      ]
     }
   ],
   "connections": {
     "Webhook": {
-      "main": [[{ "node": "Code -- normalize submission", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Code -- normalize submission",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Code -- normalize submission": {
-      "main": [[{ "node": "ValidateDoc", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "ValidateDoc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "ValidateDoc": {
       "main": [
-        [{ "node": "HubSpot -- write approved", "type": "main", "index": 0 }],
-        [{ "node": "HubSpot -- write rejected", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "HubSpot -- write approved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HubSpot -- write rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "HubSpot -- write approved": {
-      "main": [[{ "node": "Respond -- approved", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Respond -- approved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "HubSpot -- write rejected": {
-      "main": [[{ "node": "Respond -- rejected", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Respond -- rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -149,5 +247,6 @@
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all"
   },
-  "tags": ["exnoria", "onb"]
+  "id": "65b4828d65cf4b3a",
+  "active": true
 }

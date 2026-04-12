@@ -12,18 +12,24 @@
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "webhookId": "acq-lead-engage"
     },
     {
       "parameters": {
-        "jsCode": "// Exnoria - acq.lead.engage\n// Receive filter payload and build WhatsApp acknowledgment\n// contact_id, phone, name provided by cognitive layer — no fallback generation\n\nconst body = $json.body;\n\nconst contact_id = body.contact_id;\nconst phone      = body.phone      ?? '';\nconst name       = body.name       ?? 'Contact';\nconst signal_id  = body.signal_id  ?? '';\n\nif (!phone) {\n  return [{ json: { contact_id, signal_id, ack_sent: false, reason: 'no_phone_number' } }];\n}\n\nconst cleanPhone = phone.replace(/[^\\d]/g, '');\n\nconst message = [\n  'Hi ' + name + '!',\n  '',\n  'Thank you for reaching out. We have received your message and our team will be in touch shortly.',\n  '',\n  '— Exnoria'\n].join('\\n');\n\nconst whatsapp_payload = {\n  messaging_product: 'whatsapp',\n  to: cleanPhone,\n  type: 'text',\n  text: { body: message }\n};\n\nreturn [{ json: { contact_id, signal_id, phone: cleanPhone, name, whatsapp_payload, ack_sent: true } }];"
+        "jsCode": "// Exnoria - acq.lead.engage\n// Receive filter payload and build WhatsApp acknowledgment\n// contact_id, phone, name provided by cognitive layer \u2014 no fallback generation\n\nconst body = $json.body;\n\nconst contact_id = body.contact_id;\nconst phone      = body.phone      ?? '';\nconst name       = body.name       ?? 'Contact';\nconst signal_id  = body.signal_id  ?? '';\n\nif (!phone) {\n  return [{ json: { contact_id, signal_id, ack_sent: false, reason: 'no_phone_number' } }];\n}\n\nconst cleanPhone = phone.replace(/[^\\d]/g, '');\n\nconst message = [\n  'Hi ' + name + '!',\n  '',\n  'Thank you for reaching out. We have received your message and our team will be in touch shortly.',\n  '',\n  '\u2014 Exnoria'\n].join('\\n');\n\nconst whatsapp_payload = {\n  messaging_product: 'whatsapp',\n  to: cleanPhone,\n  type: 'text',\n  text: { body: message }\n};\n\nreturn [{ json: { contact_id, signal_id, phone: cleanPhone, name, whatsapp_payload, ack_sent: true } }];"
       },
       "id": "code-build-ack-w-acq-1",
       "name": "Code -- build ack payload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [480, 300]
+      "position": [
+        480,
+        300
+      ]
     },
     {
       "parameters": {
@@ -33,7 +39,12 @@
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
-          "parameters": [{ "name": "Content-Type", "value": "application/json" }]
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
         },
         "sendBody": true,
         "specifyBody": "json",
@@ -44,33 +55,67 @@
       "name": "Meta WA -- send ack",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [720, 300],
+      "position": [
+        720,
+        300
+      ],
       "credentials": {
-        "httpHeaderAuth": { "name": "Meta WhatsApp Token" }
+        "httpHeaderAuth": {
+          "name": "Meta WhatsApp Token"
+        }
       }
     },
     {
       "parameters": {
         "respondWith": "json",
         "responseBody": "={{ JSON.stringify({ status: 'executed', action_id: 'acq.lead.engage', contact_id: $('Code -- build ack payload').item.json.contact_id, ack_sent: true, channel: 'whatsapp' }) }}",
-        "options": { "responseCode": 200 }
+        "options": {
+          "responseCode": 200
+        }
       },
       "id": "respond-acq-lead-engage",
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [960, 300]
+      "position": [
+        960,
+        300
+      ]
     }
   ],
   "connections": {
     "Webhook": {
-      "main": [[{ "node": "Code -- build ack payload", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Code -- build ack payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Code -- build ack payload": {
-      "main": [[{ "node": "Meta WA -- send ack", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Meta WA -- send ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Meta WA -- send ack": {
-      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -80,5 +125,6 @@
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all"
   },
-  "tags": ["exnoria", "acq"]
+  "id": "22b850f2c4664360",
+  "active": true
 }

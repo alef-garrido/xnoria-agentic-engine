@@ -8,7 +8,7 @@ exports.reason = reason;
 // Exnoria · Cognitive · Agent reasoning loop
 //
 // Refactored to minimize token usage and eliminate multi-turn context overhead.
-// 1. Pre-processing: Deterministic context gathering (MemPalace, Compass, PostHog).
+// 1. Pre-processing: Deterministic context gathering (Compass, PostHog).
 // 2. LLM Call: Stage-aware tool selection and single decision turn.
 // 3. Action Dispatch: Filter execution.
 // 4. Memory Write: Recording the outcome.
@@ -46,28 +46,17 @@ async function gatherContext(db, event) {
     ]);
     const memories = await (0, embeddings_1.searchMemory)(db, event.contact_id, queryEmbedding);
     // Concurrent context retrieval with Promise.allSettled - either can fail independently
-    let mempalaceHistory = 'No stage history found.';
     let compassContext = 'No signal context.';
-    if (event.stage || event.signal_id) {
-        const [contactResult, signalResult] = await Promise.allSettled([
-            // Engram contact history (can fail gracefully)
-            event.stage ? (0, engram_1.getContactHistory)(event.contact_id, event.stage, event.signal_id ?? 'general', 3 // maxEntries
-            ) : Promise.resolve('No stage provided.'),
-            // Compass signal context (can fail gracefully)
-            event.signal_id ? (async () => {
-                try {
-                    const signal = await (0, client_1.executeMcpTool)('compass_get_signal', { signal_id: event.signal_id });
-                    return signal.success ? signal.content.substring(0, 500) : 'Signal lookup failed.';
-                }
-                catch (e) {
-                    return `Error: ${e}`;
-                }
-            })() : Promise.resolve('No signal ID provided.')
-        ]);
-        mempalaceHistory = contactResult.status === 'fulfilled' ? contactResult.value : 'Contact history unavailable.';
-        compassContext = signalResult.status === 'fulfilled' ? signalResult.value : 'Signal context unavailable.';
+    if (event.signal_id) {
+        try {
+            const signal = await (0, client_1.executeMcpTool)('compass_get_signal', { signal_id: event.signal_id });
+            compassContext = signal.success ? signal.content.substring(0, 500) : 'Signal lookup failed.';
+        }
+        catch (e) {
+            compassContext = `Error: ${e}`;
+        }
     }
-    return { history, memories, mempalaceHistory, compassContext };
+    return { history, memories, compassContext };
 }
 // ------------------------------------------------------------------------------
 // 2. LLM CALL: System Prompt & Decisions
@@ -82,7 +71,6 @@ CORE PRINCIPLE: You decide, the filter executes.
 CONTEXT:
 Contact: ${event.contact_id} | Stage: ${event.stage ?? 'Unknown'}
 Compass Signal: ${context.compassContext}
-MemPalace History: ${context.mempalaceHistory}
 Recent History: ${historyText}
 Semantic Memory: ${memoryText}
 

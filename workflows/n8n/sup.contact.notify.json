@@ -1,5 +1,5 @@
 {
-  "name": "W5 - Sup.contact.notify",
+  "name": "W-SUP-2 - Sup.contact.notify",
   "nodes": [
     {
       "parameters": {
@@ -12,7 +12,10 @@
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "webhookId": "sup-contact-notify"
     },
     {
@@ -26,7 +29,10 @@
       "name": "HubSpot -- get contact",
       "type": "n8n-nodes-base.hubspot",
       "typeVersion": 2,
-      "position": [480, 300],
+      "position": [
+        480,
+        300
+      ],
       "credentials": {
         "hubspotAppToken": {
           "id": "6qYgnpaGAK1L9USv",
@@ -42,7 +48,10 @@
       "name": "Code -- build message",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [720, 300]
+      "position": [
+        720,
+        300
+      ]
     },
     {
       "parameters": {
@@ -52,7 +61,12 @@
         "genericAuthType": "httpHeaderAuth",
         "sendHeaders": true,
         "headerParameters": {
-          "parameters": [{"name": "Content-Type", "value": "application/json"}]
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
         },
         "sendBody": true,
         "specifyBody": "json",
@@ -63,7 +77,10 @@
       "name": "Meta WA -- notify contact",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [960, 300],
+      "position": [
+        960,
+        300
+      ],
       "credentials": {
         "httpHeaderAuth": {
           "name": "Meta WhatsApp Token"
@@ -81,7 +98,10 @@
       "name": "HubSpot -- update contact",
       "type": "n8n-nodes-base.hubspot",
       "typeVersion": 2,
-      "position": [1200, 300],
+      "position": [
+        1200,
+        300
+      ],
       "credentials": {
         "hubspotAppToken": {
           "id": "6qYgnpaGAK1L9USv",
@@ -101,24 +121,67 @@
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1440, 300]
+      "position": [
+        1440,
+        300
+      ]
     }
   ],
   "connections": {
     "Webhook": {
-      "main": [[{"node": "HubSpot -- get contact", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "HubSpot -- get contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "HubSpot -- get contact": {
-      "main": [[{"node": "Code -- build message", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Code -- build message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Code -- build message": {
-      "main": [[{"node": "Meta WA -- notify contact", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Meta WA -- notify contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Meta WA -- notify contact": {
-      "main": [[{"node": "HubSpot -- update contact", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "HubSpot -- update contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "HubSpot -- update contact": {
-      "main": [[{"node": "Respond", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -127,5 +190,7 @@
     "saveExecutionProgress": true,
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all"
-  }
+  },
+  "id": "5fb6c8f981d942a1",
+  "active": true
 }

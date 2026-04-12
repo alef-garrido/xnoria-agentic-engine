@@ -442,6 +442,6 @@ export const TOOL_TO_ACTION: Record<string, { action_id: string; stage: string }
   posthog_get_contact_events:   null,
   posthog_get_feature_adoption: null,
 
-  // Phase 3 C3 — MemPalace contact memory (MCP routed)
+  // Phase 3 C3 — Engram contact memory (MCP routed)
 };
 

@@ -8,15 +8,13 @@ exports.shutdownMcpClients = shutdownMcpClients;
 // Exnoria · Cognitive · MCP Client
 // Multi-transport dispatcher for context retrieval tools
 //
-// Four transport types:
-//   - Compass:   local stdio MCP process
-//   - Engram:    local stdio MCP process (Phase 3 C3 — contact memory)
-//   - MemPalace: Docker sidecar over HTTP/SSE (being deprecated)
-//   - PostHog:   external API via PostHog MCP server (optional — degrades gracefully)
+// Three transport types:
+//   - Compass: local stdio MCP process
+//   - Engram:  local stdio MCP process (Phase 3 — contact memory)
+//   - PostHog: external API via PostHog MCP server (optional — degrades gracefully)
 // ==============================================================================
 const index_js_1 = require("@modelcontextprotocol/sdk/client/index.js");
 const stdio_js_1 = require("@modelcontextprotocol/sdk/client/stdio.js");
-const sse_js_1 = require("@modelcontextprotocol/sdk/client/sse.js");
 // ---------------------------------------------------------------------------
 // Tool → server routing table
 // ---------------------------------------------------------------------------
@@ -28,8 +26,8 @@ const TOOL_SERVER_MAP = {
     compass_get_domain_signals: 'compass',
     compass_get_critical_signals: 'compass',
     // Engram tools → local stdio (Phase 3 C3 — contact memory)
-    mempalace_search: 'engram',
-    mempalace_add_drawer: 'engram',
+    engram_search: 'engram',
+    engram_add: 'engram',
     // PostHog tools → external API (optional)
     // requires posthog_distinct_id = contact_id mapping to be configured
     posthog_get_contact_events: 'posthog',
@@ -70,25 +68,6 @@ async function initMcpClients() {
     catch (err) {
         console.warn('[mcp-client] Engram MCP failed to connect (optional, continuing):', err);
         servers.set('engram', { client: null, connected: false, optional: true });
-    }
-    // --- MemPalace: sidecar over HTTP/SSE ---
-    const mempalaceUrl = process.env.MEMPALACE_MCP_URL;
-    if (!mempalaceUrl) {
-        console.warn('[mcp-client] MEMPALACE_MCP_URL not set — MemPalace tools disabled');
-        servers.set('mempalace', { client: null, connected: false, optional: true });
-    }
-    else {
-        try {
-            const mempalaceTransport = new sse_js_1.SSEClientTransport(new URL(mempalaceUrl));
-            const mempalaceClient = new index_js_1.Client({ name: 'exnoria-cognitive', version: '1.0.0' });
-            await mempalaceClient.connect(mempalaceTransport);
-            servers.set('mempalace', { client: mempalaceClient, connected: true, optional: false });
-            console.log(`[mcp-client] MemPalace MCF connected via SSE (${mempalaceUrl})`);
-        }
-        catch (err) {
-            console.warn('[mcp-client] MemPalace MCP failed to connect via SSE (optional, continuing):', err);
-            servers.set('mempalace', { client: null, connected: false, optional: true });
-        }
     }
     // --- PostHog: external API (optional — degrades gracefully) ---
     const posthogApiKey = process.env.POSTHOG_API_KEY;

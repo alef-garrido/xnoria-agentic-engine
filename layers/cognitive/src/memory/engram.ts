@@ -1,6 +1,6 @@
 // ==============================================================================
 // Exnoria · Cognitive · Engram Memory Helpers
-// Phase 3 C3 — Contact memory via Engram MCP (replaces MemPalace)
+// Phase 3 C3 — Contact memory via Engram MCP
 //
 // Isolates Engram-specific logic from the reasoning loop.
 // All functions are fire-and-forget — memory read/write failure must never block reasoning.

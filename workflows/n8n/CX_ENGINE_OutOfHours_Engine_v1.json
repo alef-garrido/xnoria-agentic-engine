@@ -1,7 +1,7 @@
 {
   "updatedAt": "2026-02-23T05:50:41.617Z",
   "createdAt": "2026-02-20T23:30:54.314Z",
-  "id": "CfCYCNye9XdY1mz2",
+  "id": "5321149785cb489f",
   "name": "cxEngine_WF_OutOfHours_Engine_v1",
   "description": null,
   "active": true,
@@ -87,7 +87,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "Hola, gracias por escribirnos fuera de horario. ¿En qué podemos ayudarte? Mientras tanto, cuéntanos tu nombre.",
+        "text": "Hola, gracias por escribirnos fuera de horario. \u00bfEn qu\u00e9 podemos ayudarte? Mientras tanto, cu\u00e9ntanos tu nombre.",
         "options": {}
       },
       "id": "5",
@@ -307,14 +307,6 @@
       }
     }
   ],
-  "tags": [
-    {
-      "updatedAt": "2026-02-18T23:40:01.905Z",
-      "createdAt": "2026-02-18T23:40:01.905Z",
-      "id": "yo0Xc2h0aMzs7tfI",
-      "name": "xnoria-mvp-26"
-    }
-  ],
   "activeVersion": {
     "updatedAt": "2026-02-23T05:33:03.943Z",
     "createdAt": "2026-02-23T05:33:03.943Z",
@@ -401,7 +393,7 @@
       {
         "parameters": {
           "promptType": "define",
-          "text": "Hola, gracias por escribirnos fuera de horario. ¿En qué podemos ayudarte? Mientras tanto, cuéntanos tu nombre.",
+          "text": "Hola, gracias por escribirnos fuera de horario. \u00bfEn qu\u00e9 podemos ayudarte? Mientras tanto, cu\u00e9ntanos tu nombre.",
           "options": {}
         },
         "id": "5",

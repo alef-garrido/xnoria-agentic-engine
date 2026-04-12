@@ -12,7 +12,10 @@
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "webhookId": "onb-ticket-escalate"
     },
     {
@@ -26,7 +29,10 @@
       "name": "HubSpot -- get contact",
       "type": "n8n-nodes-base.hubspot",
       "typeVersion": 2,
-      "position": [480, 300],
+      "position": [
+        480,
+        300
+      ],
       "credentials": {
         "hubspotAppToken": {
           "id": "6qYgnpaGAK1L9USv",
@@ -36,13 +42,16 @@
     },
     {
       "parameters": {
-        "jsCode": "// Exnoria - onb.ticket.escalate\n// Build HubSpot ticket payload for technical blocker escalation\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, signal_id, signal_severity } = webhook;\nconst blocker_description = webhook.payload?.blocker_description ?? webhook.blocker_description ?? 'No description provided';\n\nconst firstname = contact.properties?.firstname?.value ?? 'Contact';\nconst lastname  = contact.properties?.lastname?.value  ?? '';\nconst email     = contact.properties?.email?.value     ?? '';\nconst company   = contact.properties?.company?.value   ?? '';\n\nconst escalatedAt = new Date(new Date().setUTCHours(0,0,0,0)).getTime();\n\nconst ticketTitle = 'Technical onboarding blocker — ' + firstname + ' ' + lastname + (company ? ' (' + company + ')' : '');\n\nconst ticketNote = [\n  'Escalated by Xnoria — signal ' + signal_id + ', severity ' + signal_severity,\n  '',\n  'Blocker description:',\n  blocker_description,\n  '',\n  'Contact: ' + email,\n  'Contact ID: ' + contact_id\n].join('\\n');\n\nreturn [{\n  json: {\n    contact_id,\n    signal_id,\n    signal_severity,\n    email,\n    firstname,\n    lastname,\n    company,\n    blocker_description,\n    ticket_title: ticketTitle,\n    ticket_note: ticketNote,\n    ticket_priority: 'HIGH',\n    escalated_at: escalatedAt\n  }\n}];"
+        "jsCode": "// Exnoria - onb.ticket.escalate\n// Build HubSpot ticket payload for technical blocker escalation\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, signal_id, signal_severity } = webhook;\nconst blocker_description = webhook.payload?.blocker_description ?? webhook.blocker_description ?? 'No description provided';\n\nconst firstname = contact.properties?.firstname?.value ?? 'Contact';\nconst lastname  = contact.properties?.lastname?.value  ?? '';\nconst email     = contact.properties?.email?.value     ?? '';\nconst company   = contact.properties?.company?.value   ?? '';\n\nconst escalatedAt = new Date(new Date().setUTCHours(0,0,0,0)).getTime();\n\nconst ticketTitle = 'Technical onboarding blocker \u2014 ' + firstname + ' ' + lastname + (company ? ' (' + company + ')' : '');\n\nconst ticketNote = [\n  'Escalated by Xnoria \u2014 signal ' + signal_id + ', severity ' + signal_severity,\n  '',\n  'Blocker description:',\n  blocker_description,\n  '',\n  'Contact: ' + email,\n  'Contact ID: ' + contact_id\n].join('\\n');\n\nreturn [{\n  json: {\n    contact_id,\n    signal_id,\n    signal_severity,\n    email,\n    firstname,\n    lastname,\n    company,\n    blocker_description,\n    ticket_title: ticketTitle,\n    ticket_note: ticketNote,\n    ticket_priority: 'HIGH',\n    escalated_at: escalatedAt\n  }\n}];"
       },
       "id": "code-escalation-logic-onb5",
       "name": "Code -- escalation logic",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [720, 300]
+      "position": [
+        720,
+        300
+      ]
     },
     {
       "parameters": {
@@ -52,7 +61,10 @@
       "name": "Simulate -- create ticket",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [960, 300]
+      "position": [
+        960,
+        300
+      ]
     },
     {
       "parameters": {
@@ -65,7 +77,10 @@
       "name": "HubSpot -- update contact",
       "type": "n8n-nodes-base.hubspot",
       "typeVersion": 2,
-      "position": [1200, 300],
+      "position": [
+        1200,
+        300
+      ],
       "credentials": {
         "hubspotAppToken": {
           "id": "6qYgnpaGAK1L9USv",
@@ -85,24 +100,67 @@
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1440, 300]
+      "position": [
+        1440,
+        300
+      ]
     }
   ],
   "connections": {
     "Webhook": {
-      "main": [[{"node": "HubSpot -- get contact", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "HubSpot -- get contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "HubSpot -- get contact": {
-      "main": [[{"node": "Code -- escalation logic", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Code -- escalation logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Code -- escalation logic": {
-      "main": [[{"node": "Simulate -- create ticket", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Simulate -- create ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Simulate -- create ticket": {
-      "main": [[{"node": "HubSpot -- update contact", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "HubSpot -- update contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "HubSpot -- update contact": {
-      "main": [[{"node": "Respond", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -111,5 +169,7 @@
     "saveExecutionProgress": true,
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all"
-  }
+  },
+  "id": "d533640528264010",
+  "active": true
 }

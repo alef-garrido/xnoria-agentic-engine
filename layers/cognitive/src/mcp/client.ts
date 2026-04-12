@@ -2,11 +2,10 @@
 // Exnoria · Cognitive · MCP Client
 // Multi-transport dispatcher for context retrieval tools
 //
-// Four transport types:
-//   - Compass:   local stdio MCP process
-//   - Engram:    local stdio MCP process (Phase 3 C3 — contact memory)
-//   - MemPalace: Docker sidecar over HTTP/SSE (being deprecated)
-//   - PostHog:   external API via PostHog MCP server (optional — degrades gracefully)
+// Three transport types:
+//   - Compass: local stdio MCP process
+//   - Engram:  local stdio MCP process (Phase 3 — contact memory)
+//   - PostHog: external API via PostHog MCP server (optional — degrades gracefully)
 // ==============================================================================
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
@@ -24,8 +23,8 @@ const TOOL_SERVER_MAP: Record<string, string> = {
   compass_get_critical_signals: 'compass',
 
   // Engram tools → local stdio (Phase 3 C3 — contact memory)
-  mempalace_search:             'engram',
-  mempalace_add_drawer:         'engram',
+  engram_search:  'engram',
+  engram_add:     'engram',
 
   // PostHog tools → external API (optional)
   // requires posthog_distinct_id = contact_id mapping to be configured
@@ -79,27 +78,7 @@ export async function initMcpClients(): Promise<void> {
      servers.set('engram', { client: null as unknown as Client, connected: false, optional: true });
    }
 
-  // --- MemPalace: sidecar over HTTP/SSE ---
-  const mempalaceUrl = process.env.MEMPALACE_MCP_URL;
-  if (!mempalaceUrl) {
-    console.warn('[mcp-client] MEMPALACE_MCP_URL not set — MemPalace tools disabled');
-    servers.set('mempalace', { client: null as unknown as Client, connected: false, optional: true });
-  } else {
-    try {
-      const mempalaceTransport = new SSEClientTransport(
-        new URL(mempalaceUrl)
-      );
-      const mempalaceClient = new Client({ name: 'exnoria-cognitive', version: '1.0.0' });
-      await mempalaceClient.connect(mempalaceTransport);
-      servers.set('mempalace', { client: mempalaceClient, connected: true, optional: false });
-      console.log(`[mcp-client] MemPalace MCF connected via SSE (${mempalaceUrl})`);
-   } catch (err) {
-     console.warn('[mcp-client] MemPalace MCP failed to connect via SSE (optional, continuing):', err);
-     servers.set('mempalace', { client: null as unknown as Client, connected: false, optional: true });
-   }
-  }
-
-  // --- PostHog: external API (optional — degrades gracefully) ---
+   // --- PostHog: external API (optional — degrades gracefully) ---
   const posthogApiKey = process.env.POSTHOG_API_KEY;
   if (!posthogApiKey) {
     console.warn('[mcp-client] POSTHOG_API_KEY not set — PostHog tools disabled');

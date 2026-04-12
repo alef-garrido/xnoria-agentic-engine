@@ -1,5 +1,5 @@
 {
-  "name": "W4 - Sup.ticket.escalate",
+  "name": "W-SUP-1 - Sup.ticket.escalate",
   "nodes": [
     {
       "parameters": {
@@ -12,7 +12,10 @@
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "webhookId": "sup-ticket-escalate"
     },
     {
@@ -26,7 +29,10 @@
       "name": "HubSpot -- get contact",
       "type": "n8n-nodes-base.hubspot",
       "typeVersion": 2,
-      "position": [480, 300],
+      "position": [
+        480,
+        300
+      ],
       "credentials": {
         "hubspotAppToken": {
           "id": "6qYgnpaGAK1L9USv",
@@ -42,7 +48,10 @@
       "name": "Code -- escalation logic",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [720, 300]
+      "position": [
+        720,
+        300
+      ]
     },
     {
       "parameters": {
@@ -52,7 +61,10 @@
       "name": "Simulate -- create task",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [960, 300]
+      "position": [
+        960,
+        300
+      ]
     },
     {
       "parameters": {
@@ -65,7 +77,10 @@
       "name": "HubSpot -- update contact",
       "type": "n8n-nodes-base.hubspot",
       "typeVersion": 2,
-      "position": [1200, 300],
+      "position": [
+        1200,
+        300
+      ],
       "credentials": {
         "hubspotAppToken": {
           "id": "6qYgnpaGAK1L9USv",
@@ -85,24 +100,67 @@
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1440, 300]
+      "position": [
+        1440,
+        300
+      ]
     }
   ],
   "connections": {
     "Webhook": {
-      "main": [[{"node": "HubSpot -- get contact", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "HubSpot -- get contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "HubSpot -- get contact": {
-      "main": [[{"node": "Code -- escalation logic", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Code -- escalation logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Code -- escalation logic": {
-      "main": [[{"node": "Simulate -- create task", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Simulate -- create task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Simulate -- create task": {
-      "main": [[{"node": "HubSpot -- update contact", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "HubSpot -- update contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "HubSpot -- update contact": {
-      "main": [[{"node": "Respond", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -111,5 +169,7 @@
     "saveExecutionProgress": true,
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all"
-  }
+  },
+  "id": "3d991cbbbe8942af",
+  "active": true
 }

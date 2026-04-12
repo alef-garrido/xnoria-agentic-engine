@@ -12,20 +12,26 @@
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "webhookId": "acq-lead-nurture"
     },
     {
       "parameters": {
         "promptType": "define",
-        "text": "={{ $json.body.message_context ?? 'Hola, gracias por escribirnos. ¿En qué podemos ayudarte? Mientras tanto, cuéntanos tu nombre.' }}",
+        "text": "={{ $json.body.message_context ?? 'Hola, gracias por escribirnos. \u00bfEn qu\u00e9 podemos ayudarte? Mientras tanto, cu\u00e9ntanos tu nombre.' }}",
         "options": {}
       },
       "id": "ai-nurture-bot",
       "name": "AINurtureBot",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
-      "position": [480, 300]
+      "position": [
+        480,
+        300
+      ]
     },
     {
       "parameters": {
@@ -35,7 +41,10 @@
       "name": "GeminiModel",
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
-      "position": [480, 480]
+      "position": [
+        480,
+        480
+      ]
     },
     {
       "parameters": {},
@@ -43,33 +52,73 @@
       "name": "SimpleMemory",
       "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "typeVersion": 1.3,
-      "position": [640, 480]
+      "position": [
+        640,
+        480
+      ]
     },
     {
       "parameters": {
         "respondWith": "json",
         "responseBody": "={{ JSON.stringify({ status: 'executed', action_id: 'acq.lead.nurture', contact_id: $json.body.contact_id, nurture_response: $('AINurtureBot').item.json.output }) }}",
-        "options": { "responseCode": 200 }
+        "options": {
+          "responseCode": 200
+        }
       },
       "id": "respond-acq-lead-nurture",
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [720, 300]
+      "position": [
+        720,
+        300
+      ]
     }
   ],
   "connections": {
     "Webhook": {
-      "main": [[{ "node": "AINurtureBot", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "AINurtureBot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "AINurtureBot": {
-      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "GeminiModel": {
-      "ai_languageModel": [[{ "node": "AINurtureBot", "type": "ai_languageModel", "index": 0 }]]
+      "ai_languageModel": [
+        [
+          {
+            "node": "AINurtureBot",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
     },
     "SimpleMemory": {
-      "ai_memory": [[{ "node": "AINurtureBot", "type": "ai_memory", "index": 0 }]]
+      "ai_memory": [
+        [
+          {
+            "node": "AINurtureBot",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -79,5 +128,6 @@
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all"
   },
-  "tags": ["exnoria", "acq"]
+  "id": "85bb4409ae5c4171",
+  "active": true
 }

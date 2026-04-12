@@ -12,7 +12,10 @@
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "webhookId": "onb-document-request"
     },
     {
@@ -26,9 +29,14 @@
       "name": "HubSpot -- get contact",
       "type": "n8n-nodes-base.hubspot",
       "typeVersion": 2,
-      "position": [480, 300],
+      "position": [
+        480,
+        300
+      ],
       "credentials": {
-        "hubspotAppToken": { "name": "HubSpot Private App" }
+        "hubspotAppToken": {
+          "name": "HubSpot Private App"
+        }
       }
     },
     {
@@ -39,14 +47,17 @@
       "name": "Code -- build doc request",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [720, 300]
+      "position": [
+        720,
+        300
+      ]
     },
     {
       "parameters": {
         "authentication": "appToken",
         "resource": "task",
         "operation": "create",
-        "taskTitle": "=Document Request: {{ $json.document_type }} — {{ $json.firstname }}",
+        "taskTitle": "=Document Request: {{ $json.document_type }} \u2014 {{ $json.firstname }}",
         "taskBody": "=Please collect the following document from this contact: {{ $json.document_type }}. Contact email: {{ $json.email }}",
         "taskStatus": "NOT_STARTED",
         "taskPriority": "MEDIUM",
@@ -59,36 +70,78 @@
       "name": "HubSpot -- create task",
       "type": "n8n-nodes-base.hubspot",
       "typeVersion": 2,
-      "position": [960, 300],
+      "position": [
+        960,
+        300
+      ],
       "credentials": {
-        "hubspotAppToken": { "name": "HubSpot Private App" }
+        "hubspotAppToken": {
+          "name": "HubSpot Private App"
+        }
       }
     },
     {
       "parameters": {
         "respondWith": "json",
         "responseBody": "={{ JSON.stringify({ status: 'executed', action_id: 'onb.document.request', contact_id: $('Code -- build doc request').item.json.contact_id, document_type: $('Code -- build doc request').item.json.document_type, task_created: true, requested_at: $('Code -- build doc request').item.json.requested_at }) }}",
-        "options": { "responseCode": 200 }
+        "options": {
+          "responseCode": 200
+        }
       },
       "id": "respond-onb-document-request",
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1200, 300]
+      "position": [
+        1200,
+        300
+      ]
     }
   ],
   "connections": {
     "Webhook": {
-      "main": [[{ "node": "HubSpot -- get contact", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "HubSpot -- get contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "HubSpot -- get contact": {
-      "main": [[{ "node": "Code -- build doc request", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Code -- build doc request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Code -- build doc request": {
-      "main": [[{ "node": "HubSpot -- create task", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "HubSpot -- create task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "HubSpot -- create task": {
-      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -98,5 +151,6 @@
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all"
   },
-  "tags": ["exnoria", "onb"]
+  "id": "a935e30461fb44b8",
+  "active": true
 }

@@ -1,10 +1,10 @@
 {
   "updatedAt": "2026-02-23T05:13:59.443Z",
   "createdAt": "2026-02-20T23:31:50.686Z",
-  "id": "gDcGMPBTljpzwuqS",
+  "id": "e9c1341170a5449c",
   "name": "cxEngine_WF_Email_Decision_Engine_v1",
   "description": null,
-  "active": false,
+  "active": true,
   "isArchived": false,
   "nodes": [
     {
@@ -785,14 +785,6 @@
           }
         ]
       }
-    }
-  ],
-  "tags": [
-    {
-      "updatedAt": "2026-02-18T23:40:01.905Z",
-      "createdAt": "2026-02-18T23:40:01.905Z",
-      "id": "yo0Xc2h0aMzs7tfI",
-      "name": "xnoria-mvp-26"
     }
   ],
   "activeVersion": null

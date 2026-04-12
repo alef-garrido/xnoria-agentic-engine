@@ -1,5 +1,5 @@
 {
-  "name": "W6 - Ret.contact.winback",
+  "name": "W-RET-1 - Ret.contact.winback",
   "nodes": [
     {
       "parameters": {
@@ -190,5 +190,7 @@
     "saveExecutionProgress": true,
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all"
-  }
+  },
+  "id": "6d96962262f64a5a",
+  "active": true
 }

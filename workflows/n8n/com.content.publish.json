@@ -4,14 +4,22 @@
     {
       "parameters": {
         "rule": {
-          "interval": [{ "field": "hour", "value": 9 }]
+          "interval": [
+            {
+              "field": "hour",
+              "value": 9
+            }
+          ]
         }
       },
       "id": "schedule-trigger-com-1",
       "name": "Schedule Trigger",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.1,
-      "position": [100, 200]
+      "position": [
+        100,
+        200
+      ]
     },
     {
       "parameters": {
@@ -23,44 +31,75 @@
       "name": "Filter Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [100, 400],
+      "position": [
+        100,
+        400
+      ],
       "webhookId": "com-content-publish"
     },
     {
       "parameters": {
-        "jsCode": "// Exnoria - com.content.publish\n// Load content calendar config from env.\n// Runs on schedule OR on-demand from filter dispatch.\n// EXCEPTION: This workflow retains its autonomous schedule — content publishing is time-based.\n// The filter webhook is a secondary entry point for on-demand cognitive triggers.\n\nreturn [{\n  json: {\n    spreadsheetId: $env.COM_CONTENT_SHEET_ID,\n    sheetName: 'ContentCalendar',\n    timezone: 'America/Mexico_City'\n  }\n}];"
+        "jsCode": "// Exnoria - com.content.publish\n// Load content calendar config from env.\n// Runs on schedule OR on-demand from filter dispatch.\n// EXCEPTION: This workflow retains its autonomous schedule \u2014 content publishing is time-based.\n// The filter webhook is a secondary entry point for on-demand cognitive triggers.\n\nreturn [{\n  json: {\n    spreadsheetId: $env.COM_CONTENT_SHEET_ID,\n    sheetName: 'ContentCalendar',\n    timezone: 'America/Mexico_City'\n  }\n}];"
       },
       "id": "config-loader-com-1",
       "name": "ConfigLoader",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [340, 300]
+      "position": [
+        340,
+        300
+      ]
     },
     {
       "parameters": {
-        "documentId": { "__rl": true, "value": "={{ $json.spreadsheetId }}", "mode": "id" },
-        "sheetName": { "__rl": true, "value": "={{ $json.sheetName }}", "mode": "name" },
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $json.sheetName }}",
+          "mode": "name"
+        },
         "operation": "read",
         "filtersUI": {
-          "conditions": [{ "keyName": "Status", "condition": "equal", "value": "Scheduled" }]
+          "conditions": [
+            {
+              "keyName": "Status",
+              "condition": "equal",
+              "value": "Scheduled"
+            }
+          ]
         }
       },
       "id": "fetch-content-com-1",
       "name": "Fetch Content",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [580, 300]
+      "position": [
+        580,
+        300
+      ]
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "typeValidation": "strict" },
-          "conditions": [{
-            "id": "filter-scheduled-id",
-            "leftValue": "={{ $json.Status }}",
-            "rightValue": "Scheduled",
-            "operator": { "type": "string", "operation": "equals" }
-          }],
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "filter-scheduled-id",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Scheduled",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
           "combinator": "and"
         },
         "options": {}
@@ -69,7 +108,10 @@
       "name": "Filter Scheduled",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [820, 300]
+      "position": [
+        820,
+        300
+      ]
     },
     {
       "parameters": {
@@ -81,7 +123,10 @@
       "name": "LinkedIn Post",
       "type": "n8n-nodes-base.linkedIn",
       "typeVersion": 1,
-      "position": [1060, 160]
+      "position": [
+        1060,
+        160
+      ]
     },
     {
       "parameters": {
@@ -90,8 +135,14 @@
         "options": {},
         "queryParametersUi": {
           "parameter": [
-            { "name": "caption",   "value": "={{ $node['Fetch Content'].json.Content }}" },
-            { "name": "image_url", "value": "={{ $node['Fetch Content'].json.ImageUrl }}" }
+            {
+              "name": "caption",
+              "value": "={{ $node['Fetch Content'].json.Content }}"
+            },
+            {
+              "name": "image_url",
+              "value": "={{ $node['Fetch Content'].json.ImageUrl }}"
+            }
           ]
         }
       },
@@ -99,7 +150,10 @@
       "name": "Instagram Post",
       "type": "n8n-nodes-base.facebookGraphApi",
       "typeVersion": 1,
-      "position": [1060, 300]
+      "position": [
+        1060,
+        300
+      ]
     },
     {
       "parameters": {
@@ -108,12 +162,20 @@
         "sendBody": true,
         "contentType": "json",
         "bodyParametersUi": {
-          "parameter": [{ "name": "text", "value": "={{ $json.Content }}" }]
+          "parameter": [
+            {
+              "name": "text",
+              "value": "={{ $json.Content }}"
+            }
+          ]
         },
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Authorization", "value": "Bearer {{$env.THREADS_ACCESS_TOKEN}}" }
+            {
+              "name": "Authorization",
+              "value": "Bearer {{$env.THREADS_ACCESS_TOKEN}}"
+            }
           ]
         }
       },
@@ -121,49 +183,120 @@
       "name": "Threads Post",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
-      "position": [1060, 440]
+      "position": [
+        1060,
+        440
+      ]
     },
     {
       "parameters": {
         "operation": "update",
-        "documentId": { "__rl": true, "value": "={{ $node['ConfigLoader'].json.spreadsheetId }}", "mode": "id" },
-        "sheetName":  { "__rl": true, "value": "={{ $node['ConfigLoader'].json.sheetName }}", "mode": "name" },
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $node['ConfigLoader'].json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $node['ConfigLoader'].json.sheetName }}",
+          "mode": "name"
+        },
         "rowNumber": "={{ $json.rowNumber }}",
         "columnsUi": {
-          "column": [{ "columnName": "Status", "value": "Posted" }]
+          "column": [
+            {
+              "columnName": "Status",
+              "value": "Posted"
+            }
+          ]
         }
       },
       "id": "mark-as-posted-com-1",
       "name": "Mark as Posted",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.5,
-      "position": [1300, 300]
+      "position": [
+        1300,
+        300
+      ]
     }
   ],
   "connections": {
     "Schedule Trigger": {
-      "main": [[{ "node": "ConfigLoader", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "ConfigLoader",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Filter Webhook": {
-      "main": [[{ "node": "ConfigLoader", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "ConfigLoader",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "ConfigLoader": {
-      "main": [[{ "node": "Fetch Content", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Fetch Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Fetch Content": {
-      "main": [[{ "node": "Filter Scheduled", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Filter Scheduled",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Filter Scheduled": {
       "main": [
         [
-          { "node": "LinkedIn Post",   "type": "main", "index": 0 },
-          { "node": "Instagram Post",  "type": "main", "index": 0 },
-          { "node": "Threads Post",    "type": "main", "index": 0 }
+          {
+            "node": "LinkedIn Post",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Instagram Post",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Threads Post",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "LinkedIn Post": {
-      "main": [[{ "node": "Mark as Posted", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Mark as Posted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -173,5 +306,6 @@
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all"
   },
-  "tags": ["exnoria", "com", "hitl"]
+  "id": "a7a65f73675946db",
+  "active": true
 }

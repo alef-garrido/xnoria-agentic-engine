@@ -1,0 +1,14 @@
+{
+  "status": "superseded",
+  "superseded_by": "prd.contact.educate",
+  "n8n_workflow_name": "prd.contact.educate",
+  "note": "Database action ID prd.adoption.nudge maps to the prd.contact.educate workflow in n8n. This action was superseded during Phase 3 A3 when the adoption.nudge and friction.flag actions were consolidated into the contact.educate workflow.",
+  "original_name": "W-PRD-2 - Prd.adoption.nudge",
+  "action_id": "prd.adoption.nudge",
+  "stage": "PRD",
+  "requires_hitl": false,
+  "enabled": true,
+  "description": "Send feature education message to contact using workarounds — consolidated into prd.contact.educate",
+  "superseded_in": "Phase 3 — A3 track (migration 007_onb_prd_actions.sql)",
+  "id": "d02d80ab7e714481"
+}

@@ -1,0 +1,154 @@
+{
+  "name": "W-MVP-1 - Acq.lead.score",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "xnoria-acq-lead-score-v1",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-acq-lead-score-v1",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "xnoria-acq-lead-score-v1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\nreturn {\n  json: {\n    contact_id: body.contact_id,\n    email: body.payload?.email || body.email,\n    source: body.payload?.source || 'unknown',\n    signal_id: body.signal_id || null,\n    signal_severity: body.signal_severity || 0,\n    session_id: body.session_id\n  }\n};"
+      },
+      "id": "normalize-lead-code",
+      "name": "NormalizeLead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const source = $json.source;\nconst severity = $json.signal_severity || 0;\n\n// Rule-based scoring\nconst sourceScore = {\n  organic: 80,\n  referral: 90,\n  paid: 60,\n  unknown: 40\n}[source] || 40;\n\nconst severityBoost = Math.round(severity * 20);\nconst score = Math.min(sourceScore + severityBoost, 100);\n\nconst tags = [];\nif (score >= 80) tags.push('hot-lead');\nelse if (score >= 60) tags.push('warm-lead');\nelse tags.push('cold-lead');\n\nif (source === 'referral') tags.push('referral-source');\n\nreturn {\n  json: {\n    ...$json,\n    lead_score: score,\n    tags\n  }\n};"
+      },
+      "id": "score-lead-code",
+      "name": "ScoreLeadLogic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.hubapi.com/crm/v3/objects/contacts/{{ $json.contact_id }}",
+        "authentication": "credential",
+        "credentialSet": {
+          "credentialName": "HubSpot"
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "properties.lead_score", "value": "={{ $json.lead_score }}" },
+            { "name": "properties.hs_lead_status", "value": "={{ $json.lead_score >= 80 ? 'IN_PROGRESS' : 'NEW' }}" },
+            { "name": "properties.xnoria_tags", "value": "={{ $json.tags.join(',') }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "update-hubspot-contact",
+      "name": "UpdateHubSpotContact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "workflowId": "cxEngine_Analytics_Metrics_v1",
+        "options": {}
+      },
+      "id": "log-result-workflow",
+      "name": "LogResult",
+      "type": "@n8n/n8n-nodes-workflow.executeWorkflow",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "respond-to-webhook",
+      "name": "RespondToFilter",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1340, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "NormalizeLead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NormalizeLead": {
+      "main": [
+        [
+          {
+            "node": "ScoreLeadLogic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ScoreLeadLogic": {
+      "main": [
+        [
+          {
+            "node": "UpdateHubSpotContact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UpdateHubSpotContact": {
+      "main": [
+        [
+          {
+            "node": "LogResult",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LogResult": {
+      "main": [
+        [
+          {
+            "node": "RespondToFilter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "001",
+  "id": "mvp-acq-lead-score-v1",
+  "meta": {
+    "instanceId": "xnoria-cognitive"
+  }
+}

@@ -39,7 +39,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Exnoria - com.content.publish\n// Load content calendar config from env.\n// Runs on schedule OR on-demand from filter dispatch.\n// EXCEPTION: This workflow retains its autonomous schedule \u2014 content publishing is time-based.\n// The filter webhook is a secondary entry point for on-demand cognitive triggers.\n\nreturn [{\n  json: {\n    spreadsheetId: $env.COM_CONTENT_SHEET_ID,\n    sheetName: 'ContentCalendar',\n    timezone: 'America/Mexico_City'\n  }\n}];"
+        "jsCode": "// Exnoria - com.content.publish\n// Load content calendar config from env.\n// Runs on schedule OR on-demand from filter dispatch.\n// EXCEPTION: This workflow retains its autonomous schedule — content publishing is time-based.\n// The filter webhook is a secondary entry point for on-demand cognitive triggers.\n\nreturn [{\n  json: {\n    spreadsheetId: $env.COM_CONTENT_SHEET_ID,\n    sheetName: 'ContentCalendar',\n    timezone: 'America/Mexico_City'\n  }\n}];"
       },
       "id": "config-loader-com-1",
       "name": "ConfigLoader",
@@ -64,11 +64,10 @@
         },
         "operation": "read",
         "filtersUI": {
-          "conditions": [
+          "values": [
             {
-              "keyName": "Status",
-              "condition": "equal",
-              "value": "Scheduled"
+              "lookupColumn": "Status",
+              "lookupValue": "Scheduled"
             }
           ]
         }
@@ -85,10 +84,6 @@
     {
       "parameters": {
         "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "typeValidation": "strict"
-          },
           "conditions": [
             {
               "id": "filter-scheduled-id",
@@ -117,7 +112,8 @@
       "parameters": {
         "text": "={{ $json.Content }}",
         "postAs": "person",
-        "resource": "post"
+        "resource": "post",
+        "person": "urn:li:person:me"
       },
       "id": "linkedin-post-com-1",
       "name": "LinkedIn Post",
@@ -202,13 +198,11 @@
           "mode": "name"
         },
         "rowNumber": "={{ $json.rowNumber }}",
-        "columnsUi": {
-          "column": [
-            {
-              "columnName": "Status",
-              "value": "Posted"
-            }
-          ]
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Posted"
+          }
         }
       },
       "id": "mark-as-posted-com-1",

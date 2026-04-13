@@ -39,10 +39,12 @@ app.get('/memory/search', (req, res) => {
                 message: `Memory search failed: ${error.message}`
             });
         }
+        // Convert stdout to string (exec may return Buffer)
+        const output = typeof stdout === 'string' ? stdout : stdout.toString();
         // Parse engram CLI output
         // Output format: "Found X memories:" followed by entries
         // Extract memory entries from stdout
-        const memories = parseEngramOutput(stdout);
+        const memories = parseEngramOutput(output);
         res.json({ memories });
     });
 });
@@ -50,16 +52,58 @@ app.get('/memory/search', (req, res) => {
 function parseEngramOutput(output) {
     const memories = [];
     const lines = output.split('\n');
+    // Engram output format:
+    // 1. Header: "Found X memories:"
+    // 2. Array line: "[1] #1 (manual) — TEST_CID_001 | ONB | ONB_FRC_01 → onb.contact.nudge [executed]"
+    // 3. First content line: "    contact_id: TEST_CID_001" (4 spaces indent)
+    // 4. Subsequent content lines: "stage: ONB" (NO indent!)
+    // 5. Timestamp line: "    2026-04-10 21:07:41 | scope: project" (4 spaces, but should skip)
+    let currentTitle = '';
+    let currentContent = '';
+    let inContentBlock = false;
     for (const line of lines) {
-        // Match format: "[1] #1 (manual) — TEST_CID_001 | ONB | ONB_FRC_01 → onb.contact.nudge [executed]"
-        const match = line.match(/\[\d+\] #\d+.*— (.+)$/);
-        if (match) {
-            memories.push({
-                title: match[1],
-                content: '',
-                created_at: new Date().toISOString()
-            });
+        // Check for array entry line: "[1] #1 (manual) — title"
+        // Uses Unicode em dash (U+2014): —
+        const arrayMatch = line.match(/^\[(\d+)\] #\d+.*\u2014 (.+)$/);
+        if (arrayMatch) {
+            // Save previous entry if exists
+            if (currentTitle) {
+                memories.push({
+                    title: currentTitle,
+                    content: currentContent.trim(),
+                    created_at: new Date().toISOString()
+                });
+            }
+            // Start new entry
+            currentTitle = arrayMatch[2];
+            currentContent = '';
+            inContentBlock = true;
+            continue;
         }
+        // Check for content lines
+        if (inContentBlock) {
+            // Content lines can be:
+            // - "    key: value" (first line with 4-space indent)
+            // - "key: value" (subsequent lines, NO indent)
+            // Skip timestamp lines
+            const trimmed = line.trim();
+            // Check if this is a timestamp line: "    YYYY-MM-DD HH:MM:SS | scope: project"
+            if (trimmed.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/)) {
+                continue;
+            }
+            // Not a timestamp, add to content
+            if (trimmed) {
+                currentContent += trimmed + '\n';
+            }
+        }
+    }
+    // Save last entry if exists
+    if (currentTitle) {
+        memories.push({
+            title: currentTitle,
+            content: currentContent.trim(),
+            created_at: new Date().toISOString()
+        });
     }
     return memories;
 }

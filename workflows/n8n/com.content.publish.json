@@ -6,8 +6,8 @@
         "rule": {
           "interval": [
             {
-              "field": "hour",
-              "value": 9
+              "field": "days",
+              "triggerAtHour": 9
             }
           ]
         }
@@ -126,8 +126,6 @@
     },
     {
       "parameters": {
-        "httpMethod": "POST",
-        "path": "me/media",
         "options": {},
         "queryParametersUi": {
           "parameter": [
@@ -140,7 +138,11 @@
               "value": "={{ $node['Fetch Content'].json.ImageUrl }}"
             }
           ]
-        }
+        },
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v18.0",
+        "node": "me",
+        "edge": "media"
       },
       "id": "instagram-post-com-1",
       "name": "Instagram Post",

@@ -1,0 +1,257 @@
+{
+  "name": "W-MVP-3 - Sal.contact.prioritize",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "xnoria-sal-contact-prioritize-v1",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-sal-contact-prioritize-v1",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "xnoria-sal-contact-prioritize-v1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\nreturn {\n  json: {\n    contact_id: body.contact_id,\n    priority: body.payload?.priority || 'high',\n    reason: body.payload?.reason || body.meta?.triggered_by || 'High intent signal',\n    phone: body.payload?.phone,\n    name: body.payload?.name || 'there',\n    signal_id: body.signal_id || null,\n    signal_severity: body.signal_severity || 0,\n    session_id: body.session_id\n  }\n};"
+      },
+      "id": "normalize-payload-code",
+      "name": "NormalizePayload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.hubapi.com/crm/v3/objects/tasks",
+        "authentication": "credential",
+        "credentialSet": {
+          "credentialName": "HubSpot"
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "properties.hs_task_subject", "value": "=PRIORITY: Immediate follow-up required — {{ $json.contact_id }}" },
+            { "name": "properties.hs_task_body", "value": "=Xnoria flagged this contact for immediate SDR attention.\nSignal: {{ $json.signal_id }}\nSeverity: {{ $json.signal_severity }}\nReason: {{ $json.reason }}" },
+            { "name": "properties.hs_task_priority", "value": "HIGH" },
+            { "name": "properties.hs_task_type", "value": "CALL" },
+            { "name": "properties.hs_timestamp", "value": "=Date.now()" }
+          ]
+        },
+        "options": {},
+        "returnAll": true,
+        "binary": false
+      },
+      "id": "create-sdr-task",
+      "name": "CreateSDRTask",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.hubapi.com/crm/v3/objects/contacts/{{ $json.contact_id }}",
+        "authentication": "credential",
+        "credentialSet": {
+          "credentialName": "HubSpot"
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "properties.hs_lead_status", "value": "IN_PROGRESS" },
+            { "name": "properties.xnoria_sdr_priority", "value": "={{ $json.priority }}" },
+            { "name": "properties.xnoria_priority_reason", "value": "={{ $json.reason }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "update-contact-priority",
+      "name": "UpdateContactPriority",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.phone }}",
+              "operation": "notempty"
+            }
+          ]
+        }
+      },
+      "id": "if-Phone-Exists",
+      "name": "IF Phone Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1120, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v21.0/{{ $env.WHATSAPP_PHONE_NUMBER_ID }}/messages",
+        "authentication": "credential",
+        "credentialSet": {
+          "credentialName": "Meta-WhatsApp"
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "messaging_product", "value": "whatsapp" },
+            { "name": "to", "value": "={{ $json.phone }}" },
+            { "name": "type", "value": "text" },
+            { "name": "text.body", "value": "=Hi {{ $json.name }}, our team has flagged your inquiry as a priority and will be reaching out shortly." }
+          ]
+        },
+        "options": {}
+      },
+      "id": "send-whatsapp",
+      "name": "SendWhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "workflowId": "cxEngine_Analytics_Metrics_v1",
+        "options": {}
+      },
+      "id": "log-result-workflow",
+      "name": "LogResult",
+      "type": "@n8n/n8n-nodes-workflow.executeWorkflow",
+      "typeVersion": 1,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "respond-to-webhook",
+      "name": "RespondToFilter",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1560, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "NormalizePayload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NormalizePayload": {
+      "main": [
+        [
+          {
+            "node": "CreateSDRTask",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CreateSDRTask": {
+      "main": [
+        [
+          {
+            "node": "UpdateContactPriority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UpdateContactPriority": {
+      "main": [
+        [
+          {
+            "node": "IF Phone Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Phone Exists": {
+      "true": [
+        [
+          {
+            "node": "SendWhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ],
+      "false": [
+        [
+          {
+            "node": "LogResult",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SendWhatsApp": {
+      "main": [
+        [
+          {
+            "node": "LogResult",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LogResult": {
+      "main": [
+        [
+          {
+            "node": "RespondToFilter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "001",
+  "id": "mvp-sal-contact-prioritize-v1",
+  "meta": {
+    "instanceId": "xnoria-cognitive"
+  }
+}

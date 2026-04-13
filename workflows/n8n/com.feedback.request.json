@@ -1,0 +1,212 @@
+{
+  "name": "W-COM-3 - Com.feedback.request",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "com-feedback-request",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-com-feedback-request",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "com-feedback-request"
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "operation": "get",
+        "contactId": "={{ $json.body.contact_id }}",
+        "additionalFields": {}
+      },
+      "id": "hubspot-get-contact-com-3",
+      "name": "HubSpot -- get contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Exnoria - com.feedback.request\n// Send feedback follow-up to contact with ignored feedback\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, signal_id } = webhook;\n\nconst firstname = contact.properties?.firstname?.value ?? 'Contact';\nconst lastname  = contact.properties?.lastname?.value  ?? '';\nconst email     = contact.properties?.email?.value     ?? '';\n\nconst whatsappMessage = \"Hi ${firstname}, we noticed your feedback hasn't received a response — we'd like to make it right.\";\n\nreturn [{\n  json: {\n    contact_id,\n    signal_id,\n    email,\n    firstname,\n    lastname,\n    whatsapp_message: whatsappMessage\n  }\n}];"
+      },
+      "id": "code-generate-message-com-3",
+      "name": "Code -- generate message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simulate -- WhatsApp message send\n// Replace with real WhatsApp API when ready\n\nconst data = $input.first().json;\n\nreturn [{\n  json: {\n    ...data,\n    message_sent: true,\n    simulated: true,\n    timestamp: Date.now()\n  }\n}];"
+      },
+      "id": "simulate-whatsapp-send-com-3",
+      "name": "Simulate -- WhatsApp send",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "email": "={{ $(\"Code -- generate message\").item.json.email }}",
+        "additionalFields": {},
+        "options": {}
+      },
+      "id": "hubspot-update-contact-com-3",
+      "name": "HubSpot -- update contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        300
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "operation": "create",
+        "subject": "Follow up on unacknowledged feedback from {{ $(\"Code -- generate message\").item.json.contact_id }}",
+        "contactId": "={{ $(\"Code -- generate message\").item.json.contact_id }}", 
+        "status": "NOT_STARTED",
+        "priority": "HIGH",
+        "additionalFields": {},
+        "options": {}
+      },
+      "id": "hubspot-create-task-com-3",
+      "name": "HubSpot -- create task",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        300
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"com.feedback.request\",\n  \"contact_id\": \"{{ $(\"Code -- generate message\").item.json.contact_id }}\",\n  \"whatsapp_sent\": {{ $(\"Simulate -- WhatsApp send\").item.json.message_sent ?? false }},\n  \"task_created\": true\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-com-3",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- get contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- get contact": {
+      "main": [
+        [
+          {
+            "node": "Code -- generate message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code -- generate message": {
+      "main": [
+        [
+          {
+            "node": "Simulate -- WhatsApp send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simulate -- WhatsApp send": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- update contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- update contact": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- create task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- create task": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "id": "com-feedback-request-id",
+  "active": true
+}

@@ -1,0 +1,182 @@
+{
+  "name": "W-COM-2 - Com.contact.reengage",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "com-contact-reengage",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-com-contact-reengage",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "com-contact-reengage"
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "operation": "get",
+        "contactId": "={{ $json.body.contact_id }}",
+        "additionalFields": {}
+      },
+      "id": "hubspot-get-contact-com-2",
+      "name": "HubSpot -- get contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Exnoria - com.contact.reengage\n// Branch based on signal_id to handle different re-engagement scenarios\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, signal_id } = webhook;\n\nconst firstname = contact.properties?.firstname?.value ?? 'Contact';\nconst lastname  = contact.properties?.lastname?.value  ?? '';\nconst email     = contact.properties?.email?.value     ?? '';\n\nlet tags = [];\nlet sequenceEnrollment = null;\nlet whatsappMessage = null;\n\n// Branch based on signal_id\nif (signal_id === 'COM_REL_01') {\n  // Unsubscribed contact - enroll in re-engagement sequence\n  tags.push('com-reengagement-active');\n  sequenceEnrollment = 're-engagement-sequence-id';\n} else if (signal_id === 'COM_REL_02') {\n  // Low engagement contact - send personalized WhatsApp nudge\n  tags.push('com-low-engagement');\n  whatsappMessage = `Hi ${firstname}, we've noticed you haven't engaged with our content lately. Here's something tailored just for you!`;\n}\n\nconst lastReengageAt = new Date(new Date().setUTCHours(0,0,0,0)).getTime();\n\nreturn [{\n  json: {\n    contact_id,\n    signal_id,\n    email,\n    firstname,\n    lastname,\n    tags,\n    sequence_enrollment: sequenceEnrollment,\n    whatsapp_message: whatsappMessage,\n    last_reengage_at: lastReengageAt\n  }\n}];"
+      },
+      "id": "code-branching-logic-com-2",
+      "name": "Code -- branching logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simulate -- HubSpot task creation and tagging\n// Replace with real HubSpot task API when ready\n\nconst data = $input.first().json;\n\nreturn [{\n  json: {\n    ...data,\n    task_created: data.sequence_enrollment ? true : false,\n    task_id: data.sequence_enrollment ? 'task_sim_' + Date.now() : null,\n    simulated: true\n  }\n}];"
+      },
+      "id": "simulate-create-task-com-2",
+      "name": "Simulate -- create task",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "email": "={{ $(\"Code -- branching logic\").item.json.email }}",
+        "additionalFields": {
+          "properties": [
+            {
+              "name": "last_com_reengage_at",
+              "value": "={{ $(\"Code -- branching logic\").item.json.last_reengage_at }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "hubspot-update-contact-com-2",
+      "name": "HubSpot -- update contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        300
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"com.contact.reengage\",\n  \"contact_id\": \"{{ $(\"Code -- branching logic\").item.json.contact_id }}\",\n  \"tags_applied\": {{ $(\"Code -- branching logic\").item.json.tags | json }}\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-com-2",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- get contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- get contact": {
+      "main": [
+        [
+          {
+            "node": "Code -- branching logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code -- branching logic": {
+      "main": [
+        [
+          {
+            "node": "Simulate -- create task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simulate -- create task": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- update contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- update contact": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "id": "com-contact-reengage-id",
+  "active": true
+}

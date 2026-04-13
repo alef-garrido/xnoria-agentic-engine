@@ -12,7 +12,10 @@
       "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "webhookId": "xnoria-sal-sequence-enroll-v1"
     },
     {
@@ -23,7 +26,10 @@
       "name": "NormalizePayload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
-      "position": [460, 300]
+      "position": [
+        460,
+        300
+      ]
     },
     {
       "parameters": {
@@ -36,14 +42,23 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Content-Type", "value": "application/json" }
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
-            { "name": "contactId", "value": "={{ $json.contact_id }}" },
-            { "name": "startingStepOrder", "value": 0 }
+            {
+              "name": "contactId",
+              "value": "={{ $json.contact_id }}"
+            },
+            {
+              "name": "startingStepOrder",
+              "value": 0
+            }
           ]
         },
         "options": {}
@@ -52,7 +67,10 @@
       "name": "EnrollInSequence",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 3,
-      "position": [680, 300]
+      "position": [
+        680,
+        300
+      ]
     },
     {
       "parameters": {
@@ -65,15 +83,27 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Content-Type", "value": "application/json" }
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
-            { "name": "properties.hs_lead_status", "value": "IN_PROGRESS" },
-            { "name": "properties.xnoria_sequence_enrolled", "value": "true" },
-            { "name": "properties.xnoria_enrollment_reason", "value": "={{ $json.reason }}" }
+            {
+              "name": "properties.hs_lead_status",
+              "value": "IN_PROGRESS"
+            },
+            {
+              "name": "properties.xnoria_sequence_enrolled",
+              "value": "true"
+            },
+            {
+              "name": "properties.xnoria_enrollment_reason",
+              "value": "={{ $json.reason }}"
+            }
           ]
         },
         "options": {}
@@ -82,18 +112,24 @@
       "name": "UpdateContactStatus",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 3,
-      "position": [900, 300]
+      "position": [
+        900,
+        300
+      ]
     },
     {
       "parameters": {
-        "workflowId": "cxEngine_Analytics_Metrics_v1",
+        "workflowId": "DPTr6Vy1ETbR7frR",
         "options": {}
       },
       "id": "log-result-workflow",
       "name": "LogResult",
-      "type": "@n8n/n8n-nodes-workflow.executeWorkflow",
+      "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
-      "position": [1120, 300]
+      "position": [
+        1120,
+        300
+      ]
     },
     {
       "parameters": {
@@ -103,7 +139,10 @@
       "name": "RespondToFilter",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1340, 300]
+      "position": [
+        1340,
+        300
+      ]
     }
   ],
   "connections": {

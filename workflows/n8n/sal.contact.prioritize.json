@@ -12,7 +12,10 @@
       "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "webhookId": "xnoria-sal-contact-prioritize-v1"
     },
     {
@@ -23,7 +26,10 @@
       "name": "NormalizePayload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
-      "position": [460, 300]
+      "position": [
+        460,
+        300
+      ]
     },
     {
       "parameters": {
@@ -36,17 +42,35 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Content-Type", "value": "application/json" }
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
-            { "name": "properties.hs_task_subject", "value": "=PRIORITY: Immediate follow-up required — {{ $json.contact_id }}" },
-            { "name": "properties.hs_task_body", "value": "=Xnoria flagged this contact for immediate SDR attention.\nSignal: {{ $json.signal_id }}\nSeverity: {{ $json.signal_severity }}\nReason: {{ $json.reason }}" },
-            { "name": "properties.hs_task_priority", "value": "HIGH" },
-            { "name": "properties.hs_task_type", "value": "CALL" },
-            { "name": "properties.hs_timestamp", "value": "=Date.now()" }
+            {
+              "name": "properties.hs_task_subject",
+              "value": "=PRIORITY: Immediate follow-up required \u2014 {{ $json.contact_id }}"
+            },
+            {
+              "name": "properties.hs_task_body",
+              "value": "=Xnoria flagged this contact for immediate SDR attention.\nSignal: {{ $json.signal_id }}\nSeverity: {{ $json.signal_severity }}\nReason: {{ $json.reason }}"
+            },
+            {
+              "name": "properties.hs_task_priority",
+              "value": "HIGH"
+            },
+            {
+              "name": "properties.hs_task_type",
+              "value": "CALL"
+            },
+            {
+              "name": "properties.hs_timestamp",
+              "value": "=Date.now()"
+            }
           ]
         },
         "options": {},
@@ -57,7 +81,10 @@
       "name": "CreateSDRTask",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 3,
-      "position": [680, 300]
+      "position": [
+        680,
+        300
+      ]
     },
     {
       "parameters": {
@@ -70,15 +97,27 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Content-Type", "value": "application/json" }
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
-            { "name": "properties.hs_lead_status", "value": "IN_PROGRESS" },
-            { "name": "properties.xnoria_sdr_priority", "value": "={{ $json.priority }}" },
-            { "name": "properties.xnoria_priority_reason", "value": "={{ $json.reason }}" }
+            {
+              "name": "properties.hs_lead_status",
+              "value": "IN_PROGRESS"
+            },
+            {
+              "name": "properties.xnoria_sdr_priority",
+              "value": "={{ $json.priority }}"
+            },
+            {
+              "name": "properties.xnoria_priority_reason",
+              "value": "={{ $json.reason }}"
+            }
           ]
         },
         "options": {}
@@ -87,7 +126,10 @@
       "name": "UpdateContactPriority",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 3,
-      "position": [900, 300]
+      "position": [
+        900,
+        300
+      ]
     },
     {
       "parameters": {
@@ -104,7 +146,10 @@
       "name": "IF Phone Exists",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
-      "position": [1120, 200]
+      "position": [
+        1120,
+        200
+      ]
     },
     {
       "parameters": {
@@ -117,16 +162,31 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Content-Type", "value": "application/json" }
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
-            { "name": "messaging_product", "value": "whatsapp" },
-            { "name": "to", "value": "={{ $json.phone }}" },
-            { "name": "type", "value": "text" },
-            { "name": "text.body", "value": "=Hi {{ $json.name }}, our team has flagged your inquiry as a priority and will be reaching out shortly." }
+            {
+              "name": "messaging_product",
+              "value": "whatsapp"
+            },
+            {
+              "name": "to",
+              "value": "={{ $json.phone }}"
+            },
+            {
+              "name": "type",
+              "value": "text"
+            },
+            {
+              "name": "text.body",
+              "value": "=Hi {{ $json.name }}, our team has flagged your inquiry as a priority and will be reaching out shortly."
+            }
           ]
         },
         "options": {}
@@ -135,18 +195,24 @@
       "name": "SendWhatsApp",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 3,
-      "position": [1120, 400]
+      "position": [
+        1120,
+        400
+      ]
     },
     {
       "parameters": {
-        "workflowId": "cxEngine_Analytics_Metrics_v1",
+        "workflowId": "DPTr6Vy1ETbR7frR",
         "options": {}
       },
       "id": "log-result-workflow",
       "name": "LogResult",
-      "type": "@n8n/n8n-nodes-workflow.executeWorkflow",
+      "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
-      "position": [1340, 300]
+      "position": [
+        1340,
+        300
+      ]
     },
     {
       "parameters": {
@@ -156,7 +222,10 @@
       "name": "RespondToFilter",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1560, 300]
+      "position": [
+        1560,
+        300
+      ]
     }
   ],
   "connections": {

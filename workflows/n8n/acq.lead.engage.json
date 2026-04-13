@@ -67,6 +67,20 @@
     },
     {
       "parameters": {
+        "workflowId": "DPTr6Vy1ETbR7frR",
+        "options": {}
+      },
+      "id": "log-result-analytics",
+      "name": "LogResult",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        960,
+        500
+      ]
+    },
+    {
+      "parameters": {
         "respondWith": "json",
         "responseBody": "={{ JSON.stringify({ status: 'executed', action_id: 'acq.lead.engage', contact_id: $('Code -- build ack payload').item.json.contact_id, ack_sent: true, channel: 'whatsapp' }) }}",
         "options": {
@@ -78,7 +92,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        960,
+        1120,
         300
       ]
     }
@@ -108,6 +122,15 @@
     },
     "Meta WA -- send ack": {
       "main": [
+        {
+          "node": "LogResult",
+          "type": "main",
+          "index": 0
+        }
+      ]
+    },
+    "LogResult": {
+      "main": [
         [
           {
             "node": "Respond",
@@ -123,7 +146,9 @@
     "saveManualExecutions": true,
     "saveExecutionProgress": true,
     "saveDataErrorExecution": "all",
-    "saveDataSuccessExecution": "all"
+    "saveDataSuccessExecution": "all",
+    "saveDataOnSuccess": "all",
+    "saveDataOnError": "all"
   },
   "id": "22b850f2c4664360",
   "active": true

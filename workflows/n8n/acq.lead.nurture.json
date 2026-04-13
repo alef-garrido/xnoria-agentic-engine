@@ -59,6 +59,20 @@
     },
     {
       "parameters": {
+        "workflowId": "DPTr6Vy1ETbR7frR",
+        "options": {}
+      },
+      "id": "log-result-analytics-nurture",
+      "name": "LogResult",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        720,
+        500
+      ]
+    },
+    {
+      "parameters": {
         "respondWith": "json",
         "responseBody": "={{ JSON.stringify({ status: 'executed', action_id: 'acq.lead.nurture', contact_id: $json.body.contact_id, nurture_response: $('AINurtureBot').item.json.output }) }}",
         "options": {
@@ -70,7 +84,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        720,
+        880,
         300
       ]
     }
@@ -89,13 +103,11 @@
     },
     "AINurtureBot": {
       "main": [
-        [
-          {
-            "node": "Respond",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        {
+          "node": "LogResult",
+          "type": "main",
+          "index": 0
+        }
       ]
     },
     "GeminiModel": {
@@ -119,6 +131,17 @@
           }
         ]
       ]
+    },
+    "LogResult": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -126,7 +149,9 @@
     "saveManualExecutions": true,
     "saveExecutionProgress": true,
     "saveDataErrorExecution": "all",
-    "saveDataSuccessExecution": "all"
+    "saveDataSuccessExecution": "all",
+    "saveDataOnSuccess": "all",
+    "saveDataOnError": "all"
   },
   "id": "85bb4409ae5c4171",
   "active": true

@@ -12,7 +12,10 @@
       "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "webhookId": "xnoria-acq-lead-score-v1"
     },
     {
@@ -23,7 +26,10 @@
       "name": "NormalizeLead",
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
-      "position": [460, 300]
+      "position": [
+        460,
+        300
+      ]
     },
     {
       "parameters": {
@@ -33,7 +39,10 @@
       "name": "ScoreLeadLogic",
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
-      "position": [680, 300]
+      "position": [
+        680,
+        300
+      ]
     },
     {
       "parameters": {
@@ -46,15 +55,27 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Content-Type", "value": "application/json" }
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
           ]
         },
         "sendBody": true,
         "bodyParameters": {
           "parameters": [
-            { "name": "properties.lead_score", "value": "={{ $json.lead_score }}" },
-            { "name": "properties.hs_lead_status", "value": "={{ $json.lead_score >= 80 ? 'IN_PROGRESS' : 'NEW' }}" },
-            { "name": "properties.xnoria_tags", "value": "={{ $json.tags.join(',') }}" }
+            {
+              "name": "properties.lead_score",
+              "value": "={{ $json.lead_score }}"
+            },
+            {
+              "name": "properties.hs_lead_status",
+              "value": "={{ $json.lead_score >= 80 ? 'IN_PROGRESS' : 'NEW' }}"
+            },
+            {
+              "name": "properties.xnoria_tags",
+              "value": "={{ $json.tags.join(',') }}"
+            }
           ]
         },
         "options": {}
@@ -63,18 +84,24 @@
       "name": "UpdateHubSpotContact",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 3,
-      "position": [900, 300]
+      "position": [
+        900,
+        300
+      ]
     },
     {
       "parameters": {
-        "workflowId": "cxEngine_Analytics_Metrics_v1",
+        "workflowId": "DPTr6Vy1ETbR7frR",
         "options": {}
       },
       "id": "log-result-workflow",
       "name": "LogResult",
-      "type": "@n8n/n8n-nodes-workflow.executeWorkflow",
+      "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1,
-      "position": [1120, 300]
+      "position": [
+        1120,
+        300
+      ]
     },
     {
       "parameters": {
@@ -84,7 +111,10 @@
       "name": "RespondToFilter",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1340, 300]
+      "position": [
+        1340,
+        300
+      ]
     }
   ],
   "connections": {

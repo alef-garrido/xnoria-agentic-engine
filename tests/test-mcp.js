@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Test script to verify MCP client functionality
-const { initMcpClients, executeMcpTool } = require('./layers/cognitive/dist/mcp/client');
+const { initMcpClients, executeMcpTool } = require('../layers/cognitive/dist/mcp/client');
 
 async function testMCP() {
   try {

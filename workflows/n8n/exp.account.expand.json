@@ -1,0 +1,199 @@
+{
+  "name": "W-EXP-1 - Exp.account.expand",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "exp-account-expand",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-exp-account-expand",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "exp-account-expand"
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "operation": "get",
+        "contactId": "={{ $json.body.contact_id }}",
+        "additionalFields": {}
+      },
+      "id": "hubspot-get-contact-exp-1",
+      "name": "HubSpot -- get contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Exnoria - exp.account.expand\n// Branch based on signal_id to handle different expansion scenarios\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, signal_id, signal_severity } = webhook;\n\nconst firstname = contact.properties?.firstname?.value ?? 'Contact';\nconst lastname  = contact.properties?.lastname?.value  ?? '';\nconst email     = contact.properties?.email?.value     ?? '';\n\nlet tags = [];\nlet sequenceEnrollment = null;\nlet taskSubject = null;\nlet taskPriority = 'MEDIUM';\n\n// Branch based on signal_id\nif (signal_id === 'EXP_GRW_01') {\n  // Competitor risk - flag for AE expansion review\n  tags.push('exp-competitor-risk');\n  taskSubject = `Expansion opportunity review for ${contact_id}`;\n  taskPriority = 'HIGH';\n} else if (signal_id === 'EXP_GRW_02') {\n  // Stagnant usage - trigger usage awareness campaign\n  tags.push('exp-usage-activation');\n  sequenceEnrollment = 'exp-usage-activation-sequence-id';\n  taskSubject = `Usage activation campaign for ${contact_id}`;\n}\n\nconst lastExpandAt = new Date(new Date().setUTCHours(0,0,0,0)).getTime();\n\nreturn [{\n  json: {\n    contact_id,\n    signal_id,\n    signal_severity,\n    email,\n    firstname,\n    lastname,\n    tags,\n    sequence_enrollment: sequenceEnrollment,\n    task_subject: taskSubject,\n    task_priority: taskPriority,\n    last_expand_at: lastExpandAt\n  }\n}];"
+      },
+      "id": "code-branching-logic-exp-1",
+      "name": "Code -- branching logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "email": "={{ $(\"Code -- branching logic\").item.json.email }}",
+        "additionalFields": {
+          "properties": [
+            {
+              "name": "xnoria_expansion_ready",
+              "value": "true"
+            },
+            {
+              "name": "last_exp_expand_at",
+              "value": "={{ $(\"Code -- branching logic\").item.json.last_expand_at }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "hubspot-update-contact-exp-1",
+      "name": "HubSpot -- update contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [
+        960,
+        300
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "operation": "create",
+        "subject": "={{ $(\"Code -- branching logic\").item.json.task_subject }}",
+        "contactId": "={{ $(\"Code -- branching logic\").item.json.contact_id }}",
+        "status": "NOT_STARTED",
+        "priority": "={{ $(\"Code -- branching logic\").item.json.task_priority }}",
+        "additionalFields": {},
+        "options": {}
+      },
+      "id": "hubspot-create-task-exp-1",
+      "name": "HubSpot -- create task",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        300
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"exp.account.expand\",\n  \"contact_id\": \"{{ $(\"Code -- branching logic\").item.json.contact_id }}\",\n  \"signal_id\": \"{{ $(\"Code -- branching logic\").item.json.signal_id }}\",\n  \"expansion_ready\": true,\n  \"task_created\": true\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-exp-1",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- get contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- get contact": {
+      "main": [
+        [
+          {
+            "node": "Code -- branching logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code -- branching logic": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- update contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- update contact": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- create task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- create task": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "id": "exp-account-expand-id",
+  "active": true
+}

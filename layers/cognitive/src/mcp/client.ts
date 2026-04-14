@@ -89,7 +89,7 @@ export async function initMcpClients(): Promise<void> {
   try {
     const posthogTransport = new StdioClientTransport({
       command: 'npx',
-      args:    ['-y', 'mcp-remote@latest', 'https://mcp.posthog.com/mcp', '--header', `Authorization:${process.env.POSTHOG_AUTH_HEADER}`],
+      args:    ['-y', 'mcp-remote@latest', 'https://mcp.posthog.com/mcp', '--header', `Authorization:Bearer ${posthogApiKey}`],
       env: {
         POSTHOG_API_KEY:    posthogApiKey,
         POSTHOG_HOST:       process.env.POSTHOG_HOST ?? 'https://app.posthog.com',

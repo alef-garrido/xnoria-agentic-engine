@@ -137,13 +137,14 @@ services:
     read_only: true
     tmpfs:
       - /tmp
+      - /root/.mcp-auth
+      - /root/.npm
     security_opt:
       - no-new-privileges:true
     cap_drop:
       - ALL
     volumes:
       - engram_data:/root/.engram
-      - ./layers/cognitive/dist:/app/dist
       - ./backups:/backups  # bind mount — survives docker compose down -v
     depends_on:
       filter:
@@ -160,9 +161,10 @@ services:
       POSTGRES_URL: postgresql://exnoria:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       # PostHog MCP (optional — cognitive degrades gracefully if not set)
-      POSTHOG_AUTH_HEADER: ${POSTHOG_AUTH_HEADER:-Bearer phx_your_api_key_here}
-      POSTHOG_HOST: ${POSTHOG_HOST:-https://app.posthog.com}
-      POSTHOG_PROJECT_ID: ${POSTHOG_PROJECT_ID:-}
+      POSTHOG_API_KEY: ${POSTHOG_API_KEY}
+      POSTHOG_AUTH_HEADER: ${POSTHOG_API_KEY}  # Bearer token format is handled by mcp-remote
+      POSTHOG_HOST: ${POSTHOG_HOST}
+      POSTHOG_PROJECT_ID: ${POSTHOG_PROJECT_ID}
     networks:
       - exnoria_internal
 

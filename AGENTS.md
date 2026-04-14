@@ -310,6 +310,51 @@ The following tools are recommended for evaluation before PRD and ONB signal det
 - **Mixpanel** — stronger for `feature_request_volume` and funnel analysis (`PRD_CAP_02`). Better reporting than PostHog but hosted-only.
 
 **Why these matter for B3:** When MCP context grounding is scoped, these tools are the natural signal sources that would feed structured `CXEvent` payloads into the cognitive layer — replacing the current pattern where signals must be manually constructed or inferred from CRM tags alone. Choosing a tool before B3 is scoped will determine the shape of the MCP integration.
+
+#### PostHog Signal Data Prerequisites (Product-Side Work)
+
+**This is a product engineering task — not an Xnoria engine task.** Until these are instrumented in the product, `posthog_get_contact_events` returns empty results for all contacts.
+
+The PostHog MCP integration is operational in the cognitive layer, but it can only return data for contacts if the product instruments PostHog tracking. Until then, the lifecycle specialist falls back to Engram memory + Compass context.
+
+| Prerequisite | Description | Product Team Must Implement |
+|---|---|---|
+| `posthog.identify(hubspot_contact_id)` | Maps HubSpot contact to PostHog `distinct_id` at user login | ✅ **Required** — without this, queries return empty/nonexistent data |
+| `posthog.capture('feature_used', { feature_name, contact_id })` | Tracks core feature interactions | For PRD_FRC_01/02 (feature adoption failure signals) |
+| `posthog.capture('onboarding_step_completed', { step, contact_id })` | Tracks each ONB step completion | For ONB_FRC_01/02 (onboarding drop-off signals) |
+| `posthog.capture('task_abandoned', { task, contact_id })` | Tracks session exit without completion | For PRD_FRC_01 (adoption regression) |
+
+##### Dependency Chain for PostHog to Be Useful
+```
+1. ✅ PostHog instance running (cloud instance configured)
+2. ❌ Product instrumented with tracking calls (feature_updated, onboarding_step, task_abandoned)
+3. ❌ Identity resolved: posthog.identify(contact_id) called at login
+4. ✅ PostHog MCP server added to cognitive MCP client (completed)
+5. ✅ POSTHOG_* environment variables set (completed)
+6. ⏳ Cognitive layer pre-processing calls posthog_get_contact_events (ready, waiting for data)
+```
+
+##### What Happens If Instrumentation Is Missing?
+- `posthog_get_contact_events(contact_id)` returns empty array
+- Cognitive layer gracefully degrades to Engram memory + Compass context
+- Lifecycle specialist continues working with reduced context (still functional)
+- No errors, no fallback failures — just less rich signal data
+
+##### How to Verify PostHog Is Working (After Instrumentation)
+```bash
+# 1. Check PostHog API access
+curl -s "https://app.posthog.com/api/projects/375314" \
+  -H "Authorization: Bearer phx_..." | jq '.name'
+
+# 2. Verify PostHog MCP connection in cognitive logs
+docker logs exnoria_cognitive | grep "PostHog MCP"
+# Should show: [mcp-client] PostHog MCP connected (stdio)
+
+# 3. After product instrumentation, test with a real contact
+# The contact must have been logged in with posthog.identify(contact_id)
+# and have events tracked (posthog.capture(...))
+```
+
 ### Phase 4 — Multi-Operator
 **Goal:** Role-based access + multi-agent coordination for client handoff
 | Track | Item | Description |

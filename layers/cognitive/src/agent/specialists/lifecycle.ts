@@ -5,16 +5,18 @@
 // Handles ONB, PRD, COM, RET stages — relationship-focused, multi-channel,
 // health-score driven interventions. Requires reasoning quality over speed.
 // ==============================================================================
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import { Pool } from 'pg';
 import { v4 as uuid } from 'uuid';
-import { CNXEvent, FilterResponse } from '../shared/types';
-import { getClusterTools } from '../tools/clusters';
-import { createLLMClient } from '../shared/llm';
-import { executeMcpTool } from '../mcp/client';
-import { recordSessionOutcome } from '../memory/engram';
-import { TOOL_TO_ACTION } from '../tools/definitions';
+import { CXEvent } from '../../shared/types';
+import { getClusterTools } from '../../tools/clusters';
+import { executeMcpTool } from '../../mcp/client';
+import { recordSessionOutcome } from '../../memory/engram';
+import { TOOL_TO_ACTION } from '../../tools/definitions';
 import { dispatchToFilter } from '../dispatch';
+import { sendReply } from '../../channels/telegram';
+import { logSessionToDb, ActionRecord } from '../../memory/session';
+import { createLLMClientWithFallback } from '../../shared/llm-fallback';
 
 const MAX_LOOP_ITERATIONS = 5;
 const MAX_CONTEXT_TOKENS = 800;
@@ -34,7 +36,7 @@ Key judgment rules:
 Context has already been retrieved and is provided below. Do not call compass or memory tools — select an action directly.`;
 
 // Pre-processing: gather context deterministically before LLM call
-async function gatherLifecycleContext(event: CNXEvent): Promise<string> {
+async function gatherLifecycleContext(event: CXEvent): Promise<string> {
   const signalCtx = await executeMcpTool('compass_get_signal', { signal_id: event.signal_id! });
 
   const signalContent = signalCtx.success
@@ -52,7 +54,7 @@ function buildContextBlock(context: string, maxTokens: number): string {
 }
 
 // Build event prompt for LLM
-function buildEventPrompt(event: CNXEvent): string {
+function buildEventPrompt(event: CXEvent): string {
   const parts = [
     `Stage: ${event.stage}`,
     `Signal ID: ${event.signal_id}`,
@@ -68,22 +70,29 @@ function buildEventPrompt(event: CNXEvent): string {
   return parts.join('\n');
 }
 
-export async function runLifecycleSpecialist(db: Pool, event: CNXEvent): Promise<void> {
+export async function runLifecycleSpecialist(db: Pool, event: CXEvent): Promise<void> {
   const activeTools = getClusterTools('lifecycle');
 
   // Pre-processing (deterministic — no LLM call)
   const context = await gatherLifecycleContext(event);
   const contextBlock = buildContextBlock(context, MAX_CONTEXT_TOKENS);
 
-  // LLM client for Anthropic claude-sonnet-4-6
-  const clientConfig = createLLMClient('LLM_LIFECYCLE_MODEL');
-  const llm = clientConfig.client as Anthropic;
-  console.info(`[lifecycle] using model: ${clientConfig.model}`);
+  // LLM client — lifecycle uses Groq with automatic fallback to OpenRouter
+  const clientConfig = await createLLMClientWithFallback();
+  const llm = clientConfig.client as OpenAI;
+  console.info(`[lifecycle] using model: ${clientConfig.model} (provider: ${clientConfig.provider})`);
 
   const systemPrompt = `${LIFECYCLE_SYSTEM_PROMPT}\n\n## Retrieved Context\n${contextBlock}`;
 
-  const session_id = uuid();
-  const messages: Anthropic.MessageParam[] = [
+  const session_id = (event.meta?.session_id as string | undefined) ?? uuid();
+  const actionsTaken: ActionRecord[] = [];
+  let botReply: string | undefined;
+
+  const messages: OpenAI.ChatCompletionMessageParam[] = [
+    {
+      role: 'system',
+      content: systemPrompt,
+    },
     {
       role: 'user',
       content: buildEventPrompt(event),
@@ -95,50 +104,74 @@ export async function runLifecycleSpecialist(db: Pool, event: CNXEvent): Promise
   while (iterations < MAX_LOOP_ITERATIONS) {
     iterations++;
 
-    const response = await llm.messages.create({
+    const completion = await llm.chat.completions.create({
       model: clientConfig.model,
-      max_tokens: 1024,
-      system: systemPrompt,
-      tools: activeTools.map(t => ({
-        name: t.function.name,
-        description: t.function.description,
-        input_schema: t.function.parameters as Anthropic.Tool['input_schema'],
-      })),
       messages,
+      tools: activeTools.map((t) => ({
+        type: 'function' as const,
+        function: {
+          name: t.function.name,
+          description: t.function.description,
+          parameters: t.function.parameters,
+        },
+      })),
+      tool_choice: 'auto',
     });
 
-    console.info(`[lifecycle] iteration=${iterations} stop_reason=${response.stop_reason} input_tokens=${response.usage?.input_tokens}`);
+    console.info(`[lifecycle] iteration=${iterations} stop_reason=${completion.choices[0]?.finish_reason} tokens_used=${completion.usage?.total_tokens}`);
 
-    if (response.stop_reason === 'end_turn') {
+    const message = completion.choices[0]?.message;
+    const toolCalls = message?.tool_calls ?? [];
+
+    if (toolCalls.length === 0) {
       console.warn('[lifecycle] LLM finished without tool call');
       break;
     }
 
-    if (response.stop_reason !== 'tool_use') break;
-
-    const toolUseBlocks = response.content.filter(b => b.type === 'tool_use');
-    if (toolUseBlocks.length === 0) break;
-
-    // Classify tool calls
-    const actionCalls = toolUseBlocks.filter(b => TOOL_TO_ACTION[b.name] !== null);
-    const contextCalls = toolUseBlocks.filter(b => TOOL_TO_ACTION[b.name] === null);
+    // Classify tool calls: null mapping = local/MCP tool, non-null = filter action
+    const actionCalls = toolCalls.filter(tc => TOOL_TO_ACTION[tc.function.name] !== undefined && TOOL_TO_ACTION[tc.function.name] !== null);
+    const replyCalls  = toolCalls.filter(tc => tc.function.name === 'reply');
+    const contextCalls = toolCalls.filter(tc => TOOL_TO_ACTION[tc.function.name] === null && tc.function.name !== 'reply');
 
     if (actionCalls.length > 0 && contextCalls.length > 0) {
       console.error('[lifecycle] Mixed tool call batch rejected');
       break;
     }
 
+    // Handle reply tool — send message back to contact via channel
+    if (replyCalls.length > 0) {
+      try {
+        const args = JSON.parse(replyCalls[0].function.arguments) as { message: string };
+        botReply = args.message;
+        await sendReply(event.contact_id, botReply);
+        console.log(`[lifecycle] Reply sent to ${event.contact_id}`);
+      } catch (err) {
+        console.error('[lifecycle] Failed to send reply:', err);
+        // Si falla al parsear los argumentos, intentar extraer el mensaje del error
+        try {
+          const failedGenMatch = replyCalls[0].function.arguments.match(/"message":\s*"([^"]+)"/);
+          if (failedGenMatch && failedGenMatch[1]) {
+            await sendReply(event.contact_id, failedGenMatch[1]);
+            console.log(`[lifecycle] Fallback reply sent to ${event.contact_id}`);
+          }
+        } catch (fallbackErr) {
+          console.error('[lifecycle] Fallback reply also failed:', fallbackErr);
+        }
+      }
+      break;
+    }
+
     if (contextCalls.length > 0) {
-      console.warn('[lifecycle] LLM requested context tools after pre-processing:', contextCalls.map(b => b.name));
+      console.warn('[lifecycle] LLM requested context tools after pre-processing:', contextCalls.map(t => t.function.name));
       break;
     }
 
     if (actionCalls.length > 0) {
       const call = actionCalls[0];
-      const mapping = TOOL_TO_ACTION[call.name];
+      const mapping = TOOL_TO_ACTION[call.function.name];
 
       if (!mapping) {
-        console.error(`[lifecycle] Invalid action tool: ${call.name}`);
+        console.error(`[lifecycle] Invalid action tool: ${call.function.name}`);
         break;
       }
 
@@ -153,12 +186,14 @@ export async function runLifecycleSpecialist(db: Pool, event: CNXEvent): Promise
         signal_severity: event.signal_severity,
         cause_code: event.cause_code,
         interventions: event.interventions,
-        payload: call.input as Record<string, unknown>,
+        payload: JSON.parse(call.function.arguments) as Record<string, unknown>,
         meta: {
-          triggered_by: `lifecycle-specialist:${call.name}`,
+          triggered_by: `lifecycle-specialist:${call.function.name}`,
           cluster: 'lifecycle',
         },
       });
+
+      actionsTaken.push({ action_id: mapping.action_id, status: filterResponse.status, log_id: filterResponse.log_id });
 
       // Post-dispatch memory write (fire-and-forget)
       await recordSessionOutcome(
@@ -175,4 +210,7 @@ export async function runLifecycleSpecialist(db: Pool, event: CNXEvent): Promise
   if (iterations >= MAX_LOOP_ITERATIONS) {
     console.error(`[lifecycle] Max iterations (${MAX_LOOP_ITERATIONS}) reached`);
   }
+
+  // Log session to Postgres for the Dashboard (fire-and-forget)
+  await logSessionToDb(db, session_id, event, clientConfig.model, actionsTaken, botReply);
 }

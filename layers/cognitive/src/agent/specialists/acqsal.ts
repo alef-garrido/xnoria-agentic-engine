@@ -8,13 +8,15 @@
 import OpenAI from 'openai';
 import { Pool } from 'pg';
 import { v4 as uuid } from 'uuid';
-import { CNXEvent } from '../shared/types';
-import { getClusterTools } from '../tools/clusters';
-import { createLLMClient } from '../shared/llm';
-import { executeMcpTool } from '../mcp/client';
-import { recordSessionOutcome } from '../memory/engram';
-import { TOOL_TO_ACTION } from '../tools/definitions';
+import { CXEvent } from '../../shared/types';
+import { getClusterTools } from '../../tools/clusters';
+import { executeMcpTool } from '../../mcp/client';
+import { recordSessionOutcome } from '../../memory/engram';
+import { TOOL_TO_ACTION } from '../../tools/definitions';
 import { dispatchToFilter } from '../dispatch';
+import { sendReply } from '../../channels/telegram';
+import { logSessionToDb, ActionRecord } from '../../memory/session';
+import { createLLMClientWithFallback } from '../../shared/llm-fallback';
 
 const MAX_LOOP_ITERATIONS = 5;
 const MAX_CONTEXT_TOKENS = 800;
@@ -33,7 +35,7 @@ Key judgment rules:
 Context has already been retrieved and is provided below. Select one action only.`;
 
 // Pre-processing: gather context deterministically before LLM call
-async function gatherAcqSalContext(event: CNXEvent): Promise<string> {
+async function gatherAcqSalContext(event: CXEvent): Promise<string> {
   const signalCtx = await executeMcpTool('compass_get_signal', { signal_id: event.signal_id! });
 
   const signalContent = signalCtx.success
@@ -51,7 +53,7 @@ function buildContextBlock(context: string, maxTokens: number): string {
 }
 
 // Build event prompt for LLM
-function buildEventPrompt(event: CNXEvent): string {
+function buildEventPrompt(event: CXEvent): string {
   const parts = [
     `Stage: ${event.stage}`,
     `Signal ID: ${event.signal_id}`,
@@ -67,21 +69,24 @@ function buildEventPrompt(event: CNXEvent): string {
   return parts.join('\n');
 }
 
-export async function runAcqSalSpecialist(db: Pool, event: CNXEvent): Promise<void> {
+export async function runAcqSalSpecialist(db: Pool, event: CXEvent): Promise<void> {
   const activeTools = getClusterTools('acqsal');
 
   // Pre-processing (deterministic — no LLM call)
   const context = await gatherAcqSalContext(event);
   const contextBlock = buildContextBlock(context, MAX_CONTEXT_TOKENS);
 
-  // LLM client for Groq llama-3.3-70b-versatile
-  const clientConfig = createLLMClient('LLM_ACQSAL_MODEL');
+  // LLM client — acqsal uses Groq with automatic fallback to OpenRouter
+  const clientConfig = await createLLMClientWithFallback();
   const llm = clientConfig.client as OpenAI;
-  console.info(`[acqsal] using model: ${clientConfig.model}`);
+  console.info(`[acqsal] using model: ${clientConfig.model} (provider: ${clientConfig.provider})`);
 
   const systemPrompt = `${ACQSAL_SYSTEM_PROMPT}\n\n## Retrieved Context\n${contextBlock}`;
 
-  const session_id = uuid();
+  const session_id = (event.meta?.session_id as string | undefined) ?? uuid();
+  const actionsTaken: ActionRecord[] = [];
+  let botReply: string | undefined;
+
   const messages: OpenAI.ChatCompletionMessageParam[] = [
     {
       role: 'system',
@@ -101,7 +106,7 @@ export async function runAcqSalSpecialist(db: Pool, event: CNXEvent): Promise<vo
     const completion = await llm.chat.completions.create({
       model: clientConfig.model,
       messages,
-      tools: activeTools.map(t => ({
+      tools: activeTools.map((t) => ({
         type: 'function' as const,
         function: {
           name: t.function.name,
@@ -122,12 +127,26 @@ export async function runAcqSalSpecialist(db: Pool, event: CNXEvent): Promise<vo
       break;
     }
 
-    // Classify tool calls
-    const actionCalls = toolCalls.filter(tc => TOOL_TO_ACTION[tc.function.name] !== null);
-    const contextCalls = toolCalls.filter(tc => TOOL_TO_ACTION[tc.function.name] === null);
+    // Classify tool calls: null mapping = local/MCP tool, non-null = filter action
+    const actionCalls = toolCalls.filter(tc => TOOL_TO_ACTION[tc.function.name] !== undefined && TOOL_TO_ACTION[tc.function.name] !== null);
+    const replyCalls  = toolCalls.filter(tc => tc.function.name === 'reply');
+    const contextCalls = toolCalls.filter(tc => TOOL_TO_ACTION[tc.function.name] === null && tc.function.name !== 'reply');
 
     if (actionCalls.length > 0 && contextCalls.length > 0) {
       console.error('[acqsal] Mixed tool call batch rejected');
+      break;
+    }
+
+    // Handle reply tool — send message back to contact via channel
+    if (replyCalls.length > 0) {
+      try {
+        const args = JSON.parse(replyCalls[0].function.arguments) as { message: string };
+        botReply = args.message;
+        await sendReply(event.contact_id, botReply);
+        console.log(`[acqsal] Reply sent to ${event.contact_id}`);
+      } catch (err) {
+        console.error('[acqsal] Failed to send reply:', err);
+      }
       break;
     }
 
@@ -163,6 +182,8 @@ export async function runAcqSalSpecialist(db: Pool, event: CNXEvent): Promise<vo
         },
       });
 
+      actionsTaken.push({ action_id: mapping.action_id, status: filterResponse.status, log_id: filterResponse.log_id });
+
       // Post-dispatch memory write (fire-and-forget)
       await recordSessionOutcome(
         { contact_id: event.contact_id, stage: event.stage!, signal_id: event.signal_id! },
@@ -178,4 +199,7 @@ export async function runAcqSalSpecialist(db: Pool, event: CNXEvent): Promise<vo
   if (iterations >= MAX_LOOP_ITERATIONS) {
     console.error(`[acqsal] Max iterations (${MAX_LOOP_ITERATIONS}) reached`);
   }
+
+  // Log session to Postgres for the Dashboard (fire-and-forget)
+  await logSessionToDb(db, session_id, event, clientConfig.model, actionsTaken, botReply);
 }

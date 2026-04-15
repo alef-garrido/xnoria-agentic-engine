@@ -1,41 +1,42 @@
 // ==============================================================================
-// Exnoria · Cognitive · Escalation Specialist
-// Phase 4 B4 — Agent-based orchestration
+// Exnoria · Cognitive · Single Agent
+// Phase 4 B4 Enhancement — AGENT_MODE switch
 //
-// Handles SUP, EXP stages — resolution and growth-focused.
-// Low-volume, high-stakes decisions requiring accurate triage.
+// Legacy single-agent behavior for debugging, cost control, or constrained infra.
+// Uses ALL TOOLS, LLM_MODEL env var, no cluster tagging.
+//
+// CRITICAL: All actions still go through dispatchToFilter — no shortcuts.
 // ==============================================================================
 import OpenAI from 'openai';
 import { Pool } from 'pg';
 import { v4 as uuid } from 'uuid';
-import { CXEvent } from '../../shared/types';
-import { getClusterTools } from '../../tools/clusters';
-import { executeMcpTool } from '../../mcp/client';
-import { recordSessionOutcome } from '../../memory/engram';
-import { TOOL_TO_ACTION } from '../../tools/definitions';
-import { dispatchToFilter } from '../dispatch';
-import { sendReply } from '../../channels/telegram';
-import { logSessionToDb, ActionRecord } from '../../memory/session';
-import { createLLMClientWithFallback } from '../../shared/llm-fallback';
+import { CXEvent } from '../shared/types';
+import { TOOLS, TOOL_TO_ACTION } from '../tools/definitions';
+import { executeMcpTool } from '../mcp/client';
+import { recordSessionOutcome } from '../memory/engram';
+import { dispatchToFilter } from './dispatch';
+import { sendReply } from '../channels/telegram';
+import { logSessionToDb, ActionRecord } from '../memory/session';
+import { createLLMClientWithFallback } from '../shared/llm-fallback';
 
 const MAX_LOOP_ITERATIONS = 5;
 const MAX_CONTEXT_TOKENS = 800;
 
-const ESCALATION_SYSTEM_PROMPT = `You are Xnoria's Escalation Specialist — the agent responsible for support resolution escalation and expansion opportunities.
-
-Your role is to accurately triage support tickets and identify expansion signals.
+const SINGLE_AGENT_SYSTEM_PROMPT = `You are Xnoria's customer experience agent. 
+Select the single most appropriate action for the signal you receive.
 
 Key judgment rules:
-- For SUP signals: escalate to senior queue only if ticket is open > 48h AND severity > 0.6
-- For SUP signals: notify contact directly only if you have clear resolution status to communicate
-- For EXP signals: flag only on high-confidence expansion signals (renewal near, usage spike, etc.)
-- Never over-promise — expansion recommendations must be data-driven
-- All actions exit through the filter — you only recommend actions, never execute directly
+- Prefer the least invasive action that matches the signal severity
+- Check prior interventions before acting
+- For ONB signals: nudge first (automated), assist only if severity >= 0.8
+- For RET signals: flag first, winback only if severity >= 0.7
+- For COM signals: legally sensitive — always confirm compliance
+- For PRD_CAP_02: log only, do not message the contact
 
 Context has already been retrieved and is provided below. Select one action only.`;
 
 // Pre-processing: gather context deterministically before LLM call
-async function gatherEscalationContext(event: CXEvent): Promise<string> {
+async function gatherContext(event: CXEvent): Promise<string> {
   const signalCtx = await executeMcpTool('compass_get_signal', { signal_id: event.signal_id! });
 
   const signalContent = signalCtx.success
@@ -69,19 +70,17 @@ function buildEventPrompt(event: CXEvent): string {
   return parts.join('\n');
 }
 
-export async function runEscalationSpecialist(db: Pool, event: CXEvent): Promise<void> {
-  const activeTools = getClusterTools('escalation');
-
+export async function runSingleAgent(db: Pool, event: CXEvent): Promise<void> {
   // Pre-processing (deterministic — no LLM call)
-  const context = await gatherEscalationContext(event);
+  const context = await gatherContext(event);
   const contextBlock = buildContextBlock(context, MAX_CONTEXT_TOKENS);
 
-  // LLM client — escalation uses Groq with automatic fallback to OpenRouter
+  // LLM client — with automatic fallback from Groq to OpenRouter
   const clientConfig = await createLLMClientWithFallback();
   const llm = clientConfig.client as OpenAI;
-  console.info(`[escalation] using model: ${clientConfig.model} (provider: ${clientConfig.provider})`);
+  console.info(`[single] using model: ${clientConfig.model} (provider: ${clientConfig.provider})`);
 
-  const systemPrompt = `${ESCALATION_SYSTEM_PROMPT}\n\n## Retrieved Context\n${contextBlock}`;
+  const systemPrompt = `${SINGLE_AGENT_SYSTEM_PROMPT}\n\n## Retrieved Context\n${contextBlock}`;
 
   const session_id = (event.meta?.session_id as string | undefined) ?? uuid();
   const actionsTaken: ActionRecord[] = [];
@@ -106,7 +105,7 @@ export async function runEscalationSpecialist(db: Pool, event: CXEvent): Promise
     const completion = await llm.chat.completions.create({
       model: clientConfig.model,
       messages,
-      tools: activeTools.map((t) => ({
+      tools: TOOLS.map((t) => ({
         type: 'function' as const,
         function: {
           name: t.function.name,
@@ -117,13 +116,13 @@ export async function runEscalationSpecialist(db: Pool, event: CXEvent): Promise
       tool_choice: 'auto',
     });
 
-    console.info(`[escalation] iteration=${iterations} stop_reason=${completion.choices[0]?.finish_reason} tokens_used=${completion.usage?.total_tokens}`);
+    console.info(`[single] iteration=${iterations} stop_reason=${completion.choices[0]?.finish_reason} tokens_used=${completion.usage?.total_tokens}`);
 
     const message = completion.choices[0]?.message;
     const toolCalls = message?.tool_calls ?? [];
 
     if (toolCalls.length === 0) {
-      console.warn('[escalation] LLM finished without tool call');
+      console.warn('[single] LLM finished without tool call');
       break;
     }
 
@@ -133,7 +132,7 @@ export async function runEscalationSpecialist(db: Pool, event: CXEvent): Promise
     const contextCalls = toolCalls.filter(tc => TOOL_TO_ACTION[tc.function.name] === null && tc.function.name !== 'reply');
 
     if (actionCalls.length > 0 && contextCalls.length > 0) {
-      console.error('[escalation] Mixed tool call batch rejected');
+      console.error('[single] Mixed tool call batch rejected');
       break;
     }
 
@@ -143,25 +142,25 @@ export async function runEscalationSpecialist(db: Pool, event: CXEvent): Promise
         const args = JSON.parse(replyCalls[0].function.arguments) as { message: string };
         botReply = args.message;
         await sendReply(event.contact_id, botReply);
-        console.log(`[escalation] Reply sent to ${event.contact_id}`);
+        console.log(`[single] Reply sent to ${event.contact_id}`);
       } catch (err) {
-        console.error('[escalation] Failed to send reply:', err);
+        console.error('[single] Failed to send reply:', err);
         // Si falla al parsear los argumentos, intentar extraer el mensaje del error
         try {
           const failedGenMatch = replyCalls[0].function.arguments.match(/"message":\s*"([^"]+)"/);
           if (failedGenMatch && failedGenMatch[1]) {
             await sendReply(event.contact_id, failedGenMatch[1]);
-            console.log(`[escalation] Fallback reply sent to ${event.contact_id}`);
+            console.log(`[single] Fallback reply sent to ${event.contact_id}`);
           }
         } catch (fallbackErr) {
-          console.error('[escalation] Fallback reply also failed:', fallbackErr);
+          console.error('[single] Fallback reply also failed:', fallbackErr);
         }
       }
       break;
     }
 
     if (contextCalls.length > 0) {
-      console.warn('[escalation] LLM requested context tools after pre-processing:', contextCalls.map(tc => tc.function.name));
+      console.warn('[single] LLM requested context tools after pre-processing:', contextCalls.map(t => t.function.name));
       break;
     }
 
@@ -170,11 +169,11 @@ export async function runEscalationSpecialist(db: Pool, event: CXEvent): Promise
       const mapping = TOOL_TO_ACTION[call.function.name];
 
       if (!mapping) {
-        console.error(`[escalation] Invalid action tool: ${call.function.name}`);
+        console.error(`[single] Invalid action tool: ${call.function.name}`);
         break;
       }
 
-      console.log(`[escalation] Dispatching: ${mapping.action_id}`);
+      console.log(`[single] Dispatching: ${mapping.action_id}`);
 
       const filterResponse = await dispatchToFilter({
         action_id: mapping.action_id,
@@ -185,10 +184,10 @@ export async function runEscalationSpecialist(db: Pool, event: CXEvent): Promise
         signal_severity: event.signal_severity,
         cause_code: event.cause_code,
         interventions: event.interventions,
-        payload: call.function.arguments ? JSON.parse(call.function.arguments) : {} as Record<string, unknown>,
+        payload: JSON.parse(call.function.arguments) as Record<string, unknown>,
         meta: {
-          triggered_by: `escalation-specialist:${call.function.name}`,
-          cluster: 'escalation',
+          triggered_by: `single-agent:${call.function.name}`,
+          // No cluster tag in single mode
         },
       });
 
@@ -199,15 +198,15 @@ export async function runEscalationSpecialist(db: Pool, event: CXEvent): Promise
         { contact_id: event.contact_id, stage: event.stage!, signal_id: event.signal_id! },
         mapping.action_id,
         filterResponse,
-        session_id,
-        'escalation'
+        session_id
+        // No cluster tag in single mode
       );
       break;
     }
   }
 
   if (iterations >= MAX_LOOP_ITERATIONS) {
-    console.error(`[escalation] Max iterations (${MAX_LOOP_ITERATIONS}) reached`);
+    console.error(`[single] Max iterations (${MAX_LOOP_ITERATIONS}) reached`);
   }
 
   // Log session to Postgres for the Dashboard (fire-and-forget)

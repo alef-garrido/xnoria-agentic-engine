@@ -6,16 +6,19 @@
 // The coordinator NEVER dispatches to the filter — only specialists do.
 // ==============================================================================
 import { Pool } from 'pg';
-import { CNXEvent } from '../shared/types';
-import { STAGE_TO_CLUSTER, getClusterStages } from '../tools/clusters';
+import { v4 as uuid } from 'uuid';
+import { CXEvent } from '../shared/types';
+import { STAGE_TO_CLUSTER } from '../tools/clusters';
 import { getContactHistory } from '../memory/engram';
 import { runAcqSalSpecialist } from './specialists/acqsal';
 import { runLifecycleSpecialist } from './specialists/lifecycle';
 import { runEscalationSpecialist } from './specialists/escalation';
+import { sendReply } from '../channels/telegram';
+import { logSessionToDb } from '../memory/session';
 
 export type AgentCluster = 'acqsal' | 'lifecycle' | 'escalation';
 
-const CLUSTER_RUNNERS: Record<AgentCluster, (db: Pool, event: CNXEvent) => Promise<void>> = {
+const CLUSTER_RUNNERS: Record<AgentCluster, (db: Pool, event: CXEvent) => Promise<void>> = {
   acqsal: runAcqSalSpecialist,
   lifecycle: runLifecycleSpecialist,
   escalation: runEscalationSpecialist,
@@ -41,27 +44,40 @@ async function buildCrossStageHistory(db: Pool, contactId: string): Promise<stri
  * This is the ONLY entry point from the reason() wrapper.
  * The coordinator never calls dispatchToFilter — only specialists do.
  */
-export async function coordinate(db: Pool, event: CNXEvent): Promise<void> {
-  // 1. Validate stage and determine cluster
-  const cluster = STAGE_TO_CLUSTER[event.stage!];
-  
+export async function coordinate(db: Pool, event: CXEvent): Promise<void> {
+  // 1. Generate a session_id for this reasoning cycle
+  const session_id = uuid();
+
+  // 2. Validate stage and determine cluster
+  const cluster = event.stage ? STAGE_TO_CLUSTER[event.stage] : undefined;
+
   if (!cluster) {
-    throw new Error(`[coordinator] Unknown stage: ${event.stage}`);
+    // Unrecognised or missing stage — reply gracefully so the user knows what to send
+    const hint = event.stage
+      ? `Stage "${event.stage}" is not recognised.`
+      : 'No journey stage detected in your message.';
+    const replyText = `${hint} Please include a stage keyword: ACQ, SAL, ONB, PRD, SUP, COM, RET or EXP.`;
+    console.warn(`[coordinator] ${hint} contact=${event.contact_id}`);
+    await sendReply(event.contact_id, replyText);
+    // Log this conversation turn to Postgres so the dashboard reflects it
+    await logSessionToDb(db, session_id, event, 'coordinator', [], replyText);
+    return;
   }
 
   console.log(`[coordinator] stage=${event.stage} cluster=${cluster} contact=${event.contact_id}`);
 
-  // 2. Fetch cross-stage history (gives specialist context about other stages)
+  // 3. Fetch cross-stage history (gives specialist context about other stages)
   const crossStageHistory = await buildCrossStageHistory(db, event.contact_id);
 
-  // 3. Attach routing metadata to event
+  // 4. Attach routing metadata to event (including session_id so specialists reuse it)
   event.meta = {
     ...event.meta,
     cross_stage_history: crossStageHistory,
     routed_by: 'coordinator',
     cluster,
+    session_id,       // Specialists read this to avoid creating a duplicate session row
   };
 
-  // 4. Route to specialist
+  // 5. Route to specialist
   await CLUSTER_RUNNERS[cluster](db, event);
 }

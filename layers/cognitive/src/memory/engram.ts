@@ -22,12 +22,15 @@ export async function getContactHistory(
   contactId: string,
   stage: string,
   query: string = 'general',
-  maxEntries: number = 3
+  maxEntries: number = 3,
+  agentCluster?: string
 ): Promise<string> {
   try {
-    // Engram search uses project + contact_id + stage as search query
-    // Format matches: "TEST_CID_001 | ONB | ONB_FRC_01"
-    const searchQuery = `${contactId} | ${stage}`;
+    // Engram search uses project + contact_id + stage + agent as search query
+    // Format matches: "TEST_CID_001 | ONB | agent:lifecycle"
+    const searchQuery = agentCluster
+      ? `${contactId} | ${stage} | agent:${agentCluster}`
+      : `${contactId} | ${stage}`;
     const result = await executeMcpTool('mem_search', {
       query: searchQuery,
       project: 'xnoria-agentic-engine'
@@ -105,11 +108,54 @@ export async function recordSessionOutcome(
   event: { contact_id: string; stage: string; signal_id?: string },
   actionId: string,
   filterResponse: FilterResponse,
-  session_id: string
+  session_id: string,
+  agentCluster?: string
 ): Promise<void> {
   if (!event.signal_id) {
-    return; // No signal, no memory record
+    return;
   }
+
+  try {
+    // Build memory title and content for Engram
+    const clusterTag = agentCluster ? ` | agent:${agentCluster}` : '';
+    const title = `${event.contact_id} | ${event.stage} | ${event.signal_id} → ${actionId} [${filterResponse.status}]${clusterTag}`;
+    const content = buildMemoryContent(event, actionId, filterResponse, agentCluster);
+    
+    await executeMcpTool('mem_save', {
+      title: title,
+      content: content,
+      project: 'xnoria-agentic-engine'
+    });
+  } catch (err) {
+    console.error('[memory] session record failed:', err);
+  }
+}
+
+// ------------------------------------------------------------------------------
+// Formatted Content Builder (RFC-compliant)
+// ------------------------------------------------------------------------------
+
+export function buildMemoryContent(
+  event: { contact_id: string; stage: string; signal_id?: string; signal_severity?: number; cause_code?: string },
+  actionId: string,
+  filterResponse: FilterResponse,
+  agentCluster?: string
+): string {
+  const clusterNote = agentCluster ? ` | agent: ${agentCluster}` : '';
+  
+  return [
+    `contact_id: ${event.contact_id}`,
+    `stage: ${event.stage}`,
+    `signal_id: ${event.signal_id ?? 'unknown'}`,
+    `signal_severity: ${event.signal_severity ?? 0}`,
+    `cause_code: ${event.cause_code ?? 'unknown'}`,
+    `action_id: ${actionId}`,
+    `status: ${filterResponse.status}`,
+    `filter_log_id: ${filterResponse.log_id ?? 'none'}`,
+    `timestamp: ${new Date().toISOString()}`,
+    `agent_cluster: ${agentCluster ?? 'none'}${clusterNote}`,
+  ].join('\n');
+}
 
   try {
     // Build memory title and content for Engram

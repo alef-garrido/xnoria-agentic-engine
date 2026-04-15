@@ -1,66 +1,14 @@
 // ==============================================================================
-// Exnoria · Cognitive · Agent reasoning loop
-//
-// Refactored to minimize token usage and eliminate multi-turn context overhead.
-// 1. Pre-processing: Deterministic context gathering (Compass, PostHog).
-// 2. LLM Call: Stage-aware tool selection and single decision turn.
-// 3. Action Dispatch: Filter execution.
-// 4. Memory Write: Recording the outcome.
+// Exnoria · Cognitive · Agent reasoning wrapper (Phase 4 B4)
+// Routes to coordinator → specialist → filter
 // ==============================================================================
-import OpenAI from 'openai';
-import axios   from 'axios';
 import { Pool } from 'pg';
-import { v4 as uuid } from 'uuid';
-import { readHistory, writeHistory }       from '../memory/history';
-import { embed, searchMemory, writeEmbedding } from '../memory/embeddings';
-import { recordSessionOutcome } from '../memory/engram';
-import { TOOLS, TOOL_TO_ACTION } from '../tools/definitions';
-import { ToolDefinition } from '../shared/types';
+import { CNXEvent } from '../shared/types';
+import { coordinate } from './coordinator';
 
-const CONTEXT_TOOL_NAMES = new Set([
-  'compass_get_signal',
-  'compass_get_interventions',
-  'posthog_get_contact_events',
-  'posthog_get_feature_adoption',
-  'reply'
-]);
-import { executeMcpTool, isMcpTool }       from '../mcp/client';
-import {
-  CXEvent, FilterRequest, FilterResponse,
-  HistoryTurn, MemoryHit
-} from '../shared/types';
-
-const FILTER_URL = process.env.FILTER_URL ?? 'http://filter:3000';
-const MODEL = process.env.LLM_MODEL ?? 'qwen/qwen3-32b';
-const CONTEXT_TOKEN_BUDGET = 800;
-const MAX_LOOP_ITERATIONS = 5;
-
-const llm = new OpenAI({
-  baseURL: process.env.LLM_BASE_URL ?? 'https://api.groq.com/openai/v1',
-  apiKey:  process.env.LLM_API_KEY  ?? ''
-});
-
-// ------------------------------------------------------------------------------
-// 1. PRE-PROCESSING: Context Gathering
-// ------------------------------------------------------------------------------
-
-async function gatherContext(db: Pool, event: CXEvent) {
-  const [history, queryEmbedding] = await Promise.all([
-    readHistory(db, event.contact_id),
-    embed(event.input)
-  ]);
-  const memories = await searchMemory(db, event.contact_id, queryEmbedding);
-
-  // Concurrent context retrieval with Promise.allSettled - either can fail independently
-  let compassContext = 'No signal context.';
-  
-  if (event.signal_id) {
-    try {
-      const signal = await executeMcpTool('compass_get_signal', { signal_id: event.signal_id });
-      compassContext = signal.success ? signal.content.substring(0, 500) : 'Signal lookup failed.';
-    } catch (e) {
-      compassContext = `Error: ${e}`;
-    }
+export async function reason(db: Pool, event: CNXEvent): Promise<void> {
+  return coordinate(db, event);
+}
   }
 
   return { history, memories, compassContext };

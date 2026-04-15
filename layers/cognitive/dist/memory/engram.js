@@ -14,11 +14,13 @@ const client_1 = require("../mcp/client");
 // ------------------------------------------------------------------------------
 // Reading: Contact History Context
 // ------------------------------------------------------------------------------
-async function getContactHistory(contactId, stage, query = 'general', maxEntries = 3) {
+async function getContactHistory(contactId, stage, query = 'general', maxEntries = 3, agentCluster) {
     try {
-        // Engram search uses project + contact_id + stage as search query
-        // Format matches: "TEST_CID_001 | ONB | ONB_FRC_01"
-        const searchQuery = `${contactId} | ${stage}`;
+        // Engram search uses project + contact_id + stage + agent as search query
+        // Format matches: "TEST_CID_001 | ONB | agent:lifecycle"
+        const searchQuery = agentCluster
+            ? `${contactId} | ${stage} | agent:${agentCluster}`
+            : `${contactId} | ${stage}`;
         const result = await (0, client_1.executeMcpTool)('mem_search', {
             query: searchQuery,
             project: 'xnoria-agentic-engine'
@@ -75,14 +77,15 @@ function hasRecentNudge(history, contactId, stage) {
 // ------------------------------------------------------------------------------
 // Writing: Session Outcome Recording
 // ------------------------------------------------------------------------------
-async function recordSessionOutcome(event, actionId, filterResponse, session_id) {
+async function recordSessionOutcome(event, actionId, filterResponse, session_id, agentCluster) {
     if (!event.signal_id) {
-        return; // No signal, no memory record
+        return;
     }
     try {
         // Build memory title and content for Engram
-        const title = `${event.contact_id} | ${event.stage} | ${event.signal_id} → ${actionId} [${filterResponse.status}]`;
-        const content = buildMemoryContent(event, actionId, filterResponse);
+        const clusterTag = agentCluster ? ` | agent:${agentCluster}` : '';
+        const title = `${event.contact_id} | ${event.stage} | ${event.signal_id} → ${actionId} [${filterResponse.status}]${clusterTag}`;
+        const content = buildMemoryContent(event, actionId, filterResponse, agentCluster);
         await (0, client_1.executeMcpTool)('mem_save', {
             title: title,
             content: content,
@@ -91,13 +94,13 @@ async function recordSessionOutcome(event, actionId, filterResponse, session_id)
     }
     catch (err) {
         console.error('[memory] session record failed:', err);
-        // Fire-and-forget — never throws
     }
 }
 // ------------------------------------------------------------------------------
 // Formatted Content Builder (RFC-compliant)
 // ------------------------------------------------------------------------------
-function buildMemoryContent(event, actionId, filterResponse) {
+function buildMemoryContent(event, actionId, filterResponse, agentCluster) {
+    const clusterNote = agentCluster ? ` | agent: ${agentCluster}` : '';
     return [
         `contact_id: ${event.contact_id}`,
         `stage: ${event.stage}`,
@@ -107,6 +110,7 @@ function buildMemoryContent(event, actionId, filterResponse) {
         `action_id: ${actionId}`,
         `status: ${filterResponse.status}`,
         `filter_log_id: ${filterResponse.log_id ?? 'none'}`,
-        `timestamp: ${new Date().toISOString()}`
+        `timestamp: ${new Date().toISOString()}`,
+        `agent_cluster: ${agentCluster ?? 'none'}${clusterNote}`,
     ].join('\n');
 }

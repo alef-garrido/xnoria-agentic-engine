@@ -234,7 +234,7 @@ cd exnoria
 
 # 2. Set up environment
 cp .env.example .env
-# Edit .env — at minimum set ANTHROPIC_API_KEY and POSTGRES_PASSWORD
+# Edit .env — at minimum set LLM_API_KEY and POSTGRES_PASSWORD
 
 # 3. Start everything
 docker compose up -d
@@ -289,7 +289,7 @@ All variables are documented in `.env.example`. Required for the MVP:
 | `POSTGRES_PASSWORD` | orchestration | Postgres password shared by n8n and filter |
 | `POSTGRES_DB` | orchestration | Database name (default: `exnoria`) |
 | `N8N_ENCRYPTION_KEY` | orchestration | n8n credential encryption — generate once, never rotate |
-| `ANTHROPIC_API_KEY` | cognitive | API key for LLM calls |
+| `LLM_API_KEY` | cognitive | API key for LLM calls (OpenAI-compatible) |
 | `FILTER_PORT` | orchestration | Filter HTTP service port (default: `3000`) |
 | `N8N_BASE_URL` | orchestration | Internal URL the filter uses to trigger n8n webhooks |
 | `DASHBOARD_PORT` | dashboard | Dashboard app port (default: `4000`) |

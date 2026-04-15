@@ -2,6 +2,7 @@ export type JourneyStage =
   | 'ACQ' | 'SAL' | 'ONB' | 'PRD'
   | 'SUP' | 'COM' | 'RET' | 'EXP';
 
+export type AgentCluster = 'acqsal' | 'lifecycle' | 'escalation';
 export type Channel = 'telegram' | 'n8n' | 'internal';
 export type Role    = 'user' | 'assistant';
 
@@ -17,7 +18,13 @@ export interface CXEvent {
   cause_code?:      string;       // e.g. "SUP-RES" — Compass cause code
   interventions?:   string[];     // e.g. ["INT_SUP_RES_01_A", "INT_SUP_RES_01_B"]
 
-  meta?:      Record<string, unknown>;
+  // Multi-agent coordinator routing metadata (Phase 4 B4)
+  meta?: {
+    cross_stage_history?: string;  // Contact history from all stages (coordinator fetches)
+    routed_by?: string;            // 'coordinator' or undefined
+    cluster?: AgentCluster;        // Cluster this event was routed to
+    [key: string]: unknown;
+  };
 }
 
 export interface HistoryTurn {

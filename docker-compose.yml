@@ -155,6 +155,14 @@ services:
       LLM_BASE_URL: ${LLM_BASE_URL:-https://generativelanguage.googleapis.com/v1beta/openai}
       LLM_API_KEY: ${LLM_API_KEY}
       LLM_MODEL: ${LLM_MODEL:-gemini-2.0-flash}
+      LLM_COORDINATOR_MODEL: ${LLM_COORDINATOR_MODEL:-llama-3.1-8b-instant}
+      LLM_ACQSAL_MODEL: ${LLM_ACQSAL_MODEL:-llama-3.3-70b-versatile}
+      LLM_ACQSAL_BASE_URL: ${LLM_ACQSAL_BASE_URL:-https://api.groq.com/openai/v1}
+      LLM_LIFECYCLE_MODEL: ${LLM_LIFECYCLE_MODEL:-claude-sonnet-4-6}
+      LLM_ESCALATION_MODEL: ${LLM_ESCALATION_MODEL:-claude-sonnet-4-6}
+      LLM_ACQSAL_API_KEY: ${LLM_ACQSAL_API_KEY:-${LLM_API_KEY}}
+      LLM_LIFECYCLE_API_KEY: ${LLM_LIFECYCLE_API_KEY:-${LLM_API_KEY}}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-${LLM_API_KEY}}
       EMBEDDING_API_KEY: ${EMBEDDING_API_KEY}
       COGNITIVE_MEMORY_PORT: ${COGNITIVE_MEMORY_PORT:-3001}
       FILTER_URL: http://filter:3000

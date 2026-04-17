@@ -27,7 +27,7 @@ const PUBLIC_API_PREFIXES = [
   '/api/health',
 ];
 
-export function middleware(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Always allow public pages

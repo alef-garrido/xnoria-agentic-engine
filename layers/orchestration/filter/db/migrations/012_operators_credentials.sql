@@ -14,14 +14,26 @@
 BEGIN;
 
 -- ------------------------------------------------------------------------------
--- Password and account-security columns on operators
+-- Operators table (Identity and RBAC)
 -- ------------------------------------------------------------------------------
-ALTER TABLE operators
-  ADD COLUMN IF NOT EXISTS password_hash    TEXT,
-  ADD COLUMN IF NOT EXISTS last_login_at    TIMESTAMPTZ,
-  ADD COLUMN IF NOT EXISTS failed_attempts  INTEGER NOT NULL DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS locked_until     TIMESTAMPTZ,
-  ADD COLUMN IF NOT EXISTS password_changed BOOLEAN NOT NULL DEFAULT false;
+CREATE TABLE IF NOT EXISTS operators (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  handle           TEXT NOT NULL UNIQUE,
+  display_name     TEXT NOT NULL,
+  role             TEXT NOT NULL, -- admin, operator, viewer
+  password_hash    TEXT,
+  last_login_at    TIMESTAMPTZ,
+  failed_attempts  INTEGER NOT NULL DEFAULT 0,
+  locked_until     TIMESTAMPTZ,
+  password_changed BOOLEAN NOT NULL DEFAULT false,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Insert default admin (password must be set manually later)
+INSERT INTO operators (handle, display_name, role)
+VALUES ('admin', 'System Admin', 'admin')
+ON CONFLICT (handle) DO NOTHING;
 
 -- ------------------------------------------------------------------------------
 -- operator_sessions

@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   // Fetch operator by handle (disabled operators cannot log in)
   const result = await query(
     `SELECT id, handle, display_name, role,
-            password_hash, failed_attempts, locked_until, disabled
+            password_hash, failed_attempts, locked_until
      FROM operators
      WHERE handle = $1`,
     [handle]
@@ -68,11 +68,6 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
-  }
-
-  // Disabled check (belt-and-suspenders — also filtered in session validation)
-  if (operator.disabled) {
-    return NextResponse.json({ error: 'Account disabled' }, { status: 403 });
   }
 
   // Reset brute-force state on successful login

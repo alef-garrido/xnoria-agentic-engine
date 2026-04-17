@@ -9,7 +9,7 @@
 - **Charts:** Recharts
 - **Icons:** Lucide React
 - **Database:** Postgres (via pg pool)
-- **Auth:** Cookie-based (mc_auth)
+- **Auth:** Session-based (`xnoria_session` cookie, bcrypt, Postgres-backed)
 
 ## Commands
 ```bash
@@ -40,18 +40,70 @@ src/
 ├── config/               # Configuration files
 ├── hooks/                # React hooks
 ├── lib/
+│   ├── auth.ts           # Session creation, validation, invalidation
 │   └── db.ts             # Postgres pool wrapper
-└── proxy.ts              # Auth middleware
+└── proxy.ts              # Auth middleware (cookie presence check only)
 data/                     # Example data files
 ```
 
 ## Path Aliases
 - `@/*` → `./src/*` (configured in tsconfig.json)
 
-## Auth Pattern
-- Cookie-based authentication using `mc_auth` cookie
-- Auth middleware in `proxy.ts` protects dashboard routes
-- Login page at `/login`
+## Auth Pattern (C4)
+
+Session-based authentication. Cookie `xnoria_session` carries a 32-byte random token.
+Only the bcrypt hash of the token is stored in `operator_sessions`. Full bcrypt comparison
+happens in `lib/auth.ts` — NOT in `proxy.ts` (edge middleware can only do cookie presence check).
+
+### Roles
+| Role | Access |
+|---|---|
+| `admin` | Full dashboard + operator management |
+| `operator` | Full dashboard, no `/api/admin/*` |
+| `viewer` | Phase 5 — defined in schema, full access until isolation is scoped |
+
+### Creating a new operator (CLI)
+```bash
+# 1. Generate bcrypt hash for the temporary password
+docker exec exnoria_dashboard node -e \
+  "require('bcrypt').hash('temp-password', 12).then(h => console.log(h))"
+
+# 2. Insert operator row
+docker exec exnoria_postgres psql -U postgres -d exnoria -c \
+  "INSERT INTO operators (handle, display_name, role, password_hash) \
+   VALUES ('alice', 'Alice Smith', 'operator', '<hash from step 1>');"
+```
+
+### Resetting a password (manual procedure)
+```bash
+# 1. Generate new hash
+docker exec exnoria_dashboard node -e \
+  "require('bcrypt').hash('new-password', 12).then(h => console.log(h))"
+
+# 2. Update operator and force a password change on next login
+docker exec exnoria_postgres psql -U postgres -d exnoria -c \
+  "UPDATE operators \
+   SET password_hash = '<new_hash>', password_changed = false \
+   WHERE handle = 'alice';"
+```
+
+### Setting the admin password after migration 012
+```bash
+docker exec exnoria_dashboard node -e \
+  "require('bcrypt').hash('your-secure-password', 12).then(h => console.log(h))"
+
+docker exec exnoria_postgres psql -U postgres -d exnoria -c \
+  "UPDATE operators SET password_hash = '<hash>', password_changed = true \
+   WHERE handle = 'admin';"
+```
+
+### Creating an operator via API (admin only)
+```bash
+curl -X POST http://localhost:4000/api/admin/operators \
+  -H "Content-Type: application/json" \
+  -H "Cookie: xnoria_session=<your-token>" \
+  -d '{"handle":"alice","display_name":"Alice","role":"operator","password":"temp1234"}'
+```
 
 ## Database Access
 - Direct Postgres connection via `src/lib/db.ts` (pg pool wrapper)
@@ -113,3 +165,11 @@ data/                     # Example data files
 | `FILTER_URL` | Filter service URL (default: `http://filter:3000` in compose) |
 | `POSTGRES_*` | Database connection (inherited from docker-compose) |
 | `COM_CONTENT_SHEET_ID` | Google Sheets ID for content calendar (COM workflow) |
+
+## Auth Notes for Agents
+- `proxy.ts` only checks cookie *presence* — it cannot do bcrypt in edge runtime
+- Full session validation: always call `validateSession()` from `lib/auth.ts` in API routes/pages
+- Use `requireAuth()` for operator check, `requireAdmin()` for admin-only routes
+- `reviewed_by_operator_id` (UUID FK) must be written alongside `reviewed_by` (string) on HITL actions
+- Session cookie name is the constant `SESSION_COOKIE` exported from `lib/auth.ts` — never hardcode `'xnoria_session'`
+- `password_changed = false` on first login must redirect to `/change-password` (page not yet built — Phase 5; login API signals it via `requires_password_change: true`)

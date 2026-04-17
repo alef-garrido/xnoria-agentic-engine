@@ -34,7 +34,7 @@ export async function GET() {
   }
 
   const result = await query(
-    `SELECT id, handle, display_name, role, disabled, last_login_at,
+    `SELECT id, handle, display_name, role, last_login_at,
             failed_attempts, locked_until, password_changed, created_at
      FROM operators
      ORDER BY created_at ASC`

@@ -1,115 +1,113 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+// ==============================================================================
+// Exnoria · Dashboard · POST /api/auth/login
+// Credential-based login: handle + password → bcrypt verify → session cookie
+// ==============================================================================
 
-// Simple in-memory rate limiter (per-IP, resets on server restart)
-// Sufficient for a personal dashboard — no external dependency needed
-const MAX_ATTEMPTS = 5;
-const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-const LOCKOUT_MS = 15 * 60 * 1000; // 15 minute lockout after max attempts
+import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcrypt';
+import { query } from '@/lib/db';
+import { createSession, SESSION_COOKIE } from '@/lib/auth';
 
-interface AttemptRecord {
-  count: number;
-  windowStart: number;
-  lockedUntil?: number;
-}
-
-const attempts = new Map<string, AttemptRecord>();
-
-function getClientIp(request: NextRequest): string {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
-    "unknown"
-  );
-}
-
-function checkRateLimit(ip: string): { allowed: boolean; retryAfterMs?: number } {
-  const now = Date.now();
-  const record = attempts.get(ip);
-
-  if (!record) {
-    return { allowed: true };
-  }
-
-  // Still locked out?
-  if (record.lockedUntil && now < record.lockedUntil) {
-    return { allowed: false, retryAfterMs: record.lockedUntil - now };
-  }
-
-  // Window expired — reset
-  if (now - record.windowStart > WINDOW_MS) {
-    attempts.delete(ip);
-    return { allowed: true };
-  }
-
-  // Within window, check count
-  if (record.count >= MAX_ATTEMPTS) {
-    // Lock out
-    record.lockedUntil = now + LOCKOUT_MS;
-    attempts.set(ip, record);
-    return { allowed: false, retryAfterMs: LOCKOUT_MS };
-  }
-
-  return { allowed: true };
-}
-
-function recordFailure(ip: string): void {
-  const now = Date.now();
-  const record = attempts.get(ip);
-
-  if (!record || now - record.windowStart > WINDOW_MS) {
-    attempts.set(ip, { count: 1, windowStart: now });
-  } else {
-    record.count += 1;
-    attempts.set(ip, record);
-  }
-}
-
-function clearAttempts(ip: string): void {
-  attempts.delete(ip);
-}
+const SESSION_MAX_AGE = 8 * 60 * 60; // 8 hours in seconds
 
 export async function POST(request: NextRequest) {
-  const ip = getClientIp(request);
+  let handle: string | undefined;
+  let password: string | undefined;
 
-  // Rate limit check
-  const { allowed, retryAfterMs } = checkRateLimit(ip);
-  if (!allowed) {
-    const retryAfterSec = Math.ceil((retryAfterMs ?? LOCKOUT_MS) / 1000);
+  try {
+    const body = await request.json();
+    handle   = body.handle;
+    password = body.password;
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+  }
+
+  if (!handle || !password) {
+    return NextResponse.json({ error: 'Missing credentials' }, { status: 400 });
+  }
+
+  // Fetch operator by handle (disabled operators cannot log in)
+  const result = await query(
+    `SELECT id, handle, display_name, role,
+            password_hash, failed_attempts, locked_until, disabled
+     FROM operators
+     WHERE handle = $1`,
+    [handle]
+  );
+
+  const operator = result.rows[0] ?? null;
+
+  // Brute-force lockout check (checked before password comparison to prevent
+  // timing attacks that reveal whether the account exists)
+  if (operator?.locked_until && new Date(operator.locked_until) > new Date()) {
     return NextResponse.json(
-      { success: false, error: "Too many failed attempts. Try again later." },
-      {
-        status: 429,
-        headers: { "Retry-After": String(retryAfterSec) },
-      }
+      { error: 'Account temporarily locked. Try again later.' },
+      { status: 423 }
     );
   }
 
-  const { password } = await request.json();
+  // Validate password — same error for bad handle or bad password (prevents enumeration)
+  const valid = operator?.password_hash
+    ? await bcrypt.compare(password, operator.password_hash)
+    : false;
 
-  if (password === process.env.ADMIN_PASSWORD) {
-    clearAttempts(ip); // Reset on success
+  if (!valid) {
+    if (operator) {
+      const attempts    = (operator.failed_attempts ?? 0) + 1;
+      const lockedUntil = attempts >= 3
+        ? new Date(Date.now() + 30 * 60 * 1000) // 30 min lockout
+        : null;
 
-    const response = NextResponse.json({ success: true });
+      await query(
+        `UPDATE operators
+         SET failed_attempts = $1,
+             locked_until    = $2
+         WHERE id = $3`,
+        [attempts, lockedUntil, operator.id]
+      );
+    }
 
-    // Set auth cookie (7 days expiry)
-    // secure=true in production (HTTPS), false in dev (HTTP localhost)
-    response.cookies.set("mc_auth", process.env.AUTH_SECRET!, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: "/",
-    });
-
-    return response;
+    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   }
 
-  // Record failed attempt
-  recordFailure(ip);
+  // Disabled check (belt-and-suspenders — also filtered in session validation)
+  if (operator.disabled) {
+    return NextResponse.json({ error: 'Account disabled' }, { status: 403 });
+  }
 
-  return NextResponse.json(
-    { success: false, error: "Invalid password" },
-    { status: 401 }
+  // Reset brute-force state on successful login
+  await query(
+    `UPDATE operators
+     SET failed_attempts = 0,
+         locked_until    = null,
+         last_login_at   = now()
+     WHERE id = $1`,
+    [operator.id]
   );
+
+  // Create persisted session
+  const token = await createSession(operator.id, {
+    userAgent: request.headers.get('user-agent') ?? undefined,
+    ip:        request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? undefined,
+  });
+
+  const response = NextResponse.json({
+    operator: {
+      handle:       operator.handle,
+      display_name: operator.display_name,
+      role:         operator.role,
+    },
+    // Signal whether a password change is required (first login)
+    requires_password_change: operator.password_changed === false,
+  });
+
+  response.cookies.set(SESSION_COOKIE, token, {
+    httpOnly: true,
+    secure:   process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge:   SESSION_MAX_AGE,
+    path:     '/',
+  });
+
+  return response;
 }

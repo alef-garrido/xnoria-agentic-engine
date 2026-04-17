@@ -43,7 +43,8 @@ export async function getPendingActions(db: Pool): Promise<HITLPendingAction[]> 
 export async function approveAction(
   db: Pool,
   logId: string,
-  reviewedBy: string = 'admin'
+  reviewedBy: string = 'admin',
+  operatorId?: string
 ): Promise<{ success: boolean; log_id: string; status: string; dispatched_at?: string; error?: string }> {
 
   // 1. Read the pending log entry
@@ -109,11 +110,12 @@ export async function approveAction(
     await db.query(
       `UPDATE filter_log
        SET status = 'executed',
-           payload_out = $1,
-           reviewed_at = now(),
-           reviewed_by = $2
-       WHERE id = $3`,
-      [JSON.stringify(workflowResult), reviewedBy, logId]
+           payload_out              = $1,
+           reviewed_at              = now(),
+           reviewed_by              = $2,
+           reviewed_by_operator_id  = $3
+       WHERE id = $4`,
+      [JSON.stringify(workflowResult), reviewedBy, operatorId ?? null, logId]
     );
 
     return { success: true, log_id: logId, status: 'executed', dispatched_at: now };
@@ -125,12 +127,13 @@ export async function approveAction(
     await db.query(
       `UPDATE filter_log
        SET status = 'error',
-           rejection_code = 'WORKFLOW_UNREACHABLE',
-           rejection_reason = $1,
-           reviewed_at = now(),
-           reviewed_by = $2
-       WHERE id = $3`,
-      [message, reviewedBy, logId]
+           rejection_code           = 'WORKFLOW_UNREACHABLE',
+           rejection_reason         = $1,
+           reviewed_at              = now(),
+           reviewed_by              = $2,
+           reviewed_by_operator_id  = $3
+       WHERE id = $4`,
+      [message, reviewedBy, operatorId ?? null, logId]
     );
 
     return { success: false, log_id: logId, status: 'error', error: message };
@@ -143,7 +146,8 @@ export async function approveAction(
 export async function rejectAction(
   db: Pool,
   logId: string,
-  reviewedBy: string = 'admin'
+  reviewedBy: string = 'admin',
+  operatorId?: string
 ): Promise<{ success: boolean; log_id: string; status: string; rejected_at?: string; error?: string }> {
 
   // 1. Read the pending log entry
@@ -178,12 +182,13 @@ export async function rejectAction(
   await db.query(
     `UPDATE filter_log
      SET status = 'rejected',
-         rejection_code = 'HITL_REJECTED',
-         rejection_reason = 'Rejected by operator',
-         reviewed_at = now(),
-         reviewed_by = $1
-     WHERE id = $2`,
-    [reviewedBy, logId]
+         rejection_code           = 'HITL_REJECTED',
+         rejection_reason         = 'Rejected by operator',
+         reviewed_at              = now(),
+         reviewed_by              = $1,
+         reviewed_by_operator_id  = $2
+     WHERE id = $3`,
+    [reviewedBy, operatorId ?? null, logId]
   );
 
   return { success: true, log_id: logId, status: 'rejected', rejected_at: now };

@@ -2,11 +2,12 @@
 
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Terminal, Lock, AlertCircle } from "lucide-react";
+import { Terminal, Lock, User, AlertCircle, KeyRound } from "lucide-react";
 
 function LoginForm() {
+  const [handle, setHandle]   = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError]     = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -18,93 +19,128 @@ function LoginForm() {
 
     try {
       const res = await fetch("/api/auth/login", {
-        method: "POST",
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body:    JSON.stringify({ handle, password }),
       });
 
       const data = await res.json();
 
-      if (data.success) {
+      if (res.ok) {
+        // If the operator has never changed their password, redirect to change-password page
+        if (data.requires_password_change) {
+          router.push("/change-password");
+          return;
+        }
         const from = searchParams.get("from") || "/";
         router.push(from);
         router.refresh();
+      } else if (res.status === 423) {
+        setError("Cuenta bloqueada temporalmente. Intentá de nuevo en 30 minutos.");
+      } else if (res.status === 401) {
+        setError("Credenciales incorrectas.");
       } else {
-        setError("Contraseña incorrecta");
+        setError(data.error ?? "Error al iniciar sesión.");
       }
     } catch {
-      setError("Error de conexión");
+      setError("Error de conexión.");
     }
 
     setLoading(false);
   };
 
   return (
-    <div 
+    <div
       className="rounded-xl p-10"
       style={{
-        backgroundColor: 'var(--card)',
-        border: '1px solid var(--border)',
+        backgroundColor: "var(--card)",
+        border: "1px solid var(--border)",
       }}
     >
       {/* Header */}
-      <div className="text-center mb-6 flex flex-col items-center gap-2">
+      <div className="text-center mb-8 flex flex-col items-center gap-2">
         <div className="flex items-center gap-2.5">
-          <Terminal 
-            className="w-7 h-7" 
-            style={{ color: 'var(--accent)' }} 
+          <Terminal
+            className="w-7 h-7"
+            style={{ color: "var(--accent)" }}
           />
           <span className="text-2xl">🧠</span>
-          <h1 
+          <h1
             className="text-xl font-bold"
-            style={{ 
-              fontFamily: 'var(--font-heading)',
-              color: 'var(--text-primary)',
-              letterSpacing: '-0.5px'
+            style={{
+              fontFamily: "var(--font-heading)",
+              color: "var(--text-primary)",
+              letterSpacing: "-0.5px",
             }}
           >
             Exnoria
           </h1>
         </div>
-        <p 
+        <p
           className="text-sm"
-          style={{ color: 'var(--text-secondary)' }}
+          style={{ color: "var(--text-secondary)" }}
         >
-          Introduce la contraseña para acceder
+          Ingresá tus credenciales para acceder
         </p>
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Handle */}
         <div className="relative">
-          <Lock 
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px]" 
-            style={{ color: 'var(--text-muted)' }}
+          <User
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px]"
+            style={{ color: "var(--text-muted)" }}
+          />
+          <input
+            type="text"
+            id="handle"
+            value={handle}
+            onChange={(e) => setHandle(e.target.value.toLowerCase().trim())}
+            className="w-full pl-11 pr-4 py-3 rounded-lg text-sm"
+            style={{
+              backgroundColor: "var(--card-elevated)",
+              border: "1px solid var(--border)",
+              color: "var(--text-primary)",
+            }}
+            placeholder="Usuario"
+            autoComplete="username"
+            required
+          />
+        </div>
+
+        {/* Password */}
+        <div className="relative">
+          <Lock
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px]"
+            style={{ color: "var(--text-muted)" }}
           />
           <input
             type="password"
+            id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full pl-11 pr-4 py-3 rounded-lg text-sm"
             style={{
-              backgroundColor: 'var(--card-elevated)',
-              border: '1px solid var(--border)',
-              color: 'var(--text-primary)',
+              backgroundColor: "var(--card-elevated)",
+              border: "1px solid var(--border)",
+              color: "var(--text-primary)",
             }}
             placeholder="Contraseña"
+            autoComplete="current-password"
             required
           />
         </div>
 
         {error && (
-          <div 
+          <div
             className="flex items-center gap-2 text-sm px-4 py-3 rounded-lg"
             style={{
-              backgroundColor: 'var(--error-bg)',
-              color: 'var(--error)',
+              backgroundColor: "var(--error-bg)",
+              color: "var(--error)",
             }}
           >
-            <AlertCircle className="w-4 h-4" />
+            <AlertCircle className="w-4 h-4 shrink-0" />
             {error}
           </div>
         )}
@@ -112,20 +148,21 @@ function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full font-semibold py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50"
+          className="w-full font-semibold py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           style={{
-            backgroundColor: 'var(--accent)',
-            color: 'white',
+            backgroundColor: "var(--accent)",
+            color: "white",
           }}
         >
-          {loading ? "Verificando..." : "Entrar"}
+          <KeyRound className="w-4 h-4" />
+          {loading ? "Verificando..." : "Ingresar"}
         </button>
       </form>
 
       {/* Footer */}
-      <p 
+      <p
         className="text-center text-xs mt-6"
-        style={{ color: 'var(--text-muted)' }}
+        style={{ color: "var(--text-muted)" }}
       >
         Exnoria CX Intelligence Engine
       </p>
@@ -135,24 +172,27 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center p-4 -ml-64"
-      style={{ backgroundColor: 'var(--background)' }}
+      style={{ backgroundColor: "var(--background)" }}
     >
       <div className="w-full max-w-md">
-        <Suspense fallback={
-          <div 
-            className="rounded-xl p-10 animate-pulse"
-            style={{
-              backgroundColor: 'var(--card)',
-              border: '1px solid var(--border)',
-            }}
-          >
-            <div className="h-8 bg-gray-700 rounded mb-4" />
-            <div className="h-12 bg-gray-700 rounded mb-4" />
-            <div className="h-10 bg-gray-700 rounded" />
-          </div>
-        }>
+        <Suspense
+          fallback={
+            <div
+              className="rounded-xl p-10 animate-pulse"
+              style={{
+                backgroundColor: "var(--card)",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <div className="h-8 bg-gray-700 rounded mb-6" />
+              <div className="h-12 bg-gray-700 rounded mb-4" />
+              <div className="h-12 bg-gray-700 rounded mb-4" />
+              <div className="h-10 bg-gray-700 rounded" />
+            </div>
+          }
+        >
           <LoginForm />
         </Suspense>
       </div>

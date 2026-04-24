@@ -102,7 +102,7 @@ app.post('/filter/execute', async (req: Request, res: Response) => {
   try {
     const workflow_result = await dispatchToN8n(
       action.n8n_workflow_id,
-      body.payload
+      { ...body.payload, session_id: body.session_id }
     );
 
     const log_id = await writeLog(db, {

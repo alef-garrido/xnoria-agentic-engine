@@ -2,10 +2,13 @@
 -- Exnoria · Filter service · MVP seed data
 -- Migration: 002_seed_filter_actions.sql
 --
--- Seeds the three ACQ/SAL workflows as permitted actions.
+-- Seeds the MVP ACQ/SAL/SUP/RET/ONB/PRD workflows as permitted actions.
 -- n8n_workflow_id matches the webhook path defined in each workflow.
 -- enabled = true means the action is live.
 -- requires_hitl = false means auto-execute, no human approval needed for MVP.
+--
+-- NOTE: acq.contact.upsert was moved to migration 013_acq_contact_upsert.sql.
+-- Post-MVP actions must use numbered migrations, NOT this seed file.
 -- ==============================================================================
 
 INSERT INTO filter_action (action_id, stage, n8n_workflow_id, requires_hitl, enabled, description)

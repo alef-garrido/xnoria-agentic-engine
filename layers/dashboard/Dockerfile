@@ -19,8 +19,9 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/scripts ./scripts
 
 EXPOSE 4000
 
 ENV PORT=4000
-CMD ["npm", "start"]
+CMD ["sh", "-c", "node scripts/init-admin-password.js || true && npm start"]

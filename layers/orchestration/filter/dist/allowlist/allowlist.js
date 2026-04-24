@@ -1,6 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.lookupAction = lookupAction;
+exports.listActions = listActions;
+exports.createAction = createAction;
+exports.updateAction = updateAction;
+exports.deleteAction = deleteAction;
+// --------------------------------------------------------------------------
+// Lookup — used by POST /filter/execute on every request
+// --------------------------------------------------------------------------
 async function lookupAction(db, action_id, stage) {
     const result = await db.query(`SELECT * FROM filter_action WHERE action_id = $1 LIMIT 1`, [action_id]);
     // Not found at all
@@ -29,4 +36,64 @@ async function lookupAction(db, action_id, stage) {
         };
     }
     return { action, rejectionCode: null, rejectionReason: null };
+}
+// --------------------------------------------------------------------------
+// CRUD — used by the allowlist manager dashboard
+// --------------------------------------------------------------------------
+async function listActions(db) {
+    const result = await db.query(`SELECT id, action_id, stage, n8n_workflow_id, requires_hitl, enabled, description, created_at, updated_at
+     FROM filter_action
+     ORDER BY stage ASC, action_id ASC`);
+    return result.rows;
+}
+async function createAction(db, input) {
+    const result = await db.query(`INSERT INTO filter_action (action_id, stage, n8n_workflow_id, requires_hitl, enabled, description)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     RETURNING id, action_id, stage, n8n_workflow_id, requires_hitl, enabled, description, created_at, updated_at`, [
+        input.action_id,
+        input.stage,
+        input.n8n_workflow_id,
+        input.requires_hitl ?? false,
+        input.enabled ?? true,
+        input.description ?? null
+    ]);
+    return result.rows[0];
+}
+async function updateAction(db, id, input) {
+    // Build dynamic SET clause from provided fields
+    const setClauses = [];
+    const values = [];
+    let paramIndex = 1;
+    if (input.requires_hitl !== undefined) {
+        setClauses.push(`requires_hitl = $${paramIndex++}`);
+        values.push(input.requires_hitl);
+    }
+    if (input.enabled !== undefined) {
+        setClauses.push(`enabled = $${paramIndex++}`);
+        values.push(input.enabled);
+    }
+    if (input.description !== undefined) {
+        setClauses.push(`description = $${paramIndex++}`);
+        values.push(input.description);
+    }
+    if (input.n8n_workflow_id !== undefined) {
+        setClauses.push(`n8n_workflow_id = $${paramIndex++}`);
+        values.push(input.n8n_workflow_id);
+    }
+    if (setClauses.length === 0) {
+        // Nothing to update — return current state
+        const current = await db.query(`SELECT id, action_id, stage, n8n_workflow_id, requires_hitl, enabled, description, created_at, updated_at
+       FROM filter_action WHERE id = $1`, [id]);
+        return current.rows[0] ?? null;
+    }
+    values.push(id);
+    const result = await db.query(`UPDATE filter_action
+     SET ${setClauses.join(', ')}
+     WHERE id = $${paramIndex}
+     RETURNING id, action_id, stage, n8n_workflow_id, requires_hitl, enabled, description, created_at, updated_at`, values);
+    return result.rows[0] ?? null;
+}
+async function deleteAction(db, id) {
+    const result = await db.query(`DELETE FROM filter_action WHERE id = $1`, [id]);
+    return (result.rowCount ?? 0) > 0;
 }

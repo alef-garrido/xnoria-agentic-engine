@@ -5,6 +5,25 @@ exports.TOOLS = [
     {
         type: 'function',
         function: {
+            name: 'crm_contact_upsert',
+            description: 'Upsert (create or update) a contact in HubSpot. ' +
+                'Use when you need a contact_id to perform subsequent actions but the contact does not exist yet. ' +
+                'This tool will return the generated contact_id if successful.',
+            parameters: {
+                type: 'object',
+                properties: {
+                    email: { type: 'string', description: 'Contact email address' },
+                    first_name: { type: 'string', description: 'Contact first name' },
+                    last_name: { type: 'string', description: 'Contact last name' },
+                    phone: { type: 'string', description: 'Contact phone number' }
+                },
+                required: ['email']
+            }
+        }
+    },
+    {
+        type: 'function',
+        function: {
             name: 'acq_lead_score',
             description: 'Score an incoming lead using rule-based logic and apply CRM tags. ' +
                 'Use when a new lead signal is received and needs qualification.',
@@ -382,6 +401,7 @@ exports.TOOLS = [
 // Map from LLM function name → filter action_id + stage
 // null = handled locally (reply) or routed to MCP client (context retrieval tools)
 exports.TOOL_TO_ACTION = {
+    crm_contact_upsert: { action_id: 'acq.contact.upsert', stage: 'ACQ' },
     acq_lead_score: { action_id: 'acq.lead.score', stage: 'ACQ' },
     sal_sequence_enroll: { action_id: 'sal.sequence.enroll', stage: 'SAL' },
     sal_contact_prioritize: { action_id: 'sal.contact.prioritize', stage: 'SAL' },

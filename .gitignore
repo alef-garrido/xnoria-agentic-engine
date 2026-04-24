@@ -10,6 +10,7 @@
 *.userosscache
 *.sln.docstates
 *.env
+*.env.backup.*
 *.mesa.md
 
 # User-specific files (MonoDevelop/Xamarin Studio)
@@ -424,6 +425,7 @@ layers/dashboard/.next/
 #workspace specific
 .next/
 .plan/
+.dev/
 .agents/
 .opencode/
 .gemini/
@@ -431,4 +433,9 @@ layers/dashboard/.next/
 # Backup files — keep directory but not contents
 backups/*.sql
 backups/*.backup
+backups/*.sql.gz
+backups/*.sql.gz.enc
 
+# Deploy — exclude generated .env files, but track .env.template files
+deploy/**/.env
+!deploy/**/.env.template

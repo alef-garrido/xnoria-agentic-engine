@@ -10,41 +10,43 @@ exports.getDefaultClusterConfig = getDefaultClusterConfig;
 // Phase 4 B4 — Multi-model agent architecture (OpenAI-compatible only)
 //
 // Factory function to create LLM clients based on model configuration.
-// Supports any OpenAI-compatible API (Groq, OpenRouter, Anthropic via compatible endpoint).
+// Supports any OpenAI-compatible API (Groq, OpenRouter, local Ollama, etc.).
 // ==============================================================================
 const openai_1 = __importDefault(require("openai"));
 /**
- * Create LLM client based on model configuration
+ * Create LLM client based on per-specialist environment variables.
  *
- * @param modelEnvVar — Environment variable name for model name (e.g., 'LLM_ACQSAL_MODEL')
- * @param baseUrlEnvVar — Optional environment variable for base URL
- * @returns LLMClient instance
+ * @param modelEnvVar   — Env var for the model name        (e.g. 'LLM_LIFECYCLE_MODEL')
+ * @param baseUrlEnvVar — Env var for the base URL          (e.g. 'LLM_LIFECYCLE_BASE_URL')
+ * @param apiKeyEnvVar  — Env var for the API key           (e.g. 'LLM_LIFECYCLE_API_KEY')
+ *
+ * Each param falls back to the global LLM_BASE_URL / LLM_API_KEY when absent.
+ * This lets Groq specialists stay on Groq while OpenRouter specialists
+ * use their own key — no more accidental cross-contamination.
  */
-function createLLMClient(modelEnvVar, baseUrlEnvVar) {
+function createLLMClient(modelEnvVar, baseUrlEnvVar, apiKeyEnvVar) {
     const model = process.env[modelEnvVar];
     if (!model) {
-        throw new Error(`Model not configured: ${modelEnvVar}`);
+        throw new Error(`[llm] Model not configured: ${modelEnvVar}`);
     }
-    const baseURL = baseUrlEnvVar ? process.env[baseUrlEnvVar] : undefined;
-    // Use OpenAI client for all models (Groq, OpenRouter, etc.)
-    const apiKey = process.env.GROQ_API_KEY || process.env.LLM_API_KEY;
+    // Resolve base URL: per-specialist → global fallback
+    const baseURL = (baseUrlEnvVar && process.env[baseUrlEnvVar]) ||
+        process.env.LLM_BASE_URL;
+    // Resolve API key: per-specialist → global fallback → Groq legacy var
+    const apiKey = (apiKeyEnvVar && process.env[apiKeyEnvVar]) ||
+        process.env.LLM_API_KEY ||
+        process.env.GROQ_API_KEY;
     if (!apiKey) {
-        throw new Error(`API key not found. Set GROQ_API_KEY or LLM_API_KEY environment variable.`);
+        throw new Error(`[llm] API key not found. Set ${apiKeyEnvVar ?? 'LLM_API_KEY'} environment variable.`);
     }
+    console.log(`[llm] client: model=${model} baseURL=${baseURL}`);
     return {
         model,
-        client: new openai_1.default({
-            apiKey,
-            baseURL: baseURL || process.env.LLM_BASE_URL,
-        }),
+        client: new openai_1.default({ apiKey, baseURL }),
     };
 }
 /**
- * Get default model config for a cluster
- * Useful for fallback or testing
- *
- * Note: All models accessed via OpenAI-compatible API
- * For Claude models, use OpenRouter endpoint: https://openrouter.ai/api/v1
+ * Get default model config for a cluster (used for fallback / testing).
  */
 function getDefaultClusterConfig(cluster) {
     const configs = {
@@ -53,11 +55,11 @@ function getDefaultClusterConfig(cluster) {
             baseUrl: 'https://api.groq.com/openai/v1',
         },
         lifecycle: {
-            model: 'claude-sonnet-4-6',
+            model: 'anthropic/claude-sonnet-4-5',
             baseUrl: 'https://openrouter.ai/api/v1',
         },
         escalation: {
-            model: 'claude-sonnet-4-6',
+            model: 'anthropic/claude-sonnet-4-5',
             baseUrl: 'https://openrouter.ai/api/v1',
         },
     };

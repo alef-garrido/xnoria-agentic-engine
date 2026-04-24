@@ -11,15 +11,26 @@ let bot: TelegramBot | null = null;
 const chatMap = new Map<string, number>();
 
 // Stage detection from natural language messages
+// Explicit acronyms take priority; semantic patterns cover natural operator speech
 const STAGE_PATTERNS: Array<{ pattern: RegExp; stage: JourneyStage }> = [
+  // --- Explicit acronyms (priority) ---
   { pattern: /\bACQ(?:uisition)?\b/i, stage: 'ACQ' },
   { pattern: /\bSAL(?:es)?\b/i, stage: 'SAL' },
   { pattern: /\bONB(?:oarding)?\b/i, stage: 'ONB' },
   { pattern: /\bPRD(?:uct)?\b/i, stage: 'PRD' },
   { pattern: /\bSUP(?:port)?\b/i, stage: 'SUP' },
-  { pattern: /\bCOM(?:munications?|munication)?\b/i, stage: 'COM' },
+  { pattern: /(?<![.@])\bCOM\b/i, stage: 'COM' },
   { pattern: /\bRET(?:ention)?\b/i, stage: 'RET' },
   { pattern: /\bEXP(?:ansion)?\b/i, stage: 'EXP' },
+  // --- Semantic / natural language (operator speech) ---
+  { pattern: /\b(?:lead|inbound|entrante|prospect)\b/i, stage: 'ACQ' },
+  { pattern: /\b(?:prioridad|prioritize|prioritise|dar.prioridad|follow.up|sales|vendedor)\b/i, stage: 'SAL' },
+  { pattern: /\b(?:onboard|bienvenida|configurar.cuenta|setup|getting.started)\b/i, stage: 'ONB' },
+  { pattern: /\b(?:soporte|support.ticket|bug|problema|issue|incidencia)\b/i, stage: 'SUP' },
+  { pattern: /\b(?:churn|cancelar|cancelaci[oó]n|winback|retener|retention)\b/i, stage: 'RET' },
+  { pattern: /\b(?:upsell|expansion|expansi[oó]n|cuenta.premium|upgrade)\b/i, stage: 'EXP' },
+  { pattern: /\b(?:contenido|publicar|newsletter|redes.sociales|social.media)\b/i, stage: 'COM' },
+  { pattern: /\b(?:friccion|friction|adopci[oó]n|adoption|feature.request|funcionalidad)\b/i, stage: 'PRD' },
 ];
 
 function extractStage(text: string): JourneyStage | undefined {

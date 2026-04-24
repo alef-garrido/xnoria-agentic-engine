@@ -1,0 +1,147 @@
+{
+  "name": "W-ACQ-13 - Acq.contact.upsert",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "acq-contact-upsert",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "n2",
+      "name": "Code -- normalize payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\nconst p = body.payload || {};\nconst email = p.email || body.email || null;\nif (!email) throw new Error('email required');\nreturn [{ json: { email, first_name: p.first_name||null, last_name: p.last_name||null, phone: p.phone||null, session_id: body.session_id||null } }];"
+      }
+    },
+    {
+      "id": "n3",
+      "name": "HubSpot -- upsert contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        680,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/batch/upsert",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.HUBSPOT_PRIVATE_APP_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ inputs: [{ idProperty: 'email', id: $json.email, properties: { email: $json.email, firstname: $json.first_name || '', lastname: $json.last_name || '', phone: $json.phone || '' } }] }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "n4",
+      "name": "Code -- extract contact_id",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const res = ($json.results||[]);\nif (!res.length) throw new Error('no results from HubSpot');\nconst cid = res[0].id;\nif (!cid) throw new Error('no id in HubSpot response');\nconst norm = $('Code -- normalize payload').item.json;\nreturn [{ json: { contact_id: cid, email: norm.email, session_id: norm.session_id, hubspot_created: res[0].createdAt||null, hubspot_updated: res[0].updatedAt||null } }];"
+      }
+    },
+    {
+      "id": "n5",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        300
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'executed', action_id: 'acq.contact.upsert', contact_id: $json.contact_id, email: $json.email, session_id: $json.session_id }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code -- normalize payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code -- normalize payload": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- upsert contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- upsert contact": {
+      "main": [
+        [
+          {
+            "node": "Code -- extract contact_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code -- extract contact_id": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true
+  }
+}

@@ -3,11 +3,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.runLifecycleSpecialist = runLifecycleSpecialist;
 const uuid_1 = require("uuid");
 const clusters_1 = require("../../tools/clusters");
-const llm_1 = require("../../shared/llm");
 const client_1 = require("../../mcp/client");
 const engram_1 = require("../../memory/engram");
 const definitions_1 = require("../../tools/definitions");
 const dispatch_1 = require("../dispatch");
+const telegram_1 = require("../../channels/telegram");
+const session_1 = require("../../memory/session");
+const llm_fallback_1 = require("../../shared/llm-fallback");
 const MAX_LOOP_ITERATIONS = 5;
 const MAX_CONTEXT_TOKENS = 800;
 const LIFECYCLE_SYSTEM_PROMPT = `You are Xnoria's Lifecycle Specialist — the agent responsible for customer health across onboarding, product adoption, communication, and retention stages.
@@ -56,13 +58,19 @@ async function runLifecycleSpecialist(db, event) {
     // Pre-processing (deterministic — no LLM call)
     const context = await gatherLifecycleContext(event);
     const contextBlock = buildContextBlock(context, MAX_CONTEXT_TOKENS);
-    // LLM client for OpenAI-compatible (Groq/OpenRouter)
-    const clientConfig = (0, llm_1.createLLMClient)('LLM_LIFECYCLE_MODEL');
+    // LLM client — lifecycle uses Groq with automatic fallback to OpenRouter
+    const clientConfig = await (0, llm_fallback_1.createLLMClientWithFallback)();
     const llm = clientConfig.client;
-    console.info(`[lifecycle] using model: ${clientConfig.model}`);
+    console.info(`[lifecycle] using model: ${clientConfig.model} (provider: ${clientConfig.provider})`);
     const systemPrompt = `${LIFECYCLE_SYSTEM_PROMPT}\n\n## Retrieved Context\n${contextBlock}`;
-    const session_id = (0, uuid_1.v4)();
+    const session_id = event.meta?.session_id ?? (0, uuid_1.v4)();
+    const actionsTaken = [];
+    let botReply;
     const messages = [
+        {
+            role: 'system',
+            content: systemPrompt,
+        },
         {
             role: 'user',
             content: buildEventPrompt(event),
@@ -91,11 +99,36 @@ async function runLifecycleSpecialist(db, event) {
             console.warn('[lifecycle] LLM finished without tool call');
             break;
         }
-        // Classify tool calls
-        const actionCalls = toolCalls.filter(tc => definitions_1.TOOL_TO_ACTION[tc.function.name] !== null);
-        const contextCalls = toolCalls.filter(tc => definitions_1.TOOL_TO_ACTION[tc.function.name] === null);
+        // Classify tool calls: null mapping = local/MCP tool, non-null = filter action
+        const actionCalls = toolCalls.filter(tc => definitions_1.TOOL_TO_ACTION[tc.function.name] !== undefined && definitions_1.TOOL_TO_ACTION[tc.function.name] !== null);
+        const replyCalls = toolCalls.filter(tc => tc.function.name === 'reply');
+        const contextCalls = toolCalls.filter(tc => definitions_1.TOOL_TO_ACTION[tc.function.name] === null && tc.function.name !== 'reply');
         if (actionCalls.length > 0 && contextCalls.length > 0) {
             console.error('[lifecycle] Mixed tool call batch rejected');
+            break;
+        }
+        // Handle reply tool — send message back to contact via channel
+        if (replyCalls.length > 0) {
+            try {
+                const args = JSON.parse(replyCalls[0].function.arguments);
+                botReply = args.message;
+                await (0, telegram_1.sendReply)(event.contact_id, botReply);
+                console.log(`[lifecycle] Reply sent to ${event.contact_id}`);
+            }
+            catch (err) {
+                console.error('[lifecycle] Failed to send reply:', err);
+                // Si falla al parsear los argumentos, intentar extraer el mensaje del error
+                try {
+                    const failedGenMatch = replyCalls[0].function.arguments.match(/"message":\s*"([^"]+)"/);
+                    if (failedGenMatch && failedGenMatch[1]) {
+                        await (0, telegram_1.sendReply)(event.contact_id, failedGenMatch[1]);
+                        console.log(`[lifecycle] Fallback reply sent to ${event.contact_id}`);
+                    }
+                }
+                catch (fallbackErr) {
+                    console.error('[lifecycle] Fallback reply also failed:', fallbackErr);
+                }
+            }
             break;
         }
         if (contextCalls.length > 0) {
@@ -125,6 +158,7 @@ async function runLifecycleSpecialist(db, event) {
                     cluster: 'lifecycle',
                 },
             });
+            actionsTaken.push({ action_id: mapping.action_id, status: filterResponse.status, log_id: filterResponse.log_id });
             // Post-dispatch memory write (fire-and-forget)
             await (0, engram_1.recordSessionOutcome)({ contact_id: event.contact_id, stage: event.stage, signal_id: event.signal_id }, mapping.action_id, filterResponse, session_id, 'lifecycle');
             break;
@@ -133,4 +167,6 @@ async function runLifecycleSpecialist(db, event) {
     if (iterations >= MAX_LOOP_ITERATIONS) {
         console.error(`[lifecycle] Max iterations (${MAX_LOOP_ITERATIONS}) reached`);
     }
+    // Log session to Postgres for the Dashboard (fire-and-forget)
+    await (0, session_1.logSessionToDb)(db, session_id, event, clientConfig.model, actionsTaken, botReply);
 }

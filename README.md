@@ -365,6 +365,61 @@ The `enabled` flag can be toggled in the database at runtime without redeploying
 
 ---
 
+## Deployment
+
+### Quick start (any environment)
+
+```bash
+git clone https://github.com/your-org/xnoria.git
+cd xnoria
+chmod +x deploy/init.sh deploy/health-check.sh deploy/backup.sh deploy/restore.sh
+./deploy/init.sh
+```
+
+The init script detects your target environment, generates secrets, prompts for credentials, runs migrations, starts the stack, and runs a health check — all in one command.
+
+### Environment-specific guides
+
+| Environment | Guide | Use case |
+|---|---|---|
+| Local development | [deploy/runbooks/local-dev.md](deploy/runbooks/local-dev.md) | Developer workstation, testing |
+| VPS | [deploy/runbooks/vps.md](deploy/runbooks/vps.md) | Ubuntu 24 on DigitalOcean/Hetzner/Vultr, public HTTPS |
+| Edge device | [deploy/runbooks/edge.md](deploy/runbooks/edge.md) | Intel NUC, Raspberry Pi 4/5, local network |
+
+### Instance templating
+
+Each client or project gets its own isolated Xnoria instance — no shared state, no shared credentials.
+
+To deploy a new instance:
+
+1. Clone the repo to the target machine
+2. Run `./deploy/init.sh` with the appropriate environment (`local`, `vps`, or `edge`)
+3. Fill in client-specific credentials when prompted
+4. The instance is fully isolated from all other deployments
+
+### Backup and restore
+
+```bash
+# Create an encrypted backup
+export BACKUP_PASSPHRASE='your-secure-passphrase'
+./deploy/backup.sh
+
+# Restore from backup
+./deploy/restore.sh backups/xnoria_backup_YYYYMMDD_HHMMSS.sql.gz.enc
+```
+
+Backups are AES-256-CBC encrypted. Never commit backup files or your `BACKUP_PASSPHRASE` to source control.
+
+### Health check
+
+```bash
+./deploy/health-check.sh
+```
+
+Validates all services are operational: Postgres, n8n, filter, dashboard, cognitive container, filter actions, pgvector extension, and Telegram bot connectivity.
+
+---
+
 ## License
 
 Private — exnoria / Oscar Armando Perez Garrido. All rights reserved.

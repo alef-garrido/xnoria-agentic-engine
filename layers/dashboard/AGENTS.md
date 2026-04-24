@@ -62,16 +62,97 @@ happens in `lib/auth.ts` — NOT in `proxy.ts` (edge middleware can only do cook
 | `operator` | Full dashboard, no `/api/admin/*` |
 | `viewer` | Phase 5 — defined in schema, full access until isolation is scoped |
 
-### Creating a new operator (CLI)
-```bash
-# 1. Generate bcrypt hash for the temporary password
-docker exec exnoria_dashboard node -e \
-  "require('bcrypt').hash('temp-password', 12).then(h => console.log(h))"
+## Admin Password Bootstrap
 
-# 2. Insert operator row
-docker exec exnoria_postgres psql -U postgres -d exnoria -c \
-  "INSERT INTO operators (handle, display_name, role, password_hash) \
-   VALUES ('alice', 'Alice Smith', 'operator', '<hash from step 1>');"
+The admin account is created by migration 012 with `password_hash = NULL`. Two mechanisms
+allow you to set the password:
+
+### Path 1: Automatic (Docker Startup + Environment Variable)
+
+**Recommended for fresh deployments.**
+
+If `DASHBOARD_ADMIN_PASSWORD` is set in `.env` before `make up`, the admin password is
+automatically seeded when the dashboard container starts:
+
+```bash
+# .env
+DASHBOARD_ADMIN_PASSWORD=your-secure-password-here
+
+# Run initialization
+./deploy/init.sh
+
+# ... migrations run ...
+# ... "DASHBOARD_ADMIN_PASSWORD is set"...
+# ... Stack starts ...
+# ... Dashboard container runs: node scripts/init-admin-password.js ...
+# ... "[admin-init] Admin password initialized successfully" ...
+```
+
+How it works:
+1. `.env` is sourced with `DASHBOARD_ADMIN_PASSWORD` set
+2. Migrations run (migration 014 verifies admin exists)
+3. Stack starts (full services including dashboard)
+4. Dashboard container entrypoint runs: `node scripts/init-admin-password.js`
+5. Script checks if admin `password_hash IS NULL`
+6. If NULL, hashes password with bcrypt and updates the row
+7. Logs success: "[admin-init] Admin password initialized successfully"
+8. Dashboard service (`npm start`) begins normally
+
+**Idempotent:** Running `./deploy/init.sh` multiple times is safe — the script only
+updates the password if it's currently `NULL`. Restarting the dashboard container is also safe.
+
+### Path 2: Manual Bootstrap API (Escape Hatch)
+
+**Use this if the password was not seeded** (e.g., env var was added after migrations).
+
+Call `POST /api/bootstrap/admin-init` once during setup:
+
+```bash
+# Endpoint is public — no auth required
+curl -X POST http://localhost:4000/api/bootstrap/admin-init \
+  -H "Content-Type: application/json" \
+  -d '{"password": "your-secure-password-here"}'
+
+# Response (200 OK):
+# {
+#   "message": "Admin password initialized successfully",
+#   "admin": {
+#     "id": "<uuid>",
+#     "handle": "admin",
+#     "display_name": "System Admin"
+#   }
+# }
+```
+
+**Self-disabling:** After the first successful call, the endpoint returns 403 Forbidden
+for all subsequent calls with message: "Admin already initialized. This endpoint can
+only be used once during setup."
+
+Error responses:
+- `400 Bad Request` — password too short (minimum 8 characters) or invalid JSON
+- `403 Forbidden` — admin already initialized or not found (dependency failure)
+- `500 Internal Server Error` — database error
+
+### Path 3: Fallback (CLI + Manual bcrypt)
+
+**Last resort if automated paths fail.**
+
+```bash
+# 1. Generate bcrypt hash for your password
+docker exec exnoria_dashboard node -e \
+  "require('bcrypt').hash('your-secure-password', 12).then(h => console.log(h))"
+
+# 2. Copy the output hash and use it in the UPDATE:
+docker exec exnoria_postgres psql -U xnoria -d exnoria -c \
+  "UPDATE operators SET password_hash = '<paste-hash-here>', password_changed = true WHERE handle = 'admin';"
+```
+
+### Creating additional operators (via API, admin only)
+```bash
+curl -X POST http://localhost:4000/api/admin/operators \
+  -H "Content-Type: application/json" \
+  -H "Cookie: xnoria_session=<your-token>" \
+  -d '{"handle":"alice","display_name":"Alice","role":"operator","password":"temp1234"}'
 ```
 
 ### Resetting a password (manual procedure)
@@ -81,29 +162,14 @@ docker exec exnoria_dashboard node -e \
   "require('bcrypt').hash('new-password', 12).then(h => console.log(h))"
 
 # 2. Update operator and force a password change on next login
-docker exec exnoria_postgres psql -U postgres -d exnoria -c \
+docker exec exnoria_postgres psql -U xnoria -d exnoria -c \
   "UPDATE operators \
    SET password_hash = '<new_hash>', password_changed = false \
    WHERE handle = 'alice';"
 ```
 
-### Setting the admin password after migration 012
-```bash
-docker exec exnoria_dashboard node -e \
-  "require('bcrypt').hash('your-secure-password', 12).then(h => console.log(h))"
+### Creating an operator via CLI (alternative to POST)
 
-docker exec exnoria_postgres psql -U postgres -d exnoria -c \
-  "UPDATE operators SET password_hash = '<hash>', password_changed = true \
-   WHERE handle = 'admin';"
-```
-
-### Creating an operator via API (admin only)
-```bash
-curl -X POST http://localhost:4000/api/admin/operators \
-  -H "Content-Type: application/json" \
-  -H "Cookie: xnoria_session=<your-token>" \
-  -d '{"handle":"alice","display_name":"Alice","role":"operator","password":"temp1234"}'
-```
 
 ## Database Access
 - Direct Postgres connection via `src/lib/db.ts` (pg pool wrapper)

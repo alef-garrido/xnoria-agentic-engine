@@ -131,6 +131,7 @@ Eight journey stages with registered actions:
 | `prd.feedback.log` | PRD | Log enriched feature request to HubSpot product pipeline |
 | `ret.contact.winback` | RET | Enroll contact in winback sequence (HITL) |
 | `ret.account.flag` | RET | Flag account for CSM review |
+| `acq.contact.upsert` | ACQ | Create or update contact in HubSpot CRM, returns `contact_id` for chaining (migration 013) |
 
 Placeholder actions (disabled):
 | Action ID | Stage | Description |
@@ -167,7 +168,7 @@ Placeholder actions (disabled):
 - Migration files: `layers/orchestration/filter/db/migrations/NNN_description.sql`
 - Cognitive layer migrations: `layers/cognitive/db/migrations/NNN_description.sql`
 - Always add migration, never modify existing ones
-- Update seed.sql for new filter_action entries
+- **Post-MVP actions go in numbered migrations** — `seed.sql` is for MVP bootstrap only. Never add new actions to seed.sql.
 ## Key Implementation Details
 ### Filter Service Flow (`POST /filter/execute`)
 1. Validate required fields (action_id, stage, session_id, payload)
@@ -182,6 +183,16 @@ Placeholder actions (disabled):
 - `ACTION_DISABLED` — action exists but enabled=false
 - `HITL_REJECTED` — human rejected the action
 - `WORKFLOW_UNREACHABLE` — n8n dispatch failed
+### Sequential Tool Execution (ReAct)
+
+The AcqSal specialist supports sequential filter dispatches for chained operations
+(e.g. upsert contact → prioritize contact). Constraints:
+- **Max 3 filter dispatches per session** (`MAX_FILTER_DISPATCHES = 3`) — separate from the loop iteration cap (`MAX_LOOP_ITERATIONS = 5`). Context retrieval does not count toward this limit.
+- **Parallel tool calls rejected** — if the LLM attempts context + action in the same batch, the batch is rejected and the loop halts.
+- **Each dispatch result is injected back as a `tool` role message** for the next LLM turn, enabling chaining.
+- **n8n workflows in sequential chains MUST use `Respond to Webhook: Return JSON`** with the fields needed by the next tool call.
+  - Example: `acq.contact.upsert` must return `{ "contact_id": "..." }` so `sal.contact.prioritize` can use the real HubSpot ID.
+- **Verification test for chained actions:** inject a Telegram message with email + name but no existing contact ID, confirm logs show two sequential dispatches with `dispatch 1/3` and `dispatch 2/3`, and confirm the second payload carries the `contact_id` returned by the first.
 ### Environment Variables
 | Variable | Service | Description |
 |---|---|---|

@@ -19,6 +19,7 @@ import { logSessionToDb, ActionRecord } from '../../memory/session';
 import { createLLMClientWithFallback } from '../../shared/llm-fallback';
 
 const MAX_LOOP_ITERATIONS = 5;
+const MAX_FILTER_DISPATCHES = 3;
 const MAX_CONTEXT_TOKENS = 800;
 
 const ACQSAL_SYSTEM_PROMPT = `You are Xnoria's Acquisition & Sales Specialist — the agent responsible for lead scoring, sales enablement, and high-velocity outreach.
@@ -31,8 +32,9 @@ Key judgment rules:
 - Score leads based on source and engagement signals
 - For SAL contacts: prioritize for SDR follow-up only on high-severity signals
 - All actions exit through the filter — you only recommend actions, never execute directly
+- You may execute multiple tools in sequence. If you need to create/update a contact before prioritizing, execute the upsert tool, wait for the response, and then execute the prioritization tool.
 
-Context has already been retrieved and is provided below. Select one action only.`;
+Context has already been retrieved and is provided below.`;
 
 // Pre-processing: gather context deterministically before LLM call
 async function gatherAcqSalContext(event: CXEvent): Promise<string> {
@@ -56,11 +58,15 @@ function buildContextBlock(context: string, maxTokens: number): string {
 function buildEventPrompt(event: CXEvent): string {
   const parts = [
     `Stage: ${event.stage}`,
-    `Signal ID: ${event.signal_id}`,
+    `Signal ID: ${event.signal_id ?? 'N/A'}`,
     `Severity: ${event.signal_severity ?? 'N/A'}`,
-    `Cause Code: ${event.cause_code}`,
+    `Cause Code: ${event.cause_code ?? 'N/A'}`,
     `Contact ID: ${event.contact_id}`,
   ];
+
+  if (event.input) {
+    parts.push(`\nOperator Message:\n${event.input}`);
+  }
 
   if (event.interventions && event.interventions.length > 0) {
     parts.push(`Interventions: ${event.interventions.join(', ')}`);
@@ -99,9 +105,11 @@ export async function runAcqSalSpecialist(db: Pool, event: CXEvent): Promise<voi
   ];
 
   let iterations = 0;
+  let filterDispatches = 0;
 
   while (iterations < MAX_LOOP_ITERATIONS) {
     iterations++;
+    console.info(`[acqsal] loop iteration=${iterations}/${MAX_LOOP_ITERATIONS} filter_dispatches=${filterDispatches}/${MAX_FILTER_DISPATCHES}`);
 
     const completion = await llm.chat.completions.create({
       model: clientConfig.model,
@@ -126,6 +134,10 @@ export async function runAcqSalSpecialist(db: Pool, event: CXEvent): Promise<voi
       console.warn('[acqsal] LLM finished without tool call');
       break;
     }
+
+    // Append the assistant's message back to context for sequential execution
+    // Cast is needed because OpenAI types `tool_calls` slightly differently in responses vs inputs
+    messages.push(message as OpenAI.ChatCompletionMessageParam);
 
     // Classify tool calls: null mapping = local/MCP tool, non-null = filter action
     const actionCalls = toolCalls.filter(tc => TOOL_TO_ACTION[tc.function.name] !== undefined && TOOL_TO_ACTION[tc.function.name] !== null);
@@ -164,7 +176,13 @@ export async function runAcqSalSpecialist(db: Pool, event: CXEvent): Promise<voi
         break;
       }
 
-      console.log(`[acqsal] Dispatching: ${mapping.action_id}`);
+      filterDispatches++;
+      console.log(`[acqsal] Dispatching: ${mapping.action_id} (dispatch ${filterDispatches}/${MAX_FILTER_DISPATCHES})`);
+
+      if (filterDispatches > MAX_FILTER_DISPATCHES) {
+        console.warn(`[acqsal] Max filter dispatches (${MAX_FILTER_DISPATCHES}) reached — halting chain. session_id=${session_id}`);
+        break;
+      }
 
       const filterResponse = await dispatchToFilter({
         action_id: mapping.action_id,
@@ -192,7 +210,30 @@ export async function runAcqSalSpecialist(db: Pool, event: CXEvent): Promise<voi
         session_id,
         'acqsal'
       );
-      break;
+
+      // Append filter response as tool role and continue for multi-step execution
+      messages.push({
+        role: 'tool',
+        tool_call_id: call.id,
+        content: JSON.stringify({
+          status: filterResponse.status,
+          log_id: filterResponse.log_id,
+          workflow_result: filterResponse.workflow_result,
+        }),
+      });
+
+      // Provide dummy responses for any other tool calls in the same batch to avoid 400 errors from strict LLM APIs
+      for (const tc of toolCalls) {
+        if (tc.id !== call.id) {
+          messages.push({
+            role: 'tool',
+            tool_call_id: tc.id,
+            content: JSON.stringify({ error: 'Ignored due to sequential execution policy. Call this again later if needed.' }),
+          });
+        }
+      }
+
+      continue;
     }
   }
 

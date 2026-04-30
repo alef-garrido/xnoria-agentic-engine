@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 const FILTER_URL = process.env.FILTER_URL ?? 'http://filter:3000';
 
@@ -21,7 +22,7 @@ export async function PATCH(
     const data = await res.json();
     return NextResponse.json(data, { status: res.status });
   } catch (error) {
-    console.error('[dashboard] Failed to proxy allowlist update:', error);
+    logger.error({ error, actionId: id }, 'Failed to proxy allowlist update');
     return NextResponse.json({ error: 'Failed to reach filter service' }, { status: 502 });
   }
 }
@@ -42,7 +43,7 @@ export async function DELETE(
     const data = await res.json();
     return NextResponse.json(data, { status: res.status });
   } catch (error) {
-    console.error('[dashboard] Failed to proxy allowlist delete:', error);
+    logger.error({ error, actionId: id }, 'Failed to proxy allowlist delete');
     return NextResponse.json({ error: 'Failed to reach filter service' }, { status: 502 });
   }
 }

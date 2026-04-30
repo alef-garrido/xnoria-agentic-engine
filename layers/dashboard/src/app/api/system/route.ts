@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { fetchDockerAPI } from '@/lib/docker';
 import os from 'os';
+import { logger } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -44,7 +45,7 @@ export async function GET() {
       host: hostMetrics
     });
   } catch (error) {
-    console.error('Failed to fetch system stats:', error);
+    logger.error({ error }, 'Failed to fetch system stats from Docker API');
     return NextResponse.json({ error: 'Failed to fetch system stats' }, { status: 500 });
   }
 }

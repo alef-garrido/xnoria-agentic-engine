@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: Request) {
   try {
@@ -33,7 +34,7 @@ export async function GET(request: Request) {
       hasMore: offset + limit < total
     });
   } catch (error) {
-    console.error('Failed to fetch sessions:', error);
+    logger.error({ error }, 'Failed to fetch cognitive sessions from database');
     return NextResponse.json({ error: 'Failed to fetch sessions' }, { status: 500 });
   }
 }

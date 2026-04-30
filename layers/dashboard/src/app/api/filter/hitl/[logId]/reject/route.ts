@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 const FILTER_URL = process.env.FILTER_URL ?? 'http://filter:3000';
 
@@ -18,7 +19,7 @@ export async function POST(
     const data = await res.json();
     return NextResponse.json(data, { status: res.status });
   } catch (error) {
-    console.error('[dashboard] Failed to proxy HITL reject:', error);
+    logger.error({ error, logId }, 'Failed to proxy HITL reject request');
     return NextResponse.json({ error: 'Failed to reach filter service' }, { status: 502 });
   }
 }

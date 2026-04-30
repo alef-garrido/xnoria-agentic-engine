@@ -169,6 +169,33 @@ Placeholder actions (disabled):
 - Cognitive layer migrations: `layers/cognitive/db/migrations/NNN_description.sql`
 - Always add migration, never modify existing ones
 - **Post-MVP actions go in numbered migrations** — `seed.sql` is for MVP bootstrap only. Never add new actions to seed.sql.
+
+## Structured Logging Standards
+
+All services in the Xnoria platform use structured logging instead of traditional `console.*` statements:
+
+### Filter Service
+- Uses `pino` for structured JSON logging
+- Pretty formatting in development, JSON in production
+- Automatic log level management based on environment
+
+### Cognitive Layer
+- Uses `pino` for structured JSON logging
+- Context-aware logging with session and action metadata
+- Structured error reporting with stack traces
+
+### Dashboard
+- Server-side: `pino` structured logging
+- Client-side: Console wrapper with structured formatting
+- Separated logging concerns to respect Next.js architecture constraints
+
+### Key Principles
+1. **No direct console calls** - All logging goes through structured logger
+2. **Context-rich logs** - Include relevant identifiers and metadata
+3. **Appropriate log levels** - Debug, Info, Warn, Error used correctly
+4. **Performance conscious** - Avoid expensive string operations in hot paths
+5. **Observability focused** - Logs designed for machine parsing and analysis
+
 ## Key Implementation Details
 ### Filter Service Flow (`POST /filter/execute`)
 1. Validate required fields (action_id, stage, session_id, payload)
@@ -307,6 +334,7 @@ make down-hard # ⚠️  NUCLEAR OPTION — completely wipes system
 - ✅ Stage-Aware Tool Filtering: Only 8 tools shown instead of 19+
 - ✅ Memory Persistence: Engram survives container restarts
 - ✅ Cooldown Logic: Avoids retrying same action within 48 hours
+- ✅ Structured Logging: Complete migration from console.* to structured logging across all services
 
 #### B3 Tool Recommendations (for evaluation before scoping B3)
 
@@ -406,4 +434,4 @@ Phase 1 (A1, B1, C1) ✅
         └── Phase 2.5 (A2.5 → B2.5, C2.5) ✅
               └── Phase 3 (A3, B3, C3) ✅
                     └── Phase 4 (A4, B4, C4)
-                          └── Phase 5 (Instance templating, Deployment guides)
+                          └── Phase 5 (Instance templating, Deployment guides)✅

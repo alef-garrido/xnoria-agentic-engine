@@ -1,0 +1,35 @@
+# ============================================================
+# .dockerignore — repo-root build context
+# All services now use context: . to access layers/shared/
+# This file prevents large/sensitive trees from being sent
+# to the Docker daemon on every build.
+# ============================================================
+
+# Version control
+.git/
+.gitignore
+
+# Dependencies (rebuilt inside Docker)
+**/node_modules/
+
+# Build outputs (rebuilt inside Docker)
+**/dist/
+**/.next/
+
+# Secrets — never in image
+.env
+.env.*
+
+# Logs and runtime artifacts
+**/*.log
+backups/
+
+# Planning / dev docs
+.plan/
+.dev/
+.agent/
+
+# Test files
+tests/
+**/*.test.ts
+**/*.spec.ts

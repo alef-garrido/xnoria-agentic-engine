@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+  
   try {
-    const { id } = await params;
     
     // We expect cognitive_history to have id, session_id, role, content, created_at
     const historyQuery = `
@@ -22,7 +24,7 @@ export async function GET(
       history: res.rows
     });
   } catch (error) {
-    console.error(`Failed to fetch history for session:`, error);
+    logger.error({ error, sessionId: id }, 'Failed to fetch session history from database');
     return NextResponse.json({ error: 'Failed to fetch session history' }, { status: 500 });
   }
 }

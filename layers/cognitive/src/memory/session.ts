@@ -6,6 +6,9 @@
 import { Pool } from 'pg';
 import { CXEvent } from '../shared/types';
 import { FilterResponse } from '../agent/dispatch';
+import { createLogger } from '../../../shared/logging';
+
+const logger = createLogger('memory-session', 'cognitive');
 
 export interface ActionRecord {
   action_id: string;
@@ -63,9 +66,9 @@ export async function logSessionToDb(
       );
     }
 
-    console.log(`[session] Logged session ${session_id} to Postgres`);
+    logger.debug({ session_id }, 'Session logged to Postgres');
   } catch (err) {
     // Never block the reasoning flow on DB write errors
-    console.error('[session] Failed to log session to DB:', err);
+    logger.error({ err, session_id }, 'Failed to log session to DB');
   }
 }

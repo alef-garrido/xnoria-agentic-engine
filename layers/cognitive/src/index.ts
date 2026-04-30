@@ -7,29 +7,31 @@ import { initTelegram }   from './channels/telegram';
 import { createEventLoop } from './events/loop';
 import { initMcpClients, shutdownMcpClients } from './mcp/client';
 import * as memoryServer from './memory/server';
+import { createLogger }   from '../../shared/logging';
 
 const db = new Pool({
   connectionString: process.env.POSTGRES_URL,
   max: 5
 });
 
+const logger = createLogger('index', 'cognitive');
+
 async function main() {
-  console.log('================================================================');
-  console.log(' Exnoria · Cognitive layer (OpenClaw)');
-  console.log('================================================================');
-  console.log(` LLM:     ${process.env.LLM_MODEL ?? 'qwen/qwen3-32b'} @ ${process.env.LLM_BASE_URL}`);
-  console.log(` Filter:  ${process.env.FILTER_URL}`);
-  console.log(` Channel: Telegram`);
-  console.log('----------------------------------------------------------------');
+  logger.info({ 
+    model: process.env.LLM_MODEL ?? 'qwen/qwen3-32b',
+    baseURL: process.env.LLM_BASE_URL,
+    filter: process.env.FILTER_URL,
+    channel: 'Telegram'
+  }, 'Exnoria · Cognitive layer (OpenClaw) starting');
 
   // Connect to Postgres
   await db.connect();
-  console.log('[cognitive] Connected to Postgres');
+  logger.info('Connected to Postgres');
 
   // Initialize MCP clients (Compass, Engram, PostHog)
-  console.log('[cognitive] Initializing MCP clients...');
+  logger.info('Initializing MCP clients...');
   await initMcpClients();
-  console.log('[cognitive] MCP clients ready');
+  logger.info('MCP clients ready');
 
   // Start memory search HTTP endpoint (if enabled)
   const memoryPort = parseInt(process.env.COGNITIVE_MEMORY_PORT ?? '0', 10);
@@ -43,26 +45,25 @@ async function main() {
   // Initialize Telegram channel
   initTelegram(processEvent);
 
-  console.log('[cognitive] Event loop running — waiting for signals');
-  console.log('================================================================\n');
+  logger.info('Event loop running — waiting for signals');
 }
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  console.log('[cognitive] SIGTERM received — shutting down');
+  logger.info('SIGTERM received — shutting down');
   await shutdownMcpClients();
   await db.end();
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
-  console.log('[cognitive] SIGINT received — shutting down');
+  logger.info('SIGINT received — shutting down');
   await shutdownMcpClients();
   await db.end();
   process.exit(0);
 });
 
 main().catch((err) => {
-  console.error('[cognitive] Fatal error:', err);
+  logger.error({ error: err }, 'Fatal error during startup');
   process.exit(1);
 });

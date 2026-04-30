@@ -34,22 +34,47 @@ async function buildCrossStageHistory(db, contactId) {
  * This is the ONLY entry point from the reason() wrapper.
  * The coordinator never calls dispatchToFilter — only specialists do.
  */
+// Lightweight keyword map for intent inference when stage is not detected by the Telegram adapter.
+// This is a stopgap — proper intent extraction belongs in the channel adapter.
+// Maps keyword patterns to (cluster, defaultStage) pairs.
+const INTENT_FALLBACK = [
+    { pattern: /\b(?:prioritize|prioridad|lead|entrante|inbound|enroll|enrolar|prospect|outreach)\b/i, cluster: 'acqsal', defaultStage: 'SAL' },
+    { pattern: /\b(?:onboard|bienvenida|churn|cancelar|winback|retener|contenido|publicar|friccion|adoption)\b/i, cluster: 'lifecycle', defaultStage: 'ONB' },
+    { pattern: /\b(?:ticket|escalate|escalar|soporte|support|bug|incidencia|expansion|upsell)\b/i, cluster: 'escalation', defaultStage: 'SUP' },
+];
+function inferClusterFromText(text) {
+    for (const entry of INTENT_FALLBACK) {
+        if (entry.pattern.test(text)) {
+            return { cluster: entry.cluster, defaultStage: entry.defaultStage };
+        }
+    }
+    return undefined;
+}
 async function coordinate(db, event) {
     // 1. Generate a session_id for this reasoning cycle
     const session_id = (0, uuid_1.v4)();
     // 2. Validate stage and determine cluster
-    const cluster = event.stage ? clusters_1.STAGE_TO_CLUSTER[event.stage] : undefined;
+    let cluster = event.stage ? clusters_1.STAGE_TO_CLUSTER[event.stage] : undefined;
     if (!cluster) {
-        // Unrecognised or missing stage — reply gracefully so the user knows what to send
-        const hint = event.stage
-            ? `Stage "${event.stage}" is not recognised.`
-            : 'No journey stage detected in your message.';
-        const replyText = `${hint} Please include a stage keyword: ACQ, SAL, ONB, PRD, SUP, COM, RET or EXP.`;
-        console.warn(`[coordinator] ${hint} contact=${event.contact_id}`);
-        await (0, telegram_1.sendReply)(event.contact_id, replyText);
-        // Log this conversation turn to Postgres so the dashboard reflects it
-        await (0, session_1.logSessionToDb)(db, session_id, event, 'coordinator', [], replyText);
-        return;
+        // Attempt lightweight intent inference from the raw operator message before hard-failing
+        const inferred = event.input ? inferClusterFromText(event.input) : undefined;
+        if (inferred) {
+            console.warn(`[coordinator] Stage not detected — inferred cluster=${inferred.cluster} from message text. Defaulting stage to ${inferred.defaultStage}. contact=${event.contact_id}`);
+            cluster = inferred.cluster;
+            event.stage = inferred.defaultStage;
+        }
+        else {
+            // Unrecognised or missing stage — reply gracefully so the operator knows what to send
+            const hint = event.stage
+                ? `Stage "${event.stage}" is not recognised.`
+                : 'No journey stage detected in your message.';
+            const replyText = `${hint} Please include a stage keyword: ACQ, SAL, ONB, PRD, SUP, COM, RET or EXP.`;
+            console.warn(`[coordinator] ${hint} contact=${event.contact_id}`);
+            await (0, telegram_1.sendReply)(event.contact_id, replyText);
+            // Log this conversation turn to Postgres so the dashboard reflects it
+            await (0, session_1.logSessionToDb)(db, session_id, event, 'coordinator', [], replyText);
+            return;
+        }
     }
     console.log(`[coordinator] stage=${event.stage} cluster=${cluster} contact=${event.contact_id}`);
     // 3. Fetch cross-stage history (gives specialist context about other stages)
@@ -63,5 +88,6 @@ async function coordinate(db, event) {
         session_id, // Specialists read this to avoid creating a duplicate session row
     };
     // 5. Route to specialist
+    console.log(`[coordinator] Routing to ${cluster} specialist...`);
     await CLUSTER_RUNNERS[cluster](db, event);
 }

@@ -10,6 +10,9 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
+import { createLogger } from '../../../shared/logging';
+
+const logger = createLogger('mcp-client', 'cognitive');
 
 // ---------------------------------------------------------------------------
 // Tool → server routing table
@@ -52,15 +55,15 @@ export async function initMcpClients(): Promise<void> {
   try {
     const compassTransport = new StdioClientTransport({
       command: 'node',
-      args:    ['dist/mcp/compass-server.js']
+      args:    ['dist/cognitive/src/mcp/compass-server.js']
     });
     const compassClient = new Client({ name: 'exnoria-cognitive', version: '1.0.0' });
     await compassClient.connect(compassTransport);
     servers.set('compass', { client: compassClient, connected: true, optional: false });
-     console.log('[mcp-client] Compass MCP connected (stdio)');
-   } catch (err) {
-     console.error('[mcp-client] Compass MCP failed to connect:', err);
-     throw err;  // Compass is required — fail hard
+    logger.info({ server: 'compass', transport: 'stdio' }, 'MCP server connected');
+  } catch (err) {
+    logger.error({ err, server: 'compass' }, 'MCP server failed to connect — required, aborting');
+    throw err;
    }
 
    // --- Engram: local stdio process (Phase 3 C3 — contact memory) ---
@@ -71,17 +74,17 @@ export async function initMcpClients(): Promise<void> {
      });
      const engramClient = new Client({ name: 'exnoria-cognitive', version: '1.0.0' });
      await engramClient.connect(engramTransport);
-     servers.set('engram', { client: engramClient, connected: true, optional: true });
-     console.log('[mcp-client] Engram MCP connected (stdio)');
-   } catch (err) {
-     console.warn('[mcp-client] Engram MCP failed to connect (optional, continuing):', err);
-     servers.set('engram', { client: null as unknown as Client, connected: false, optional: true });
+    servers.set('engram', { client: engramClient, connected: true, optional: true });
+    logger.info({ server: 'engram', transport: 'stdio' }, 'MCP server connected');
+  } catch (err) {
+    logger.warn({ err, server: 'engram' }, 'MCP server failed to connect (optional — continuing)');
+    servers.set('engram', { client: null as unknown as Client, connected: false, optional: true });
    }
 
    // --- PostHog: external API (optional — degrades gracefully) ---
   const posthogApiKey = process.env.POSTHOG_API_KEY;
   if (!posthogApiKey) {
-    console.warn('[mcp-client] POSTHOG_API_KEY not set — PostHog tools disabled');
+    logger.warn({ server: 'posthog' }, 'POSTHOG_API_KEY not set — PostHog tools disabled');
     servers.set('posthog', { client: null as unknown as Client, connected: false, optional: true });
     return;
   }
@@ -100,9 +103,9 @@ export async function initMcpClients(): Promise<void> {
     const posthogClient = new Client({ name: 'exnoria-cognitive', version: '1.0.0' });
     await posthogClient.connect(posthogTransport);
     servers.set('posthog', { client: posthogClient, connected: true, optional: true });
-    console.log('[mcp-client] PostHog MCP connected (stdio)');
+    logger.info({ server: 'posthog', transport: 'stdio' }, 'MCP server connected');
   } catch (err) {
-    console.warn('[mcp-client] PostHog MCP failed to connect (optional, continuing):', err);
+    logger.warn({ err, server: 'posthog' }, 'MCP server failed to connect (optional — continuing)');
     servers.set('posthog', { client: null as unknown as Client, connected: false, optional: true });
   }
 }
@@ -152,7 +155,7 @@ export async function executeMcpTool(
     return { success: true, content: textContent };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error(`[mcp-client] Tool ${toolName} failed:`, message);
+    logger.error({ tool: toolName, err: message }, 'MCP tool call failed');
     return { success: false, content: '', error: message };
   }
 }
@@ -172,9 +175,9 @@ export async function shutdownMcpClients(): Promise<void> {
     if (server.connected) {
       try {
         await server.client.close();
-        console.log(`[mcp-client] ${name} disconnected`);
+        logger.info({ server: name }, 'MCP server disconnected');
       } catch (err) {
-        console.warn(`[mcp-client] Error disconnecting ${name}:`, err);
+        logger.warn({ err, server: name }, 'Error disconnecting MCP server');
       }
     }
   }

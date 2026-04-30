@@ -9,6 +9,7 @@
 - **Charts:** Recharts
 - **Icons:** Lucide React
 - **Database:** Postgres (via pg pool)
+- **Logging:** Structured logging with pino (server) and console wrapper (client)
 - **Auth:** Session-based (`xnoria_session` cookie, bcrypt, Postgres-backed)
 
 ## Commands
@@ -40,8 +41,10 @@ src/
 ├── config/               # Configuration files
 ├── hooks/                # React hooks
 ├── lib/
-│   ├── auth.ts           # Session creation, validation, invalidation
-│   └── db.ts             # Postgres pool wrapper
+│   ├── auth.ts           # Session creation, validation, inactivation
+│   ├── db.ts             # Postgres pool wrapper
+│   ├── logger.ts         # Server-side structured logger (pino)
+│   └── client-logger.ts  # Client-side structured logger wrapper
 └── proxy.ts              # Auth middleware (cookie presence check only)
 data/                     # Example data files
 ```
@@ -195,6 +198,51 @@ docker exec exnoria_postgres psql -U xnoria -d exnoria -c \
 - Use Recharts for data visualization
 - Use Lucide React for icons
 - Use date-fns for date formatting
+
+## Logging Patterns
+
+All logging in the dashboard follows a structured approach using dedicated logger modules:
+
+### Server-Side Logging (`src/lib/logger.ts`)
+- Uses `pino` for structured JSON logging in production
+- Pretty formatted logs in development with `pino-pretty`
+- Automatically handles log levels based on `NODE_ENV`
+- Includes serializers for request/response/error objects
+
+**Usage in API routes:**
+```typescript
+import { logger } from '@/lib/logger';
+
+try {
+  // ... some operation
+} catch (error) {
+  logger.error({ error, additionalContext: 'value' }, 'Descriptive error message');
+}
+```
+
+### Client-Side Logging (`src/lib/client-logger.ts`)
+- Safe console wrapper for React client components
+- Structured formatting with log levels
+- Automatically suppresses DEBUG logs in production
+- Same interface as server logger for consistency
+
+**Usage in client components:**
+```typescript
+import { clientLogger } from '@/lib/client-logger';
+
+try {
+  // ... some operation
+} catch (error) {
+  clientLogger.error('Descriptive error message', { error, additionalContext: 'value' });
+}
+```
+
+### Key Principles
+1. **No direct `console.*` calls** - always use appropriate logger
+2. **Structured data** - pass objects as first parameter for correlation
+3. **Descriptive messages** - clear, actionable log content
+4. **Context aware** - include relevant IDs and metadata
+5. **Level appropriate** - use debug/info/warn/error correctly
 
 ## Domain Language
 | Term | Meaning |

@@ -4,6 +4,9 @@
 // Fire-and-forget: never blocks the filter response
 // ==============================================================================
 import axios from 'axios';
+import { createLogger } from '../shared/logging';
+
+const logger = createLogger('filter-hitl-telegram', 'filter');
 
 const TELEGRAM_BOT_TOKEN    = process.env.TELEGRAM_BOT_TOKEN;
 const OPERATOR_CHAT_ID      = process.env.TELEGRAM_OPERATOR_CHAT_ID;
@@ -23,7 +26,7 @@ interface HITLNotification {
  */
 export async function notifyOperator(notification: HITLNotification): Promise<void> {
   if (!TELEGRAM_BOT_TOKEN || !OPERATOR_CHAT_ID) {
-    console.warn('[filter/telegram] TELEGRAM_BOT_TOKEN or TELEGRAM_OPERATOR_CHAT_ID not set — skipping notification');
+    logger.warn('TELEGRAM_BOT_TOKEN or TELEGRAM_OPERATOR_CHAT_ID not set — skipping HITL notification');
     return;
   }
 
@@ -58,10 +61,10 @@ export async function notifyOperator(notification: HITLNotification): Promise<vo
       },
       { timeout: 10_000 }
     );
-    console.log(`[filter/telegram] HITL notification sent for ${notification.action_id}`);
+    logger.info({ action_id: notification.action_id }, 'HITL notification sent');
   } catch (err: unknown) {
     const errMsg = err instanceof Error ? err.message : 'Unknown error';
-    console.error(`[filter/telegram] Failed to send notification: ${errMsg}`);
+    logger.error({ err: errMsg, action_id: notification.action_id }, 'HITL notification failed');
     // Never throw — notification is best-effort
   }
 }

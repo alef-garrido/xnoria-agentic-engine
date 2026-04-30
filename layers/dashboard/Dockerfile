@@ -2,10 +2,10 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY layers/dashboard/package*.json ./
 RUN npm ci
 
-COPY . .
+COPY layers/dashboard/ .
 RUN npm run build
 
 FROM node:20-alpine AS runner

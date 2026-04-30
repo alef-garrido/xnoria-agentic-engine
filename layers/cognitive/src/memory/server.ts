@@ -5,6 +5,9 @@
 import express, { Request, Response } from 'express';
 import { Pool } from 'pg';
 import { exec } from 'child_process';
+import { createLogger } from '../../../shared/logging';
+
+const logger = createLogger('memory-server', 'cognitive');
 
 const app  = express();
 const port = parseInt(process.env.COGNITIVE_MEMORY_PORT ?? '0', 10);
@@ -34,7 +37,7 @@ app.get('/memory/search', (req: Request, res: Response) => {
 
   exec(engramSearch, { maxBuffer: 1024 * 1024 }, (error, stdout: string | Buffer, stderr: string | Buffer) => {
     if (error) {
-      console.error('[memory/search] Engram CLI error:', error);
+      logger.error({ err: error.message }, 'Engram CLI search failed');
       return res.status(500).json({
         error: 'MEMORY_UNAVAILABLE',
         message: `Memory search failed: ${error.message}`
@@ -129,33 +132,28 @@ app.get('/health', (_req: Request, res: Response) => {
 // Export start function for integration with main server
 export function startServer(db: Pool) {
   if (port <= 0) {
-    console.log('[cognitive] Memory search endpoint disabled (COGNITIVE_MEMORY_PORT not set)');
+    logger.info('Memory search endpoint disabled (COGNITIVE_MEMORY_PORT not set)');
     return;
   }
 
-  console.log('================================================================');
-  console.log(' Exnoria · Cognitive layer (Memory Search Endpoint)');
-  console.log('================================================================');
-  console.log(` Port: ${port}`);
-  console.log('----------------------------------------------------------------');
+  logger.info({ port, service: 'memory-search' }, 'Starting memory search endpoint');
 
   // Connect to Postgres
   db.connect().then(() => {
-    console.log('[cognitive] Connected to Postgres');
+    logger.info('Connected to Postgres');
 
     // Start HTTP server
     app.listen(port, () => {
-      console.log(`[cognitive] Memory search endpoint running on port ${port}`);
-      console.log('================================================================\n');
+      logger.info({ port }, 'Memory search endpoint running');
     });
   }).catch((err) => {
-    console.error('[cognitive] Failed to initialize memory server:', err);
+    logger.error({ err }, 'Failed to initialize memory server');
     process.exit(1);
   });
 
   // Graceful shutdown
   const cleanup = async () => {
-    console.log('[cognitive] Shutting down memory server...');
+    logger.info('Shutting down memory server');
     await db.end();
     process.exit(0);
   };

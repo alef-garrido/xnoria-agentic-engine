@@ -17,6 +17,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import { query } from '@/lib/db';
+import { logger } from '@/lib/logger';
 
 const BCRYPT_COST = 12;
 const MIN_PASSWORD_LENGTH = 8;
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (err: unknown) {
-    console.error('Bootstrap error:', err);
+    logger.error({ error: err }, 'Bootstrap admin password initialization failed');
     return NextResponse.json(
       { error: 'Internal server error during password initialization' },
       { status: 500 }

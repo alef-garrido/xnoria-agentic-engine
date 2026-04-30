@@ -38,9 +38,11 @@ const STAGE_PATTERNS = [
 function extractStage(text) {
     for (const { pattern, stage } of STAGE_PATTERNS) {
         if (pattern.test(text)) {
+            console.log(`[telegram] stage detected: ${stage} (matched pattern for "${stage}")`);
             return stage;
         }
     }
+    console.log(`[telegram] no stage detected — coordinator will handle fallback`);
     return undefined;
 }
 function initTelegram(onEvent) {

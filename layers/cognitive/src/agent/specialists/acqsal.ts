@@ -16,13 +16,78 @@ import { TOOL_TO_ACTION } from '../../tools/definitions';
 import { dispatchToFilter } from '../dispatch';
 import { sendReply } from '../../channels/telegram';
 import { logSessionToDb, ActionRecord } from '../../memory/session';
+import { createLogger } from '../../../../shared/logging';
 import { createLLMClientWithFallback } from '../../shared/llm-fallback';
+
+// Module-level logger — used by parseLegacyFunctionCalls and runAcqSalSpecialist
+const logger = createLogger('acqsal-specialist', 'cognitive');
 
 const MAX_LOOP_ITERATIONS = 5;
 const MAX_FILTER_DISPATCHES = 3;
 const MAX_CONTEXT_TOKENS = 800;
 
-const ACQSAL_SYSTEM_PROMPT = `You are Xnoria's Acquisition & Sales Specialist — the agent responsible for lead scoring, sales enablement, and high-velocity outreach.
+/**
+ * Groq fallback: some model versions (llama-3.3-70b-versatile) emit tool calls
+ * as `<function=name,{args}></function>` inside the message content during multi-turn
+ * sequences instead of using the standard tool_calls array.
+ *
+ * This parser extracts those calls and synthesizes a tool_calls array so the loop
+ * can continue without modification to the rest of the logic.
+ */
+function parseLegacyFunctionCalls(content: string | null | undefined): OpenAI.ChatCompletionMessageToolCall[] {
+  if (!content) return [];
+
+  const calls: OpenAI.ChatCompletionMessageToolCall[] = [];
+  
+  // Pattern 1: Groq llama-3.3-70b variants - handle various malformed tool call formats
+  const groqPatterns = [
+    /<function=([^,(>]+)[\s,]*\(?(\{[\s\S]*?\})\)?><\/function>/g, // Original pattern
+    /<function\s+([^=]+)\s*=\s*([^>]+)><\/function>/g, // More flexible spacing pattern
+    /<function=([^=>]+)=([^>]+)><\/function>/g, // Handles = separator instead of ,
+    /<function=([^=>]+)=([^>]*)\u003e<\/function>/g, // Handles unescaped > in args
+  ];
+  
+  for (const pattern of groqPatterns) {
+    let match;
+    while ((match = pattern.exec(content)) !== null) {
+      try {
+        const name = match[1].trim();
+        let argsStr = match[2].trim();
+        
+        // Handle different argument formats
+        if (argsStr.startsWith('{') && argsStr.endsWith('}')) {
+          // Standard JSON object format
+          JSON.parse(argsStr); // Validate JSON
+          calls.push({
+            id: `legacy-${Date.now()}-${calls.length}-${name}`,
+            type: 'function',
+            function: { name, arguments: argsStr },
+          });
+          // nop — legacy format parsed successfully
+        } else if (!argsStr.includes('{') && !argsStr.includes('}')) {
+          // Simple string arguments - create a basic JSON object
+          const simpleArgs = { value: argsStr };
+          calls.push({
+            id: `legacy-${Date.now()}-${calls.length}-${name}`,
+            type: 'function',
+            function: { name, arguments: JSON.stringify(simpleArgs) },
+          });
+          // nop — simple legacy format parsed
+        }
+      } catch (err) {
+        logger.warn({ err, raw_call: '[REDACTED]' }, 'Failed to parse legacy function call');
+      }
+    }
+  }
+  
+  return calls;
+}
+
+const ACQSAL_SYSTEM_PROMPT = `Always respond in the same language the operator is writing in. If the operator writes in Spanish, respond in Spanish. If in English, respond in English.
+
+You are an internal CX engine assistant for Xnoria. Messages come from OPERATORS giving instructions about contacts — NOT from customers directly. When an operator provides contact details and an action intent (prioritize, enroll, engage, upsert, etc.), extract the contact information, identify the correct action, and execute it via the appropriate tool.
+
+You are Xnoria's Acquisition & Sales Specialist — the agent responsible for lead scoring, sales enablement, and high-velocity outreach.
 
 Your role is to quickly route contacts to the appropriate action based on signal severity and HubSpot pipeline context.
 
@@ -33,6 +98,14 @@ Key judgment rules:
 - For SAL contacts: prioritize for SDR follow-up only on high-severity signals
 - All actions exit through the filter — you only recommend actions, never execute directly
 - You may execute multiple tools in sequence. If you need to create/update a contact before prioritizing, execute the upsert tool, wait for the response, and then execute the prioritization tool.
+
+Important: When calling tools, use standard JSON format for arguments. Do not wrap tool calls in XML tags or other non-standard formats.
+
+Tool Calling Instructions:
+- Always use the exact tool names as defined (e.g., sal_contact_prioritize, not sal.contact.prioritize)
+- Format arguments as valid JSON objects only
+- Do not use XML-like tags <function=name{args}></function>
+- The system will automatically handle tool dispatch - you only need to specify the function name and arguments
 
 Context has already been retrieved and is provided below.`;
 
@@ -76,6 +149,7 @@ function buildEventPrompt(event: CXEvent): string {
 }
 
 export async function runAcqSalSpecialist(db: Pool, event: CXEvent): Promise<void> {
+  try {
   const activeTools = getClusterTools('acqsal');
 
   // Pre-processing (deterministic — no LLM call)
@@ -85,7 +159,7 @@ export async function runAcqSalSpecialist(db: Pool, event: CXEvent): Promise<voi
   // LLM client — acqsal uses Groq with automatic fallback to OpenRouter
   const clientConfig = await createLLMClientWithFallback();
   const llm = clientConfig.client as OpenAI;
-  console.info(`[acqsal] using model: ${clientConfig.model} (provider: ${clientConfig.provider})`);
+  logger.info({ model: clientConfig.model, provider: clientConfig.provider }, 'LLM client ready');
 
   const systemPrompt = `${ACQSAL_SYSTEM_PROMPT}\n\n## Retrieved Context\n${contextBlock}`;
 
@@ -109,29 +183,54 @@ export async function runAcqSalSpecialist(db: Pool, event: CXEvent): Promise<voi
 
   while (iterations < MAX_LOOP_ITERATIONS) {
     iterations++;
-    console.info(`[acqsal] loop iteration=${iterations}/${MAX_LOOP_ITERATIONS} filter_dispatches=${filterDispatches}/${MAX_FILTER_DISPATCHES}`);
+    logger.debug({ iteration: iterations, max: MAX_LOOP_ITERATIONS, filter_dispatches: filterDispatches }, 'Loop iteration');
 
-    const completion = await llm.chat.completions.create({
-      model: clientConfig.model,
-      messages,
-      tools: activeTools.map((t) => ({
-        type: 'function' as const,
-        function: {
-          name: t.function.name,
-          description: t.function.description,
-          parameters: t.function.parameters,
-        },
-      })),
-      tool_choice: 'auto',
-    });
+    let completion;
+    try {
+      completion = await llm.chat.completions.create({
+        model: clientConfig.model,
+        messages,
+        tools: activeTools.map((t) => ({
+          type: 'function' as const,
+          function: {
+            name: t.function.name,
+            description: t.function.description,
+            parameters: t.function.parameters,
+          },
+        })),
+        tool_choice: 'auto',
+      });
+    } catch (err: any) {
+      logger.error({ err: err.message, model: clientConfig.model }, 'LLM API error');
+      throw err;
+    }
 
-    console.info(`[acqsal] iteration=${iterations} stop_reason=${completion.choices[0]?.finish_reason} tokens_used=${completion.usage?.total_tokens}`);
+    logger.debug({ iteration: iterations, stop_reason: completion.choices[0]?.finish_reason, tokens: completion.usage?.total_tokens }, 'LLM response received');
 
     const message = completion.choices[0]?.message;
-    const toolCalls = message?.tool_calls ?? [];
+    let toolCalls = message?.tool_calls ?? [];
+
+    // Fallback: some Groq model versions embed tool calls in content as <function=name,{args}>
+    // instead of the standard tool_calls array. Parse and promote them.
+    if (toolCalls.length === 0 && message?.content) {
+      const legacyCalls = parseLegacyFunctionCalls(message.content);
+      if (legacyCalls.length > 0) {
+        toolCalls = legacyCalls;
+        // Sanitize content so it doesn't get re-sent with the function tag in next turn
+        (message as unknown as Record<string, unknown>).content = null;
+        (message as unknown as Record<string, unknown>).tool_calls = legacyCalls;
+      }
+    }
 
     if (toolCalls.length === 0) {
-      console.warn('[acqsal] LLM finished without tool call');
+      const textContent = message?.content;
+      if (textContent && textContent.trim()) {
+        botReply = textContent;
+        await sendReply(event.contact_id, textContent);
+        logger.info({ contact_id: event.contact_id }, 'LLM text reply sent to contact');
+      } else {
+        logger.warn({ iteration: iterations }, 'LLM finished without tool call or text response');
+      }
       break;
     }
 
@@ -145,7 +244,7 @@ export async function runAcqSalSpecialist(db: Pool, event: CXEvent): Promise<voi
     const contextCalls = toolCalls.filter(tc => TOOL_TO_ACTION[tc.function.name] === null && tc.function.name !== 'reply');
 
     if (actionCalls.length > 0 && contextCalls.length > 0) {
-      console.error('[acqsal] Mixed tool call batch rejected');
+      logger.error({ action_count: actionCalls.length, context_count: contextCalls.length }, 'Mixed tool call batch rejected');
       break;
     }
 
@@ -155,15 +254,15 @@ export async function runAcqSalSpecialist(db: Pool, event: CXEvent): Promise<voi
         const args = JSON.parse(replyCalls[0].function.arguments) as { message: string };
         botReply = args.message;
         await sendReply(event.contact_id, botReply);
-        console.log(`[acqsal] Reply sent to ${event.contact_id}`);
+        logger.info({ contact_id: event.contact_id }, 'Reply sent to contact');
       } catch (err) {
-        console.error('[acqsal] Failed to send reply:', err);
+        logger.error({ err }, 'Failed to send reply');
       }
       break;
     }
 
     if (contextCalls.length > 0) {
-      console.warn('[acqsal] LLM requested context tools after pre-processing:', contextCalls.map(t => t.function.name));
+      logger.warn({ tools: contextCalls.map(t => t.function.name) }, 'LLM requested context tools after pre-processing — skipping');
       break;
     }
 
@@ -172,15 +271,15 @@ export async function runAcqSalSpecialist(db: Pool, event: CXEvent): Promise<voi
       const mapping = TOOL_TO_ACTION[call.function.name];
 
       if (!mapping) {
-        console.error(`[acqsal] Invalid action tool: ${call.function.name}`);
+        logger.error({ tool_name: call.function.name }, 'Invalid action tool — no filter mapping found');
         break;
       }
 
       filterDispatches++;
-      console.log(`[acqsal] Dispatching: ${mapping.action_id} (dispatch ${filterDispatches}/${MAX_FILTER_DISPATCHES})`);
+      logger.info({ action_id: mapping.action_id, dispatch: filterDispatches, max: MAX_FILTER_DISPATCHES }, 'Dispatching to filter');
 
       if (filterDispatches > MAX_FILTER_DISPATCHES) {
-        console.warn(`[acqsal] Max filter dispatches (${MAX_FILTER_DISPATCHES}) reached — halting chain. session_id=${session_id}`);
+        logger.warn({ max: MAX_FILTER_DISPATCHES, session_id }, 'Max filter dispatches reached — halting chain');
         break;
       }
 
@@ -238,9 +337,13 @@ export async function runAcqSalSpecialist(db: Pool, event: CXEvent): Promise<voi
   }
 
   if (iterations >= MAX_LOOP_ITERATIONS) {
-    console.error(`[acqsal] Max iterations (${MAX_LOOP_ITERATIONS}) reached`);
+    logger.warn({ iterations, max: MAX_LOOP_ITERATIONS, session_id }, 'Max loop iterations reached');
   }
 
   // Log session to Postgres for the Dashboard (fire-and-forget)
   await logSessionToDb(db, session_id, event, clientConfig.model, actionsTaken, botReply);
+  } catch (error: any) {
+    logger.error({ err: error instanceof Error ? error.message : String(error) }, 'Unhandled error in acqsal specialist');
+    throw error;
+  }
 }

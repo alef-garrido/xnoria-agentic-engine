@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 const COGNITIVE_MEMORY_URL = process.env.COGNITIVE_MEMORY_URL ?? 'http://cognitive:3001';
 
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
     const data = await res.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error('[dashboard] Failed to proxy memory search:', error);
+    logger.error({ error }, 'Failed to proxy memory search to cognitive service');
     return NextResponse.json(
       { error: 'Failed to reach memory service' },
       { status: 502 }

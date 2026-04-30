@@ -4,6 +4,9 @@
 // ==============================================================================
 import TelegramBot from 'node-telegram-bot-api';
 import { CXEvent, JourneyStage } from '../shared/types';
+import { createLogger } from '../../../shared/logging';
+
+const logger = createLogger('telegram', 'cognitive');
 
 let bot: TelegramBot | null = null;
 
@@ -36,9 +39,11 @@ const STAGE_PATTERNS: Array<{ pattern: RegExp; stage: JourneyStage }> = [
 function extractStage(text: string): JourneyStage | undefined {
   for (const { pattern, stage } of STAGE_PATTERNS) {
     if (pattern.test(text)) {
+      logger.debug({ stage }, 'Stage detected from message pattern');
       return stage;
     }
   }
+  logger.debug('No stage detected — coordinator will handle fallback');
   return undefined;
 }
 
@@ -47,7 +52,7 @@ export function initTelegram(
 ): void {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) {
-    console.warn('[telegram] TELEGRAM_BOT_TOKEN not set — channel disabled');
+    logger.warn('TELEGRAM_BOT_TOKEN not set — channel disabled');
     return;
   }
 
@@ -62,7 +67,8 @@ export function initTelegram(
     // Store mapping for replies
     chatMap.set(contactId, chatId);
 
-    console.log(`[telegram] Inbound from ${contactId}: ${msg.text}`);
+    // Log inbound at debug only — message content is PII
+    logger.debug({ contact_id: contactId }, 'Inbound message received');
 
     const stage = extractStage(msg.text);
 
@@ -81,16 +87,16 @@ export function initTelegram(
     try {
       await onEvent(event);
     } catch (err) {
-      console.error('[telegram] Error processing event:', err);
+      logger.error({ err, contact_id: contactId }, 'Error processing event');
       await sendReply(contactId, 'Sorry, something went wrong. Please try again.');
     }
   });
 
   bot.on('polling_error', (err) => {
-    console.error('[telegram] Polling error:', err.message);
+    logger.error({ err: err.message }, 'Telegram polling error');
   });
 
-  console.log('[telegram] Channel active — polling for messages');
+  logger.info('Channel active — polling for messages');
 }
 
 export async function sendReply(
@@ -101,14 +107,14 @@ export async function sendReply(
 
   const chatId = chatMap.get(contactId);
   if (!chatId) {
-    console.warn(`[telegram] No chat ID found for contact ${contactId}`);
+    logger.warn({ contact_id: contactId }, 'No chat ID found for contact — reply dropped');
     return;
   }
 
   try {
     await bot.sendMessage(chatId, message);
-    console.log(`[telegram] Reply sent to ${contactId}`);
+    logger.debug({ contact_id: contactId }, 'Reply sent');
   } catch (err) {
-    console.error(`[telegram] Failed to send reply to ${contactId}:`, err);
+    logger.error({ err, contact_id: contactId }, 'Failed to send reply');
   }
 }

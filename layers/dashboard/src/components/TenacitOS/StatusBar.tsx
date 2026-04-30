@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Cpu, HardDrive, MemoryStick, Clock } from "lucide-react";
+import { clientLogger } from "@/lib/client-logger";
 
 interface SystemStats {
   cpu: number;
@@ -40,7 +41,7 @@ export function StatusBar() {
           });
         }
       } catch (error) {
-        console.error("Failed to fetch system stats:", error);
+        clientLogger.error("Failed to fetch system stats", { error });
       }
     };
 

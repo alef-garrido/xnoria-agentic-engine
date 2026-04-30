@@ -24,6 +24,11 @@ services:
       retries: 5
     networks:
       - exnoria_internal
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # ---------------------------------------------------------------------------
   # n8n — workflow orchestration engine
@@ -88,6 +93,11 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # ---------------------------------------------------------------------------
   # Filter service — deterministic allowlist enforcement
@@ -95,8 +105,8 @@ services:
   # ---------------------------------------------------------------------------
   filter:
     build:
-      context: ./layers/orchestration/filter
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: layers/orchestration/filter/Dockerfile
     container_name: exnoria_filter
     restart: unless-stopped
     depends_on:
@@ -122,6 +132,11 @@ services:
       retries: 5
     networks:
       - exnoria_internal
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 
 
@@ -130,8 +145,8 @@ services:
   # ---------------------------------------------------------------------------
   cognitive:
     build:
-      context: ./layers/cognitive
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: layers/cognitive/Dockerfile
     container_name: exnoria_cognitive
     restart: unless-stopped
     read_only: true
@@ -177,14 +192,19 @@ services:
       POSTHOG_PROJECT_ID: ${POSTHOG_PROJECT_ID}
     networks:
       - exnoria_internal
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # ---------------------------------------------------------------------------
   # Dashboard — execution layer, CX Tool Dock
   # ---------------------------------------------------------------------------
   dashboard:
     build:
-      context: ./layers/dashboard
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: layers/dashboard/Dockerfile
     container_name: exnoria_dashboard
     restart: unless-stopped
     depends_on:
@@ -203,6 +223,11 @@ services:
       - "${DASHBOARD_PORT:-4000}:4000"
     networks:
       - exnoria_internal
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 # -----------------------------------------------------------------------------
 # Volumes — persistent data survives container restarts

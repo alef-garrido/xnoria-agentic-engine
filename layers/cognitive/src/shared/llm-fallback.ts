@@ -7,6 +7,9 @@
 // ==============================================================================
 import OpenAI from 'openai';
 import { createLLMClient } from './llm';
+import { createLogger } from '../../../shared/logging';
+
+const logger = createLogger('llm-fallback', 'cognitive');
 
 export interface LLMClientWithFallback {
   model: string;
@@ -32,10 +35,10 @@ export async function createLLMClientWithFallback(): Promise<LLMClientWithFallba
       max_tokens: 1,
     });
     
-    console.log(`[llm-fallback] Groq primary: model=${groqClient.model} status=OK`);
+    logger.info({ model: groqClient.model, provider: 'groq' }, 'Primary LLM ready');
     return { ...groqClient, provider: 'groq' };
   } catch (error) {
-    console.warn(`[llm-fallback] Groq failed (${error instanceof Error ? error.message : 'unknown error'}), switching to OpenRouter backup...`);
+    logger.warn({ err: error instanceof Error ? error.message : String(error) }, 'Groq primary failed — switching to OpenRouter');
   }
 
   // Fallback: OpenRouter
@@ -60,7 +63,7 @@ export async function createLLMClientWithFallback(): Promise<LLMClientWithFallba
       max_tokens: 1,
     });
     
-    console.log(`[llm-fallback] OpenRouter backup: model=${openrouterModel} status=OK`);
+    logger.info({ model: openrouterModel, provider: 'openrouter' }, 'Backup LLM ready');
     return { 
       model: openrouterModel, 
       client: backupClient, 

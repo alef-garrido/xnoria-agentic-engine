@@ -17,11 +17,19 @@ import { dispatchToFilter } from '../dispatch';
 import { sendReply } from '../../channels/telegram';
 import { logSessionToDb, ActionRecord } from '../../memory/session';
 import { createLLMClientWithFallback } from '../../shared/llm-fallback';
+import { createLogger } from '../../../../shared/logging';
+
+// Module-level logger
+const logger = createLogger('lifecycle-specialist', 'cognitive');
 
 const MAX_LOOP_ITERATIONS = 5;
 const MAX_CONTEXT_TOKENS = 800;
 
-const LIFECYCLE_SYSTEM_PROMPT = `You are Xnoria's Lifecycle Specialist — the agent responsible for customer health across onboarding, product adoption, communication, and retention stages.
+const LIFECYCLE_SYSTEM_PROMPT = `Always respond in the same language the operator is writing in. If the operator writes in Spanish, respond in Spanish. If in English, respond in English.
+
+You are an internal CX engine assistant for Xnoria. Messages come from OPERATORS giving instructions about contacts — NOT from customers directly. When an operator provides contact details and an action intent, extract the contact information, identify the correct action, and execute it via the appropriate tool.
+
+You are Xnoria's Lifecycle Specialist — the agent responsible for customer health across onboarding, product adoption, communication, and retention stages.
 
 Your role is to select the single most appropriate intervention for the customer signal you receive. You have access to the customer's prior intervention history and the Compass signal framework.
 
@@ -30,7 +38,7 @@ Key judgment rules:
 - Check prior interventions before acting — do not repeat a nudge sent within 48 hours
 - For ONB signals: nudge first (automated), assist only if severity >= 0.8 or nudge already sent
 - For RET signals: flag first (no HITL), winback only if severity >= 0.7
-- For COM signals (unsubscribed): this is legally sensitive — always confirm compliance in your reasoning
+- For COM signals: only act on an explicit COM-stage signal. NEVER assume a contact has unsubscribed unless signal_id maps to a COM unsubscribe signal. Do not generate unsubscribe-related responses for non-COM events.
 - For PRD_CAP_02 (feature requests): log only, do not message the contact
 
 Context has already been retrieved and is provided below. Do not call compass or memory tools — select an action directly.`;
@@ -67,6 +75,10 @@ function buildEventPrompt(event: CXEvent): string {
     parts.push(`Interventions: ${event.interventions.join(', ')}`);
   }
 
+  if (event.input) {
+    parts.push(`\nOperator Message:\n${event.input}`);
+  }
+
   return parts.join('\n');
 }
 
@@ -80,7 +92,7 @@ export async function runLifecycleSpecialist(db: Pool, event: CXEvent): Promise<
   // LLM client — lifecycle uses Groq with automatic fallback to OpenRouter
   const clientConfig = await createLLMClientWithFallback();
   const llm = clientConfig.client as OpenAI;
-  console.info(`[lifecycle] using model: ${clientConfig.model} (provider: ${clientConfig.provider})`);
+  logger.info({ model: clientConfig.model, provider: clientConfig.provider }, 'LLM client ready');
 
   const systemPrompt = `${LIFECYCLE_SYSTEM_PROMPT}\n\n## Retrieved Context\n${contextBlock}`;
 
@@ -118,13 +130,20 @@ export async function runLifecycleSpecialist(db: Pool, event: CXEvent): Promise<
       tool_choice: 'auto',
     });
 
-    console.info(`[lifecycle] iteration=${iterations} stop_reason=${completion.choices[0]?.finish_reason} tokens_used=${completion.usage?.total_tokens}`);
+    logger.debug({ iteration: iterations, stop_reason: completion.choices[0]?.finish_reason, tokens: completion.usage?.total_tokens }, 'LLM response received');
 
     const message = completion.choices[0]?.message;
     const toolCalls = message?.tool_calls ?? [];
 
     if (toolCalls.length === 0) {
-      console.warn('[lifecycle] LLM finished without tool call');
+      const textContent = message?.content;
+      if (textContent && textContent.trim()) {
+        botReply = textContent;
+        await sendReply(event.contact_id, textContent);
+        logger.info({ contact_id: event.contact_id }, 'LLM text reply sent to contact');
+      } else {
+        logger.warn({ iteration: iterations }, 'LLM finished without tool call or text response');
+      }
       break;
     }
 
@@ -134,7 +153,7 @@ export async function runLifecycleSpecialist(db: Pool, event: CXEvent): Promise<
     const contextCalls = toolCalls.filter(tc => TOOL_TO_ACTION[tc.function.name] === null && tc.function.name !== 'reply');
 
     if (actionCalls.length > 0 && contextCalls.length > 0) {
-      console.error('[lifecycle] Mixed tool call batch rejected');
+      logger.error({ action_count: actionCalls.length, context_count: contextCalls.length }, 'Mixed tool call batch rejected');
       break;
     }
 
@@ -144,25 +163,27 @@ export async function runLifecycleSpecialist(db: Pool, event: CXEvent): Promise<
         const args = JSON.parse(replyCalls[0].function.arguments) as { message: string };
         botReply = args.message;
         await sendReply(event.contact_id, botReply);
-        console.log(`[lifecycle] Reply sent to ${event.contact_id}`);
+        logger.info({ contact_id: event.contact_id }, 'Reply sent to contact');
       } catch (err) {
-        console.error('[lifecycle] Failed to send reply:', err);
-        // Si falla al parsear los argumentos, intentar extraer el mensaje del error
+        logger.error({ err }, 'Failed to send reply — attempting regex fallback');
         try {
           const failedGenMatch = replyCalls[0].function.arguments.match(/"message":\s*"([^"]+)"/);
           if (failedGenMatch && failedGenMatch[1]) {
             await sendReply(event.contact_id, failedGenMatch[1]);
-            console.log(`[lifecycle] Fallback reply sent to ${event.contact_id}`);
+            logger.info({ contact_id: event.contact_id }, 'Fallback reply sent');
           }
         } catch (fallbackErr) {
-          console.error('[lifecycle] Fallback reply also failed:', fallbackErr);
+          logger.error({ err: fallbackErr }, 'Fallback reply also failed');
         }
       }
       break;
     }
 
     if (contextCalls.length > 0) {
-      console.warn('[lifecycle] LLM requested context tools after pre-processing:', contextCalls.map(t => t.function.name));
+      logger.warn({ tools: contextCalls.map(t => t.function.name) }, 'LLM requested context tools after pre-processing — sending fallback reply');
+      const fallback = 'I couldn\'t retrieve enough context to process this request. Please provide more details or include a stage keyword (ACQ, SAL, ONB, PRD, SUP, COM, RET, EXP).';
+      botReply = fallback;
+      await sendReply(event.contact_id, fallback);
       break;
     }
 
@@ -171,11 +192,11 @@ export async function runLifecycleSpecialist(db: Pool, event: CXEvent): Promise<
       const mapping = TOOL_TO_ACTION[call.function.name];
 
       if (!mapping) {
-        console.error(`[lifecycle] Invalid action tool: ${call.function.name}`);
+        logger.error({ tool_name: call.function.name }, 'Invalid action tool — no filter mapping found');
         break;
       }
 
-      console.log(`[lifecycle] Dispatching: ${mapping.action_id}`);
+      logger.info({ action_id: mapping.action_id }, 'Dispatching to filter');
 
       const filterResponse = await dispatchToFilter({
         action_id: mapping.action_id,
@@ -208,7 +229,7 @@ export async function runLifecycleSpecialist(db: Pool, event: CXEvent): Promise<
   }
 
   if (iterations >= MAX_LOOP_ITERATIONS) {
-    console.error(`[lifecycle] Max iterations (${MAX_LOOP_ITERATIONS}) reached`);
+    logger.warn({ iterations, max: MAX_LOOP_ITERATIONS, session_id }, 'Max loop iterations reached');
   }
 
   // Log session to Postgres for the Dashboard (fire-and-forget)

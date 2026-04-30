@@ -169,10 +169,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
+  // INTENTIONAL: compass-server is a stdio MCP process.
+  // console.error → stderr only (safe). console.log/info would corrupt the MCP protocol stream.
   console.error('[compass-mcp] Compass MCP server running on stdio');
 }
 
 main().catch((err) => {
+  // INTENTIONAL: Must use stderr here — stdout belongs to the MCP protocol.
   console.error('[compass-mcp] Fatal error:', err);
   process.exit(1);
 });

@@ -7,6 +7,9 @@
 // ==============================================================================
 import { executeMcpTool } from '../mcp/client';
 import { FilterResponse } from '../shared/types';
+import { createLogger } from '../../../shared/logging';
+
+const logger = createLogger('memory-engram', 'cognitive');
 
 export interface EngramResult {
   title: string;
@@ -59,7 +62,7 @@ export async function getContactHistory(
 
     return lines.join('\n');
   } catch (err) {
-    console.error('[memory] context fetch failed:', err);
+    logger.warn({ err }, 'Contact history fetch failed — proceeding without context');
     return `Memory unavailable — proceed without prior context.`;
   }
 }
@@ -127,7 +130,7 @@ export async function recordSessionOutcome(
       project: 'xnoria-agentic-engine'
     });
   } catch (err) {
-    console.error('[memory] session record failed:', err);
+    logger.warn({ err, action_id: actionId }, 'Session outcome recording failed');
   }
 }
 

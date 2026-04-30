@@ -1,12 +1,18 @@
 FROM node:20-bookworm-slim
 
-WORKDIR /app
+# Container layout mirrors the layers/ monorepo structure:
+#   /app/cognitive/     ← WORKDIR: package.json, tsconfig.json, src/, node_modules/
+#   /app/shared/        ← shared modules (rootDir: ".." from /app/cognitive → /app/)
+#
+# With rootDir: ".." tsc emits:
+#   /app/cognitive/dist/cognitive/src/index.js  (not dist/index.js)
+WORKDIR /app/cognitive
 
 # Install curl for downloading binaries
 RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-COPY package.json ./
+COPY layers/cognitive/package.json ./
 RUN npm install
 
 # Install mcp-remote for PostHog MCP bridge
@@ -23,9 +29,12 @@ RUN curl -L "https://github.com/Gentleman-Programming/engram/releases/download/v
     && rm /tmp/engram.tar.gz \
     && engram version
 
-COPY tsconfig.json ./
-COPY src/ ./src/
+COPY layers/cognitive/tsconfig.json ./
+COPY layers/cognitive/src/ ./src/
+# Copy shared one level up → /app/shared/ (matches rootDir: ".." → /app/)
+COPY layers/shared/ /app/shared/
 
 RUN npm run build
 
-CMD ["npm", "start"]
+# rootDir: ".." causes tsc to nest output: dist/cognitive/src/index.js
+CMD ["node", "dist/cognitive/src/index.js"]

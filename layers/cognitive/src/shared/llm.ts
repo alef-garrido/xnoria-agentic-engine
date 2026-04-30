@@ -7,6 +7,9 @@
 // ==============================================================================
 import OpenAI from 'openai';
 import { AgentCluster } from '../tools/clusters';
+import { createLogger } from '../../../shared/logging';
+
+const logger = createLogger('llm-client', 'cognitive');
 
 /**
  * LLM Client wrapper (OpenAI-compatible)
@@ -55,7 +58,7 @@ export function createLLMClient(
     );
   }
 
-  console.log(`[llm] client: model=${model} baseURL=${baseURL}`);
+  logger.debug({ model, baseURL }, 'LLM client created');
 
   return {
     model,

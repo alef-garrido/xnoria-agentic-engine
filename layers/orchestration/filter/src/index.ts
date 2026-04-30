@@ -6,6 +6,9 @@ import { writeLog } from './audit/log';
 import { getPendingActions, approveAction, rejectAction } from './hitl/hitl';
 import { notifyOperator } from './hitl/telegram';
 import { FilterRequest, FilterResponse } from './shared/types';
+import { createLogger } from './shared/logging';
+
+const logger = createLogger('filter', 'filter');
 
 const app  = express();
 const port = parseInt(process.env.FILTER_PORT ?? '3000', 10);
@@ -155,7 +158,7 @@ app.get('/filter/hitl/pending', async (_req: Request, res: Response) => {
     return res.json({ pending, count: pending.length });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[filter] Failed to fetch HITL pending:', message);
+    logger.error({ err: message, endpoint: 'GET /filter/hitl/pending' }, 'HITL pending fetch failed');
     return res.status(500).json({ error: 'Failed to fetch pending actions', message });
   }
 });
@@ -175,7 +178,7 @@ app.post('/filter/hitl/:log_id/approve', async (req: Request, res: Response) => 
     return res.json(result);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[filter] Failed to approve HITL action:', message);
+    logger.error({ err: message, log_id, endpoint: 'POST /filter/hitl/approve' }, 'HITL approve failed');
     return res.status(500).json({ error: 'Failed to approve action', message });
   }
 });
@@ -195,7 +198,7 @@ app.post('/filter/hitl/:log_id/reject', async (req: Request, res: Response) => {
     return res.json(result);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[filter] Failed to reject HITL action:', message);
+    logger.error({ err: message, log_id, endpoint: 'POST /filter/hitl/reject' }, 'HITL reject failed');
     return res.status(500).json({ error: 'Failed to reject action', message });
   }
 });
@@ -286,7 +289,7 @@ app.get('/filter/health', async (req: Request, res: Response) => {
     return res.json({ metrics, period_days: days });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[filter] Failed to compute health metrics:', message);
+    logger.error({ err: message, endpoint: 'GET /filter/health' }, 'Health metrics computation failed');
     return res.status(500).json({ error: 'Failed to compute health metrics', message });
   }
 });
@@ -302,7 +305,7 @@ app.get('/filter/allowlist', async (_req: Request, res: Response) => {
     return res.json({ actions, count: actions.length });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[filter] Failed to list actions:', message);
+    logger.error({ err: message, endpoint: 'GET /filter/allowlist' }, 'List actions failed');
     return res.status(500).json({ error: 'Failed to list actions', message });
   }
 });
@@ -328,7 +331,7 @@ app.post('/filter/allowlist', async (req: Request, res: Response) => {
     if (message.includes('duplicate key') || message.includes('unique')) {
       return res.status(409).json({ error: `Action '${action_id}' already exists` });
     }
-    console.error('[filter] Failed to create action:', message);
+    logger.error({ err: message, action_id, endpoint: 'POST /filter/allowlist' }, 'Create action failed');
     return res.status(500).json({ error: 'Failed to create action', message });
   }
 });
@@ -350,7 +353,7 @@ app.patch('/filter/allowlist/:id', async (req: Request, res: Response) => {
     return res.json({ action });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[filter] Failed to update action:', message);
+    logger.error({ err: message, action_id: id, endpoint: 'PATCH /filter/allowlist' }, 'Update action failed');
     return res.status(500).json({ error: 'Failed to update action', message });
   }
 });
@@ -369,7 +372,7 @@ app.delete('/filter/allowlist/:id', async (req: Request, res: Response) => {
     return res.json({ deleted: true, id });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[filter] Failed to delete action:', message);
+    logger.error({ err: message, action_id: id, endpoint: 'DELETE /filter/allowlist' }, 'Delete action failed');
     return res.status(500).json({ error: 'Failed to delete action', message });
   }
 });
@@ -379,12 +382,12 @@ app.delete('/filter/allowlist/:id', async (req: Request, res: Response) => {
 // ------------------------------------------------------------------------------
 db.connect()
   .then(() => {
-    console.log('[filter] connected to postgres');
+    logger.info({ service: 'filter' }, 'Connected to Postgres');
     app.listen(port, () => {
-      console.log(`[filter] listening on port ${port}`);
+      logger.info({ port, service: 'filter' }, 'Filter service ready');
     });
   })
   .catch((err: unknown) => {
-    console.error('[filter] failed to connect to postgres:', err);
+    logger.error({ err }, 'Failed to connect to Postgres — exiting');
     process.exit(1);
   });

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { formatDistanceToNow, format } from "date-fns";
 import { History as HistoryIcon, MessagesSquare, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { clientLogger } from "@/lib/client-logger";
 
 interface Session {
   id: string;
@@ -44,7 +45,7 @@ function SessionRow({ session }: { session: Session }) {
           setHistory(data.history);
         }
       } catch (err) {
-        console.error("Failed to load history", err);
+        clientLogger.error("Failed to load session history", { error: err });
       }
       setLoading(false);
     }

@@ -4,17 +4,21 @@
 // Specialists dispatch to filter and write memory directly
 // ==============================================================================
 import { Pool }         from 'pg';
-import { coordinate }   from '../agent/coordinator';
+import { reason }       from '../agent/reason';
 import { CXEvent }      from '../shared/types';
+import { createLogger } from '../../../shared/logging';
 
 export function createEventLoop(db: Pool) {
+  const logger = createLogger('events-loop', 'cognitive');
+  
   // Process a single inbound event through the reasoning cycle
   async function processEvent(event: CXEvent): Promise<void> {
+    logger.debug({ event }, 'Processing event');
     try {
-      await coordinate(db, event);
-      console.log(`[loop] Event routed: stage=${event.stage} contact=${event.contact_id}`);
+      await reason(db, event);
+      logger.info({ contact_id: event.contact_id, stage: event.stage }, 'Event routed');
     } catch (err) {
-      console.error('[loop] Error in routing:', err);
+      logger.error({ error: err, contact_id: event.contact_id }, 'Error in routing');
     }
   }
 

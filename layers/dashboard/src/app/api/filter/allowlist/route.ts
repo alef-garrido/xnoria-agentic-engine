@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 const FILTER_URL = process.env.FILTER_URL ?? 'http://filter:3000';
 
@@ -18,7 +19,7 @@ export async function GET() {
     const data = await res.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error('[dashboard] Failed to proxy allowlist list:', error);
+    logger.error({ error }, 'Failed to proxy allowlist list request');
     return NextResponse.json({ error: 'Failed to reach filter service' }, { status: 502 });
   }
 }
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
     const data = await res.json();
     return NextResponse.json(data, { status: res.status });
   } catch (error) {
-    console.error('[dashboard] Failed to proxy allowlist create:', error);
+    logger.error({ error }, 'Failed to proxy allowlist create request');
     return NextResponse.json({ error: 'Failed to reach filter service' }, { status: 502 });
   }
 }

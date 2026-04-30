@@ -18,6 +18,9 @@ import { dispatchToFilter } from './dispatch';
 import { sendReply } from '../channels/telegram';
 import { logSessionToDb, ActionRecord } from '../memory/session';
 import { createLLMClientWithFallback } from '../shared/llm-fallback';
+import { createLogger } from '../../../shared/logging';
+
+const logger = createLogger('single-agent', 'cognitive');
 
 const MAX_LOOP_ITERATIONS = 5;
 const MAX_CONTEXT_TOKENS = 800;
@@ -67,6 +70,10 @@ function buildEventPrompt(event: CXEvent): string {
     parts.push(`Interventions: ${event.interventions.join(', ')}`);
   }
 
+  if (event.input) {
+    parts.push(`\nOperator Message:\n${event.input}`);
+  }
+
   return parts.join('\n');
 }
 
@@ -78,7 +85,7 @@ export async function runSingleAgent(db: Pool, event: CXEvent): Promise<void> {
   // LLM client — with automatic fallback from Groq to OpenRouter
   const clientConfig = await createLLMClientWithFallback();
   const llm = clientConfig.client as OpenAI;
-  console.info(`[single] using model: ${clientConfig.model} (provider: ${clientConfig.provider})`);
+  logger.info({ model: clientConfig.model, provider: clientConfig.provider }, 'LLM client ready');
 
   const systemPrompt = `${SINGLE_AGENT_SYSTEM_PROMPT}\n\n## Retrieved Context\n${contextBlock}`;
 
@@ -116,13 +123,20 @@ export async function runSingleAgent(db: Pool, event: CXEvent): Promise<void> {
       tool_choice: 'auto',
     });
 
-    console.info(`[single] iteration=${iterations} stop_reason=${completion.choices[0]?.finish_reason} tokens_used=${completion.usage?.total_tokens}`);
+    logger.debug({ iteration: iterations, stop_reason: completion.choices[0]?.finish_reason, tokens: completion.usage?.total_tokens }, 'LLM response received');
 
     const message = completion.choices[0]?.message;
     const toolCalls = message?.tool_calls ?? [];
 
     if (toolCalls.length === 0) {
-      console.warn('[single] LLM finished without tool call');
+      const textContent = message?.content;
+      if (textContent && textContent.trim()) {
+        botReply = textContent;
+        await sendReply(event.contact_id, textContent);
+        logger.info({ contact_id: event.contact_id }, 'LLM text reply sent to contact');
+      } else {
+        logger.warn({ iteration: iterations }, 'LLM finished without tool call or text response');
+      }
       break;
     }
 
@@ -132,7 +146,7 @@ export async function runSingleAgent(db: Pool, event: CXEvent): Promise<void> {
     const contextCalls = toolCalls.filter(tc => TOOL_TO_ACTION[tc.function.name] === null && tc.function.name !== 'reply');
 
     if (actionCalls.length > 0 && contextCalls.length > 0) {
-      console.error('[single] Mixed tool call batch rejected');
+      logger.error({ action_count: actionCalls.length, context_count: contextCalls.length }, 'Mixed tool call batch rejected');
       break;
     }
 
@@ -142,25 +156,27 @@ export async function runSingleAgent(db: Pool, event: CXEvent): Promise<void> {
         const args = JSON.parse(replyCalls[0].function.arguments) as { message: string };
         botReply = args.message;
         await sendReply(event.contact_id, botReply);
-        console.log(`[single] Reply sent to ${event.contact_id}`);
+        logger.info({ contact_id: event.contact_id }, 'Reply sent to contact');
       } catch (err) {
-        console.error('[single] Failed to send reply:', err);
-        // Si falla al parsear los argumentos, intentar extraer el mensaje del error
+        logger.error({ err }, 'Failed to send reply — attempting regex fallback');
         try {
           const failedGenMatch = replyCalls[0].function.arguments.match(/"message":\s*"([^"]+)"/);
           if (failedGenMatch && failedGenMatch[1]) {
             await sendReply(event.contact_id, failedGenMatch[1]);
-            console.log(`[single] Fallback reply sent to ${event.contact_id}`);
+            logger.info({ contact_id: event.contact_id }, 'Fallback reply sent');
           }
         } catch (fallbackErr) {
-          console.error('[single] Fallback reply also failed:', fallbackErr);
+          logger.error({ err: fallbackErr }, 'Fallback reply also failed');
         }
       }
       break;
     }
 
     if (contextCalls.length > 0) {
-      console.warn('[single] LLM requested context tools after pre-processing:', contextCalls.map(t => t.function.name));
+      logger.warn({ tools: contextCalls.map(t => t.function.name) }, 'LLM requested context tools after pre-processing — sending fallback reply');
+      const fallback = 'I couldn\'t retrieve enough context to process this request. Please provide more details or include a stage keyword (ACQ, SAL, ONB, PRD, SUP, COM, RET, EXP).';
+      botReply = fallback;
+      await sendReply(event.contact_id, fallback);
       break;
     }
 
@@ -169,11 +185,11 @@ export async function runSingleAgent(db: Pool, event: CXEvent): Promise<void> {
       const mapping = TOOL_TO_ACTION[call.function.name];
 
       if (!mapping) {
-        console.error(`[single] Invalid action tool: ${call.function.name}`);
+        logger.error({ tool_name: call.function.name }, 'Invalid action tool — no filter mapping found');
         break;
       }
 
-      console.log(`[single] Dispatching: ${mapping.action_id}`);
+      logger.info({ action_id: mapping.action_id }, 'Dispatching to filter');
 
       const filterResponse = await dispatchToFilter({
         action_id: mapping.action_id,
@@ -206,7 +222,7 @@ export async function runSingleAgent(db: Pool, event: CXEvent): Promise<void> {
   }
 
   if (iterations >= MAX_LOOP_ITERATIONS) {
-    console.error(`[single] Max iterations (${MAX_LOOP_ITERATIONS}) reached`);
+    logger.warn({ iterations, max: MAX_LOOP_ITERATIONS, session_id }, 'Max loop iterations reached');
   }
 
   // Log session to Postgres for the Dashboard (fire-and-forget)

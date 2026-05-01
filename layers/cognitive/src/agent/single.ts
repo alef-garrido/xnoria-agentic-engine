@@ -217,6 +217,28 @@ export async function runSingleAgent(db: Pool, event: CXEvent): Promise<void> {
         session_id
         // No cluster tag in single mode
       );
+
+      // Confirm action outcome to the operator via Telegram
+      let confirmMsg: string;
+      switch (filterResponse.status) {
+        case 'executed':
+          confirmMsg = `✅ Action \`${mapping.action_id}\` executed successfully.`;
+          break;
+        case 'pending_hitl':
+          confirmMsg = `⏳ Action \`${mapping.action_id}\` is pending human approval (HITL). Check the dashboard to approve or reject.`;
+          break;
+        case 'rejected':
+          confirmMsg = `🚫 Action \`${mapping.action_id}\` was rejected by the filter. Reason: ${filterResponse.rejection_code ?? 'unknown'}.`;
+          break;
+        case 'error':
+          confirmMsg = `⚠️ Action \`${mapping.action_id}\` failed to execute. ${filterResponse.message ?? 'Workflow unreachable.'}`;
+          break;
+        default:
+          confirmMsg = `ℹ️ Action \`${mapping.action_id}\` — status: ${filterResponse.status}.`;
+      }
+      botReply = confirmMsg;
+      await sendReply(event.contact_id, confirmMsg);
+      logger.info({ contact_id: event.contact_id, action_id: mapping.action_id, status: filterResponse.status }, 'Action confirmation sent to operator');
       break;
     }
   }

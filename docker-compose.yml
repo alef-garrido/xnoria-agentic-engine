@@ -115,6 +115,7 @@ services:
       n8n:
         condition: service_healthy
     environment:
+      NODE_ENV: ${NODE_ENV:-production}
       FILTER_PORT: ${FILTER_PORT:-3000}
       POSTGRES_URL: postgresql://exnoria:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
       N8N_BASE_URL: http://n8n:5678

@@ -65,6 +65,12 @@ app.post('/filter/execute', async (req: Request, res: Response) => {
       meta:             body.meta ?? {}
     });
 
+    logger.info(
+      { action_id: body.action_id, stage: body.stage, session_id: body.session_id,
+        rejection_code: rejectionCode, log_id },
+      'filter: action rejected'
+    );
+
     return res.status(403).json({
       status:          'rejected',
       log_id,
@@ -93,6 +99,12 @@ app.post('/filter/execute', async (req: Request, res: Response) => {
       meta:       body.meta
     });
 
+    logger.info(
+      { action_id: body.action_id, stage: body.stage, session_id: body.session_id,
+        log_id, requires_hitl: true },
+      'filter: action queued for HITL'
+    );
+
     return res.status(202).json({
       status:    'pending_hitl',
       log_id,
@@ -117,6 +129,12 @@ app.post('/filter/execute', async (req: Request, res: Response) => {
       payload_out:  workflow_result,
       meta:         body.meta ?? {}
     });
+
+    logger.info(
+      { action_id: body.action_id, stage: body.stage, session_id: body.session_id,
+        log_id, result_keys: Object.keys(workflow_result ?? {}) },
+      'filter: action executed'
+    );
 
     return res.status(200).json({
       status: 'executed',
@@ -385,6 +403,16 @@ db.connect()
     logger.info({ service: 'filter' }, 'Connected to Postgres');
     app.listen(port, () => {
       logger.info({ port, service: 'filter' }, 'Filter service ready');
+
+      // Startup validation: DASHBOARD_URL debe ser resoluble externamente en producción
+      const dashboardUrl = process.env.DASHBOARD_URL ?? 'http://localhost:4000';
+      const isLocal = dashboardUrl.includes('localhost') || dashboardUrl.includes('127.0.0.1');
+      if (isLocal && process.env.NODE_ENV !== 'development') {
+        logger.warn(
+          { dashboard_url: dashboardUrl },
+          'DASHBOARD_URL apunta a localhost — los links de HITL en Telegram no funcionarán desde dispositivos externos. Seteá DASHBOARD_URL a un dominio o IP resoluble públicamente.'
+        );
+      }
     });
   })
   .catch((err: unknown) => {

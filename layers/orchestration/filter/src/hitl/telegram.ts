@@ -23,6 +23,19 @@ interface HITLNotification {
 /**
  * Send a Telegram notification to the operator when an action is queued for HITL.
  * Fire-and-forget — logs errors but never throws.
+ *
+ * ⚠️  DEV NOTE — Colisión de notificaciones en entorno local:
+ * Existen DOS canales de Telegram independientes en la arquitectura:
+ *   1. sendReply(contact_id, ...)  → Cognitive Layer → responde al *cliente*
+ *   2. notifyOperator(...)         → Filter Service  → avisa al *operador* (este archivo)
+ *
+ * En producción son chats distintos (cliente vs. equipo de soporte).
+ * En desarrollo local, si TELEGRAM_OPERATOR_CHAT_ID y el chat del contacto
+ * apuntan al mismo chat personal del dev, recibirás DOS mensajes por acción HITL:
+ *   - "✅ executed" / "⏳ pending approval" (del Cognitive, al cliente)
+ *   - "⚠️ HITL Review Required" (del Filter, al operador)
+ * Esto NO es un bug — es comportamiento correcto. Los dos mensajes coexisten.
+ * Si probás con una acción sin HITL (requires_hitl=false), solo llegará el primero.
  */
 export async function notifyOperator(notification: HITLNotification): Promise<void> {
   if (!TELEGRAM_BOT_TOKEN || !OPERATOR_CHAT_ID) {

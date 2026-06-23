@@ -44,7 +44,8 @@ export async function approveAction(
   db: Pool,
   logId: string,
   reviewedBy: string = 'admin',
-  operatorId?: string
+  operatorId?: string,
+  payloadOverride?: Record<string, unknown>
 ): Promise<{ success: boolean; log_id: string; status: string; dispatched_at?: string; error?: string }> {
 
   // 1. Read the pending log entry
@@ -101,9 +102,11 @@ export async function approveAction(
   // 3. Dispatch to n8n
   const now = new Date().toISOString();
   try {
+    // 3. Dispatch to n8n — use operator-edited payload if provided
+    const dispatchPayload = payloadOverride ?? entry.payload_in;
     const workflowResult = await dispatchToN8n(
       actionResult.rows[0].n8n_workflow_id,
-      entry.payload_in
+      dispatchPayload
     );
 
     // 4. Update log: pending_hitl → executed
@@ -111,11 +114,18 @@ export async function approveAction(
       `UPDATE filter_log
        SET status = 'executed',
            payload_out              = $1,
+           payload_reviewed         = $2,
            reviewed_at              = now(),
-           reviewed_by              = $2,
-           reviewed_by_operator_id  = $3
-       WHERE id = $4`,
-      [JSON.stringify(workflowResult), reviewedBy, operatorId ?? null, logId]
+           reviewed_by              = $3,
+           reviewed_by_operator_id  = $4
+       WHERE id = $5`,
+      [
+        JSON.stringify(workflowResult),
+        payloadOverride ? JSON.stringify(payloadOverride) : null,
+        reviewedBy,
+        operatorId ?? null,
+        logId
+      ]
     );
 
     return { success: true, log_id: logId, status: 'executed', dispatched_at: now };

@@ -51,6 +51,28 @@ export const TOOLS: ToolDefinition[] = [
   {
     type: 'function',
     function: {
+      name: 'acq_contact_outreach',
+      description:
+        'Send cold outreach to a prospect via WhatsApp and email, and sync to HubSpot. ' +
+        'Use when you have a qualified lead that needs initial contact. ' +
+        'Requires HITL — the operator will review and may edit the message before sending.',
+      parameters: {
+        type: 'object',
+        properties: {
+          contact_id: { type: 'string', description: 'HubSpot contact ID (from crm_contact_upsert)' },
+          email:      { type: 'string', description: 'Contact email address' },
+          phone:      { type: 'string', description: 'Contact phone/WhatsApp number' },
+          message:    { type: 'string', description: 'Personalized outreach message based on the lead pain signals' },
+          company:    { type: 'string', description: 'Company name' },
+          pain_signals: { type: 'string', description: 'Key pain points identified from lead data' }
+        },
+        required: ['contact_id', 'email', 'message']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
       name: 'sal_sequence_enroll',
       description:
         'Enroll a contact in a sales outreach sequence. ' +
@@ -434,6 +456,7 @@ export const TOOLS: ToolDefinition[] = [
 export const TOOL_TO_ACTION: Record<string, { action_id: string; stage: string } | null> = {
   crm_contact_upsert:     { action_id: 'acq.contact.upsert',     stage: 'ACQ' },
   acq_lead_score:         { action_id: 'acq.lead.score',        stage: 'ACQ' },
+  acq_contact_outreach:   { action_id: 'acq.contact.outreach',  stage: 'ACQ' },
   sal_sequence_enroll:    { action_id: 'sal.sequence.enroll',    stage: 'SAL' },
   sal_contact_prioritize: { action_id: 'sal.contact.prioritize', stage: 'SAL' },
 

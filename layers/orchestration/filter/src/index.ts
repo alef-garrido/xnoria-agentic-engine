@@ -182,11 +182,13 @@ app.get('/filter/hitl/pending', async (_req: Request, res: Response) => {
 });
 
 // POST /filter/hitl/:log_id/approve — approve a pending HITL action
+// Optional body: { payload: { ... } } — overrides the AI-proposed payload
 app.post('/filter/hitl/:log_id/approve', async (req: Request, res: Response) => {
   const { log_id } = req.params;
+  const payloadOverride = req.body?.payload as Record<string, unknown> | undefined;
 
   try {
-    const result = await approveAction(db, log_id, 'admin');
+    const result = await approveAction(db, log_id, 'admin', undefined, payloadOverride);
 
     if (!result.success) {
       const statusCode = result.status === 'not_found' ? 404 : 400;

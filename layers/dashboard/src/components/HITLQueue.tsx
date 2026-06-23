@@ -12,6 +12,8 @@ import {
   RefreshCw,
   AlertTriangle,
   Inbox,
+  Pencil,
+  RotateCcw,
 } from "lucide-react";
 
 interface PendingAction {
@@ -36,6 +38,8 @@ export function HITLQueue() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  // Track operator edits per action — key: log_id, value: edited payload
+  const [editedPayloads, setEditedPayloads] = useState<Record<string, Record<string, unknown>>>({});
 
   const addToast = useCallback((message: string, type: "success" | "error") => {
     const id = crypto.randomUUID();
@@ -66,12 +70,32 @@ export function HITLQueue() {
   const handleApprove = async (logId: string) => {
     setActionInProgress(logId);
     try {
-      const res = await fetch(`/api/filter/hitl/${logId}/approve`, { method: "POST" });
+      // Build request body — include payload override if operator edited it
+      const edited = editedPayloads[logId];
+      const body: Record<string, unknown> = {};
+      if (edited) {
+        body.payload = edited;
+      }
+
+      const res = await fetch(`/api/filter/hitl/${logId}/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
       const data = await res.json();
 
       if (data.success) {
         setPending((prev) => prev?.filter((a) => a.log_id !== logId) ?? null);
-        addToast("Action approved and dispatched", "success");
+        // Clean up edited state
+        setEditedPayloads((prev) => {
+          const next = { ...prev };
+          delete next[logId];
+          return next;
+        });
+        addToast(
+          edited ? "Action approved with edits and dispatched" : "Action approved and dispatched",
+          "success"
+        );
       } else {
         addToast(data.error ?? "Failed to approve", "error");
       }
@@ -304,6 +328,96 @@ export function HITLQueue() {
                       >
                         <span style={{ color: "var(--text-muted)" }}>Reason: </span>
                         {String(action.payload_in.reason)}
+                      </div>
+                    )}
+
+                    {/* Editable message field */}
+                    {Boolean(action.payload_in?.message) && (
+                      <div className="mt-3">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span
+                            className="text-xs font-semibold"
+                            style={{ color: "var(--text-muted)" }}
+                          >
+                            <Pencil className="w-3 h-3 inline-block mr-1" style={{ verticalAlign: "text-bottom" }} />
+                            OUTREACH MESSAGE
+                          </span>
+                          {editedPayloads[action.log_id] && (
+                            <span
+                              className="badge"
+                              style={{
+                                backgroundColor: "var(--info-soft)",
+                                color: "var(--info)",
+                                fontSize: "10px",
+                              }}
+                            >
+                              edited
+                            </span>
+                          )}
+                        </div>
+                        <textarea
+                          rows={4}
+                          defaultValue={String(action.payload_in.message)}
+                          onChange={(e) => {
+                            const newMessage = e.target.value;
+                            const original = String(action.payload_in.message);
+                            if (newMessage === original) {
+                              // Reverted to original — remove override
+                              setEditedPayloads((prev) => {
+                                const next = { ...prev };
+                                delete next[action.log_id];
+                                return next;
+                              });
+                            } else {
+                              setEditedPayloads((prev) => ({
+                                ...prev,
+                                [action.log_id]: {
+                                  ...action.payload_in,
+                                  message: newMessage,
+                                },
+                              }));
+                            }
+                          }}
+                          style={{
+                            width: "100%",
+                            padding: "10px 12px",
+                            borderRadius: "var(--radius-md)",
+                            border: editedPayloads[action.log_id]
+                              ? "1.5px solid var(--info)"
+                              : "1px solid var(--border)",
+                            backgroundColor: "var(--bg)",
+                            color: "var(--text-primary)",
+                            fontFamily: "var(--font-body)",
+                            fontSize: "13px",
+                            lineHeight: "1.5",
+                            resize: "vertical",
+                            outline: "none",
+                            transition: "border-color 0.2s ease",
+                          }}
+                        />
+                        {editedPayloads[action.log_id] && (
+                          <button
+                            onClick={() => {
+                              setEditedPayloads((prev) => {
+                                const next = { ...prev };
+                                delete next[action.log_id];
+                                return next;
+                              });
+                              // Reset the textarea to original value
+                              const textarea = document.querySelector(
+                                `textarea[data-log-id="${action.log_id}"]`
+                              ) as HTMLTextAreaElement | null;
+                              if (textarea) {
+                                textarea.value = String(action.payload_in.message);
+                              }
+                            }}
+                            className="flex items-center gap-1 mt-1 text-xs"
+                            style={{ color: "var(--text-muted)", cursor: "pointer" }}
+                          >
+                            <RotateCcw className="w-3 h-3" />
+                            Reset to original
+                          </button>
+                        )}
                       </div>
                     )}
 

@@ -4,16 +4,27 @@ import { logger } from '@/lib/logger';
 const FILTER_URL = process.env.FILTER_URL ?? 'http://filter:3000';
 
 // POST /api/filter/hitl/[logId]/approve → proxy to POST /filter/hitl/:logId/approve
+// Optional body: { payload: { ... } } — operator-edited payload override
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ logId: string }> }
 ) {
   const { logId } = await params;
 
   try {
+    // Forward the body as-is (may contain payload override)
+    let body: Record<string, unknown> | undefined;
+    try {
+      body = await request.json();
+    } catch {
+      // No body or invalid JSON — approve with original payload
+      body = undefined;
+    }
+
     const res = await fetch(`${FILTER_URL}/filter/hitl/${logId}/approve`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
+      body: body ? JSON.stringify(body) : '{}'
     });
 
     const data = await res.json();

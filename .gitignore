@@ -429,13 +429,19 @@ layers/dashboard/.next/
 .agents/
 .opencode/
 .gemini/
+tmp/
 
 # Backup files — keep directory but not contents
 backups/*.sql
 backups/*.backup
 backups/*.sql.gz
 backups/*.sql.gz.enc
+backups/*.csv
+
+# Validation files
+validation/*.csv
 
 # Deploy — exclude generated .env files, but track .env.template files
 deploy/**/.env
 !deploy/**/.env.template
+

@@ -17,12 +17,32 @@ export const TOOLS: ToolDefinition[] = [
       parameters: {
         type: 'object',
         properties: {
-          email:      { type: 'string', description: 'Contact email address' },
-          first_name: { type: 'string', description: 'Contact first name' },
-          last_name:  { type: 'string', description: 'Contact last name' },
-          phone:      { type: 'string', description: 'Contact phone number' }
+          email:       { type: 'string', description: 'Contact email address' },
+          first_name:  { type: 'string', description: 'Contact first name' },
+          last_name:   { type: 'string', description: 'Contact last name' },
+          phone:       { type: 'string', description: 'Contact phone number' },
+          pain_points: { type: 'string', description: 'Semicolon-separated pain points identified from lead data (stored as cx_pain_points in HubSpot)' },
+          pci:         { type: 'number', description: 'Prospect-Customer Index score 1-100 (stored as cx_pci in HubSpot)' }
         },
         required: ['email']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'crm_contact_get',
+      description:
+        'Retrieve a contact from HubSpot by email or contact_id, including custom CX properties. ' +
+        'Use BEFORE outreach to read the contact\'s pain points, PCI score, and other context. ' +
+        'Returns contact properties or { status: "not_found" } if the contact does not exist.',
+      parameters: {
+        type: 'object',
+        properties: {
+          email:      { type: 'string', description: 'Contact email address (used as lookup key if contact_id not provided)' },
+          contact_id: { type: 'string', description: 'HubSpot contact ID (preferred over email for lookup)' }
+        },
+        required: []
       }
     }
   },
@@ -455,6 +475,7 @@ export const TOOLS: ToolDefinition[] = [
 // null = handled locally (reply) or routed to MCP client (context retrieval tools)
 export const TOOL_TO_ACTION: Record<string, { action_id: string; stage: string } | null> = {
   crm_contact_upsert:     { action_id: 'acq.contact.upsert',     stage: 'ACQ' },
+  crm_contact_get:        { action_id: 'acq.contact.get',        stage: 'ACQ' },
   acq_lead_score:         { action_id: 'acq.lead.score',        stage: 'ACQ' },
   acq_contact_outreach:   { action_id: 'acq.contact.outreach',  stage: 'ACQ' },
   sal_sequence_enroll:    { action_id: 'sal.sequence.enroll',    stage: 'SAL' },

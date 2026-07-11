@@ -13,17 +13,33 @@ export const TOOLS: ToolDefinition[] = [
       description:
         'Upsert (create or update) a contact in HubSpot. ' +
         'Use when you need a contact_id to perform subsequent actions but the contact does not exist yet. ' +
-        'This tool will return the generated contact_id if successful.',
+        'This tool will return the generated contact_id if successful. ' +
+        'Accepts all standard contact fields — extract as many as possible from the message.',
       parameters: {
         type: 'object',
         properties: {
-          email:       { type: 'string', description: 'Contact email address' },
-          first_name:  { type: 'string', description: 'Contact first name' },
-          last_name:   { type: 'string', description: 'Contact last name' },
-          phone:       { type: 'string', description: 'Contact phone number' },
-          pain_points: { type: 'string', description: 'Semicolon-separated pain points identified from lead data (stored as cx_pain_points in HubSpot)' },
-          pci:         { type: 'number', description: 'Prospect-Customer Index score 1-100 (stored as cx_pci in HubSpot)' }
-        },
+          email:            { type: 'string', description: 'Contact email address (correo electrónico)' },
+          first_name:       { type: 'string', description: 'Contact first name (nombre de contacto)' },
+          last_name:        { type: 'string', description: 'Contact last name (apellido)' },
+          phone:            { type: 'string', description: 'Primary phone number (teléfono principal)' },
+          company:          { type: 'string', description: 'Company name (empresa / nombre de la compañía)' },
+          industry:         { type: 'string', description: 'Industry (industria / giro de la empresa, e.g. retail, manufacturing, technology)' },
+          city:             { type: 'string', description: 'City (ciudad)' },
+          address:          { type: 'string', description: 'Street address (dirección / calle y número)' },
+          colonia:          { type: 'string', description: 'Neighborhood or district (colonia / fraccionamiento)' },
+          postal_code:      { type: 'string', description: 'Postal / ZIP code (código postal)' },
+          website:          { type: 'string', description: 'Website URL (sitio web)' },
+          linkedin:         { type: 'string', description: 'Company or personal LinkedIn URL (URL de LinkedIn)' },
+          contact_linkedin: { type: 'string', description: 'Contact person\'s LinkedIn URL (LinkedIn del contacto)' },
+          facebook:         { type: 'string', description: 'Facebook ID or profile URL (ID o perfil de Facebook)' },
+          instagram:        { type: 'string', description: 'Instagram handle or profile URL (usuario o perfil de Instagram)' },
+          whatsapp:         { type: 'string', description: 'WhatsApp phone number (número de WhatsApp con código de país)' },
+          secondary_phone:  { type: 'string', description: 'Secondary phone number (teléfono secundario / alternativo)' },
+          job_title:        { type: 'string', description: 'Contact job title / position (cargo del contacto, e.g. CEO, Director, Gerente)' },
+          pain_points:      { type: 'string', description: 'Semicolon-separated pain points (notas de dolor / puntos de dolor; stored as cx_pain_points in HubSpot)' },
+          pci:              { type: 'number', description: 'Prospect-Customer Index score 1-100 (puntuación PCI; stored as cx_pci in HubSpot)' },
+          source:           { type: 'string', description: 'Lead source / acquisition channel (fuente de captura, e.g. organic, referral, paid, partner, event, website)' },
+          status:           { type: 'string', enum: ['new', 'attempted_to_contact', 'in_progress', 'open', 'unqualified', 'bad_timing'], description: 'Lead/contact status (estado del lead; maps to HubSpot lead status)' }        },
         required: ['email']
       }
     }
@@ -60,9 +76,12 @@ export const TOOLS: ToolDefinition[] = [
           email:      { type: 'string', description: 'Contact email address' },
           source:     {
             type: 'string',
-            enum: ['organic', 'referral', 'paid', 'unknown'],
-            description: 'Lead acquisition source'
-          }
+            enum: ['organic', 'referral', 'paid', 'unknown', 'partner', 'event', 'website', 'cold_call', 'other'],
+            description: 'Lead acquisition source (fuente de captura)'
+          },
+          company:  { type: 'string', description: 'Company name (empresa)' },
+          phone:    { type: 'string', description: 'Contact phone number (teléfono)' },
+          industry: { type: 'string', description: 'Industry (industria / giro)' }
         },
         required: ['contact_id', 'email', 'source']
       }

@@ -23,6 +23,7 @@ import { createLogger } from '../../../shared/logging';
 const logger = createLogger('single-agent', 'cognitive');
 
 const MAX_LOOP_ITERATIONS = 5;
+const MAX_FILTER_DISPATCHES = 3;
 const MAX_CONTEXT_TOKENS = 800;
 
 const SINGLE_AGENT_SYSTEM_PROMPT = `You are Xnoria's customer experience agent. 
@@ -105,9 +106,11 @@ export async function runSingleAgent(db: Pool, event: CXEvent): Promise<void> {
   ];
 
   let iterations = 0;
+  let filterDispatches = 0;
 
   while (iterations < MAX_LOOP_ITERATIONS) {
     iterations++;
+    logger.debug({ iteration: iterations, max: MAX_LOOP_ITERATIONS, filter_dispatches: filterDispatches }, 'Loop iteration');
 
     const completion = await llm.chat.completions.create({
       model: clientConfig.model,
@@ -150,6 +153,9 @@ export async function runSingleAgent(db: Pool, event: CXEvent): Promise<void> {
       break;
     }
 
+    // Append the assistant's message back to context for sequential execution
+    messages.push(message as OpenAI.ChatCompletionMessageParam);
+
     // Handle reply tool — send message back to contact via channel
     if (replyCalls.length > 0) {
       try {
@@ -189,7 +195,13 @@ export async function runSingleAgent(db: Pool, event: CXEvent): Promise<void> {
         break;
       }
 
-      logger.info({ action_id: mapping.action_id }, 'Dispatching to filter');
+      filterDispatches++;
+      logger.info({ action_id: mapping.action_id, dispatch: filterDispatches, max: MAX_FILTER_DISPATCHES }, 'Dispatching to filter');
+
+      if (filterDispatches > MAX_FILTER_DISPATCHES) {
+        logger.warn({ max: MAX_FILTER_DISPATCHES, session_id }, 'Max filter dispatches reached — halting chain');
+        break;
+      }
 
       const filterResponse = await dispatchToFilter({
         action_id: mapping.action_id,
@@ -239,7 +251,30 @@ export async function runSingleAgent(db: Pool, event: CXEvent): Promise<void> {
       botReply = confirmMsg;
       await sendReply(event.contact_id, confirmMsg);
       logger.info({ contact_id: event.contact_id, action_id: mapping.action_id, status: filterResponse.status }, 'Action confirmation sent to operator');
-      break;
+
+      // Append filter response as tool role and continue for multi-step execution
+      messages.push({
+        role: 'tool',
+        tool_call_id: call.id,
+        content: JSON.stringify({
+          status: filterResponse.status,
+          log_id: filterResponse.log_id,
+          workflow_result: filterResponse.workflow_result,
+        }),
+      });
+
+      // Provide dummy responses for any other tool calls in the same batch to avoid 400 errors from strict LLM APIs
+      for (const tc of toolCalls) {
+        if (tc.id !== call.id) {
+          messages.push({
+            role: 'tool',
+            tool_call_id: tc.id,
+            content: JSON.stringify({ error: 'Ignored due to sequential execution policy. Call this again later if needed.' }),
+          });
+        }
+      }
+
+      continue;
     }
   }
 

@@ -68,6 +68,9 @@ export const TOOLS: ToolDefinition[] = [
       name: 'acq_lead_score',
       description:
         'Score an incoming lead using rule-based logic and apply CRM tags. ' +
+        'IMPORTANT: Before calling this tool, first create or update the contact via crm_contact_upsert ' +
+        'to ensure all fields (company, phone, address, etc.) are saved in HubSpot. ' +
+        'This tool only captures 6 fields — crm_contact_upsert captures 22. ' +
         'Use when a new lead signal is received and needs qualification.',
       parameters: {
         type: 'object',

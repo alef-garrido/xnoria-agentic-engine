@@ -4,19 +4,19 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "xnoria-sal-sequence-enroll-v1",
-        "responseMode": "lastNode",
+        "path": "sal-sequence-enroll",
+        "responseMode": "responseNode",
         "options": {}
       },
       "id": "webhook-sal-sequence-enroll-v1",
       "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         240,
         300
       ],
-      "webhookId": "xnoria-sal-sequence-enroll-v1"
+      "webhookId": "aa167af5-3628-40be-9feb-a4c2bdcf4189"
     },
     {
       "parameters": {
@@ -133,12 +133,16 @@
     },
     {
       "parameters": {
-        "options": {}
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'executed', action_id: 'sal.sequence.enroll', contact_id: $('NormalizePayload').item.json.contact_id, sequence_id: $('NormalizePayload').item.json.sequence_id, reason: $('NormalizePayload').item.json.reason }) }}",
+        "options": {
+          "responseCode": 200
+        }
       },
       "id": "respond-to-webhook",
       "name": "RespondToFilter",
       "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [
         1340,
         300

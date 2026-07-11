@@ -96,7 +96,7 @@ VALUES
   (
     'prd.adoption.nudge',
     'PRD',
-    'prd-adoption-nudge',
+    'prd-contact-nudge',
     false,
     true,
     'Send adoption nudge to low-engagement contact'

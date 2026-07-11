@@ -1,1 +1,204 @@
-[{"updatedAt":"2026-07-02T23:30:00.000Z","createdAt":"2026-04-13T10:49:40.830Z","id":"mvp-acq-lead-score-v1","name":"W-MVP-1 - Acq.lead.score","description":null,"active":true,"isArchived":false,"nodes":[{"parameters":{"httpMethod":"POST","path":"xnoria-acq-lead-score-v1","responseMode":"responseNode","options":{}},"id":"webhook-acq-lead-score-v1","name":"Webhook","type":"n8n-nodes-base.webhook","typeVersion":2,"position":[240,304]},{"parameters":{"jsCode":"const body = $json.body || $json;\nreturn {\n  json: {\n    contact_id: body.contact_id,\n    email: body.payload?.email || body.email,\n    source: body.payload?.source || 'unknown',\n    signal_id: body.signal_id || null,\n    signal_severity: body.signal_severity || 0,\n    session_id: body.session_id\n  }\n};"},"id":"normalize-lead-code","name":"NormalizeLead","type":"n8n-nodes-base.code","typeVersion":2,"position":[464,304]},{"parameters":{"jsCode":"const source = $json.source;\nconst severity = $json.signal_severity || 0;\n\n// Rule-based scoring\nconst sourceScore = {\n  organic: 80,\n  referral: 90,\n  paid: 60,\n  unknown: 40\n}[source] || 40;\n\nconst severityBoost = Math.round(severity * 20);\nconst score = Math.min(sourceScore + severityBoost, 100);\n\nconst tags = [];\nif (score >= 80) tags.push('hot-lead');\nelse if (score >= 60) tags.push('warm-lead');\nelse tags.push('cold-lead');\n\nif (source === 'referral') tags.push('referral-source');\n\nreturn {\n  json: {\n    ...$json,\n    lead_score: score,\n    tags\n  }\n};"},"id":"score-lead-code","name":"ScoreLeadLogic","type":"n8n-nodes-base.code","typeVersion":2,"position":[688,304]},{"parameters":{"method":"PATCH","url":"=https://api.hubapi.com/crm/v3/objects/contacts/{{ $json.contact_id }}","sendHeaders":true,"headerParameters":{"parameters":[{"name":"Authorization","value":"=Bearer {{ $env.HUBSPOT_PRIVATE_APP_TOKEN }}"},{"name":"Content-Type","value":"application/json"}]},"sendBody":true,"specifyBody":"json","jsonBody":"={{ JSON.stringify({ properties: { lead_score: String($json.lead_score), hs_lead_status: $json.lead_score >= 80 ? 'IN_PROGRESS' : 'NEW', xnoria_tags: $json.tags.join(',') } }) }}","options":{"response":{"response":{"responseFormat":"json"}}}},"continueOnFail":true,"id":"update-hubspot-contact","name":"UpdateHubSpotContact","type":"n8n-nodes-base.httpRequest","typeVersion":4.2,"position":[912,304]},{"parameters":{"workflowId":"DPTr6Vy1ETbR7frR","options":{}},"continueOnFail":true,"id":"log-result-workflow","name":"LogResult","type":"n8n-nodes-base.executeWorkflow","typeVersion":1,"position":[1120,288]},{"parameters":{"respondWith":"json","responseBody":"={{ JSON.stringify({ status: 'executed', action_id: 'acq.lead.score', contact_id: $('NormalizeLead').item.json.contact_id, lead_score: $('ScoreLeadLogic').item.json.lead_score, tags: $('ScoreLeadLogic').item.json.tags }) }}","options":{"responseCode":200}},"id":"respond-to-webhook","name":"RespondToFilter","type":"n8n-nodes-base.respondToWebhook","typeVersion":1.1,"position":[1344,304]}],"connections":{"Webhook":{"main":[[{"node":"NormalizeLead","type":"main","index":0}]]},"NormalizeLead":{"main":[[{"node":"ScoreLeadLogic","type":"main","index":0}]]},"ScoreLeadLogic":{"main":[[{"node":"UpdateHubSpotContact","type":"main","index":0}]]},"UpdateHubSpotContact":{"main":[[{"node":"LogResult","type":"main","index":0}]]},"LogResult":{"main":[[{"node":"RespondToFilter","type":"main","index":0}]]}},"settings":{"executionOrder":"v1","saveManualExecutions":true,"saveExecutionProgress":true,"saveDataErrorExecution":"all","saveDataSuccessExecution":"all"},"staticData":null,"meta":{"instanceId":"xnoria-cognitive"},"pinData":{}}]
+{
+  "name": "W-MVP-1 - Acq.lead.score",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "xnoria-acq-lead-score-v1",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "9f36d124-8efe-4893-ba1f-e59db453b70a",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1104,
+        16
+      ],
+      "webhookId": "4ed65bed-24f7-45f9-ac1f-5eb41fcce5ff"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\nconst p = body.payload || {};\nreturn {\n  json: {\n    contact_id: body.contact_id,\n    email: p.email || body.email || body.contact_id,\n    source: p.source || body.source || 'unknown',\n    company: p.company || body.company || null,\n    phone: p.phone || body.phone || null,\n    industry: p.industry || body.industry || null,\n    signal_id: body.signal_id || null,\n    signal_severity: body.signal_severity || 0,\n    session_id: body.session_id\n  }\n};"
+      },
+      "id": "aeaaba3f-cfe0-46c5-bae6-c19b265caaf6",
+      "name": "NormalizeLead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const source = $json.source;\nconst severity = $json.signal_severity || 0;\n\n// Rule-based scoring\nconst sourceScore = {\n  organic: 80,\n  referral: 90,\n  paid: 60,\n  unknown: 40\n}[source] || 40;\n\nconst severityBoost = Math.round(severity * 20);\nconst score = Math.min(sourceScore + severityBoost, 100);\n\nconst tags = [];\nif (score >= 80) tags.push('hot-lead');\nelse if (score >= 60) tags.push('warm-lead');\nelse tags.push('cold-lead');\n\nif (source === 'referral') tags.push('referral-source');\n\nreturn {\n  json: {\n    ...$json,\n    lead_score: score,\n    tags\n  }\n};"
+      },
+      "id": "cc2a2182-5fac-4363-a3f2-749ee0edc59f",
+      "name": "ScoreLeadLogic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/batch/upsert",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.HUBSPOT_PRIVATE_APP_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (() => { const props = { email: $json.email, lead_score: String($json.lead_score), hs_lead_status: $json.lead_score >= 80 ? 'IN_PROGRESS' : 'NEW', xnoria_tags: $json.tags.join(',') }; if ($json.company) props.company = $json.company; if ($json.phone) props.phone = $json.phone; if ($json.industry) props.industry = $json.industry; return JSON.stringify({ inputs: [{ idProperty: 'email', id: $json.email, properties: props }] }); })() }}",
+        "options": {}
+      },
+      "id": "b0eeae7c-d05b-4dde-aa83-b37e8220d0af",
+      "name": "HubSpot -- upsert contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -432,
+        16
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "try {\n  const res = ($json.results || []);\n  if (!res.length) throw new Error('no HubSpot results');\n  const cid = res[0].id;\n  if (!cid) throw new Error('no contact id in HubSpot response');\n  const normalized = $('NormalizeLead').item.json;\n  return {\n    json: {\n      contact_id: cid,\n      email: normalized.email,\n      lead_score: $json.results[0].properties.lead_score || $('ScoreLeadLogic').item.json.lead_score,\n      tags: ($json.results[0].properties.xnoria_tags || '').split(',').filter(Boolean) || $('ScoreLeadLogic').item.json.tags,\n      session_id: normalized.session_id\n    }\n  };\n} catch (e) {\n  const scored = $('ScoreLeadLogic').item.json;\n  return {\n    json: {\n      contact_id: scored.email,\n      email: scored.email,\n      lead_score: scored.lead_score,\n      tags: scored.tags,\n      session_id: $('NormalizeLead').item.json.session_id,\n      hubspot_error: e.message\n    }\n  };\n}"
+      },
+      "id": "5fab825e-e0e0-415a-8e39-7140c6166032",
+      "name": "Code -- extract contact_id",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "DPTr6Vy1ETbR7frR",
+        "options": {}
+      },
+      "id": "8183c3e5-8320-4276-9267-b026ea823196",
+      "name": "LogResult",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [
+        0,
+        16
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: $('Code -- extract contact_id').item.json.hubspot_error ? 'error' : 'executed', action_id: 'acq.lead.score', contact_id: $('Code -- extract contact_id').item.json.contact_id, email: $('Code -- extract contact_id').item.json.email, lead_score: $('Code -- extract contact_id').item.json.lead_score, tags: $('Code -- extract contact_id').item.json.tags, hubspot_error: $('Code -- extract contact_id').item.json.hubspot_error }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "1bbda22b-0d21-42c5-89af-05d032802850",
+      "name": "RespondToFilter",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        16
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "NormalizeLead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NormalizeLead": {
+      "main": [
+        [
+          {
+            "node": "ScoreLeadLogic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ScoreLeadLogic": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- upsert contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- upsert contact": {
+      "main": [
+        [
+          {
+            "node": "Code -- extract contact_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code -- extract contact_id": {
+      "main": [
+        [
+          {
+            "node": "LogResult",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LogResult": {
+      "main": [
+        [
+          {
+            "node": "RespondToFilter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "id": "loJ0OOEzdipDj8g6",
+  "active": true
+}

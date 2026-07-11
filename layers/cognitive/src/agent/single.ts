@@ -252,6 +252,12 @@ export async function runSingleAgent(db: Pool, event: CXEvent): Promise<void> {
       await sendReply(event.contact_id, confirmMsg);
       logger.info({ contact_id: event.contact_id, action_id: mapping.action_id, status: filterResponse.status }, 'Action confirmation sent to operator');
 
+      // Only 'executed' status allows chaining — HITL, rejected, error all halt the loop
+      if (filterResponse.status !== 'executed') {
+        logger.info({ status: filterResponse.status, action_id: mapping.action_id }, 'Non-executed status — halting chain');
+        break;
+      }
+
       // Append filter response as tool role and continue for multi-step execution
       messages.push({
         role: 'tool',

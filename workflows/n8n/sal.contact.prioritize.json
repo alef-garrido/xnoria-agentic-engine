@@ -4,19 +4,19 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "xnoria-sal-contact-prioritize-v1",
-        "responseMode": "lastNode",
+        "path": "sal-contact-prioritize",
+        "responseMode": "responseNode",
         "options": {}
       },
       "id": "webhook-sal-contact-prioritize-v1",
       "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
+      "typeVersion": 2,
       "position": [
         240,
         300
       ],
-      "webhookId": "xnoria-sal-contact-prioritize-v1"
+      "webhookId": "e0c547fc-cce7-47f9-8c35-2ec531e034ba"
     },
     {
       "parameters": {
@@ -216,12 +216,16 @@
     },
     {
       "parameters": {
-        "options": {}
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'executed', action_id: 'sal.contact.prioritize', contact_id: $('NormalizePayload').item.json.contact_id, priority: $('NormalizePayload').item.json.priority, reason: $('NormalizePayload').item.json.reason }) }}",
+        "options": {
+          "responseCode": 200
+        }
       },
       "id": "respond-to-webhook",
       "name": "RespondToFilter",
       "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
+      "typeVersion": 1.1,
       "position": [
         1560,
         300

@@ -112,19 +112,39 @@ export async function runSingleAgent(db: Pool, event: CXEvent): Promise<void> {
     iterations++;
     logger.debug({ iteration: iterations, max: MAX_LOOP_ITERATIONS, filter_dispatches: filterDispatches }, 'Loop iteration');
 
-    const completion = await llm.chat.completions.create({
-      model: clientConfig.model,
-      messages,
-      tools: TOOLS.map((t) => ({
-        type: 'function' as const,
-        function: {
-          name: t.function.name,
-          description: t.function.description,
-          parameters: t.function.parameters,
-        },
-      })),
-      tool_choice: 'auto',
-    });
+    let completion: OpenAI.Chat.Completions.ChatCompletion;
+    let retries = 0;
+    const MAX_RETRIES = 1;
+
+    while (true) {
+      try {
+        completion = await llm.chat.completions.create({
+          model: clientConfig.model,
+          messages,
+          tools: TOOLS.map((t) => ({
+            type: 'function' as const,
+            function: {
+              name: t.function.name,
+              description: t.function.description,
+              parameters: t.function.parameters,
+            },
+          })),
+          tool_choice: 'auto',
+        });
+        break;
+      } catch (err) {
+        const apiError = err as { status?: number; message?: string };
+        if (retries >= MAX_RETRIES || apiError?.status !== 400 || !apiError?.message?.includes('tool_use_failed')) {
+          throw err;
+        }
+        retries++;
+        logger.warn({ retry: retries, iteration: iterations }, 'LLM function call malformed — retrying');
+        messages.push({
+          role: 'user' as const,
+          content: 'Your previous function call had a JSON syntax error. Ensure you pass valid JSON (curly braces {}, double quotes on keys/strings, no brackets). Call the function again with correct syntax.',
+        });
+      }
+    }
 
     logger.debug({ iteration: iterations, stop_reason: completion.choices[0]?.finish_reason, tokens: completion.usage?.total_tokens }, 'LLM response received');
 

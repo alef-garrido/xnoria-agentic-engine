@@ -46,7 +46,14 @@
       "position": [
         720,
         200
-      ]
+      ],
+      "continueOnFail": true,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "sETmIzapp65pmP2F",
+          "name": "WhatsApp account"
+        }
+      }
     },
     {
       "parameters": {
@@ -70,7 +77,9 @@
         "subject": "={{ $('Code -- build outreach payload').item.json.gmail_subject }}",
         "emailType": "text",
         "message": "={{ $('Code -- build outreach payload').item.json.gmail_body }}",
-        "appendAttribution": false
+        "options": {
+          "appendAttribution": false
+        }
       },
       "id": "gmail-outbound",
       "name": "GmailOutbound",
@@ -79,7 +88,13 @@
       "position": [
         1200,
         200
-      ]
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YMxwY3u929C0wtWe",
+          "name": "Gmail account"
+        }
+      }
     },
     {
       "parameters": {

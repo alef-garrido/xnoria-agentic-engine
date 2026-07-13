@@ -84,19 +84,39 @@ async function runSingleAgent(db, event) {
     while (iterations < MAX_LOOP_ITERATIONS) {
         iterations++;
         logger.debug({ iteration: iterations, max: MAX_LOOP_ITERATIONS, filter_dispatches: filterDispatches }, 'Loop iteration');
-        const completion = await llm.chat.completions.create({
-            model: clientConfig.model,
-            messages,
-            tools: definitions_1.TOOLS.map((t) => ({
-                type: 'function',
-                function: {
-                    name: t.function.name,
-                    description: t.function.description,
-                    parameters: t.function.parameters,
-                },
-            })),
-            tool_choice: 'auto',
-        });
+        let completion;
+        let retries = 0;
+        const MAX_RETRIES = 1;
+        while (true) {
+            try {
+                completion = await llm.chat.completions.create({
+                    model: clientConfig.model,
+                    messages,
+                    tools: definitions_1.TOOLS.map((t) => ({
+                        type: 'function',
+                        function: {
+                            name: t.function.name,
+                            description: t.function.description,
+                            parameters: t.function.parameters,
+                        },
+                    })),
+                    tool_choice: 'auto',
+                });
+                break;
+            }
+            catch (err) {
+                const apiError = err;
+                if (retries >= MAX_RETRIES || apiError?.status !== 400 || !apiError?.message?.includes('tool_use_failed')) {
+                    throw err;
+                }
+                retries++;
+                logger.warn({ retry: retries, iteration: iterations }, 'LLM function call malformed — retrying');
+                messages.push({
+                    role: 'user',
+                    content: 'Your previous function call had a JSON syntax error. Ensure you pass valid JSON (curly braces {}, double quotes on keys/strings, no brackets). Call the function again with correct syntax.',
+                });
+            }
+        }
         logger.debug({ iteration: iterations, stop_reason: completion.choices[0]?.finish_reason, tokens: completion.usage?.total_tokens }, 'LLM response received');
         const message = completion.choices[0]?.message;
         const toolCalls = message?.tool_calls ?? [];
@@ -206,6 +226,11 @@ async function runSingleAgent(db, event) {
             botReply = confirmMsg;
             await (0, telegram_1.sendReply)(event.contact_id, confirmMsg);
             logger.info({ contact_id: event.contact_id, action_id: mapping.action_id, status: filterResponse.status }, 'Action confirmation sent to operator');
+            // Only 'executed' status allows chaining — HITL, rejected, error all halt the loop
+            if (filterResponse.status !== 'executed') {
+                logger.info({ status: filterResponse.status, action_id: mapping.action_id }, 'Non-executed status — halting chain');
+                break;
+            }
             // Append filter response as tool role and continue for multi-step execution
             messages.push({
                 role: 'tool',

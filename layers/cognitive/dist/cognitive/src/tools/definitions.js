@@ -143,6 +143,27 @@ exports.TOOLS = [
             }
         }
     },
+    {
+        type: 'function',
+        function: {
+            name: 'sal_contact_message',
+            description: 'Send a personalized message to a SAL stage contact. ' +
+                'Delivery is primarily via email, with an optional WhatsApp send if a phone number is available. ' +
+                'Use when you need to send a specific message crafted for the contact context.',
+            parameters: {
+                type: 'object',
+                properties: {
+                    contact_id: { type: 'string', description: 'HubSpot contact ID' },
+                    email: { type: 'string', description: 'Contact email address (primary delivery channel)' },
+                    message: { type: 'string', description: 'The personalized message content to send' },
+                    phone: { type: 'string', description: 'Contact phone/WhatsApp number (optional)' },
+                    name: { type: 'string', description: 'Contact name for email greeting' },
+                    signal_id: { type: 'string', description: 'Compass signal ID for context (optional)' }
+                },
+                required: ['contact_id', 'email', 'message']
+            }
+        }
+    },
     // ---------------------------------------------------------------------------
     // Phase 2 — SUP (Support & Service) tools
     // ---------------------------------------------------------------------------
@@ -470,6 +491,7 @@ exports.TOOL_TO_ACTION = {
     acq_contact_outreach: { action_id: 'acq.contact.outreach', stage: 'ACQ' },
     sal_sequence_enroll: { action_id: 'sal.sequence.enroll', stage: 'SAL' },
     sal_contact_prioritize: { action_id: 'sal.contact.prioritize', stage: 'SAL' },
+    sal_contact_message: { action_id: 'sal.contact.message', stage: 'SAL' },
     // Phase 2 — SUP + RET
     sup_ticket_escalate: { action_id: 'sup.ticket.escalate', stage: 'SUP' },
     sup_contact_notify: { action_id: 'sup.contact.notify', stage: 'SUP' },

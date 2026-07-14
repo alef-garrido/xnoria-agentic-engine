@@ -8,61 +8,65 @@ exports.createLLMClientWithFallback = createLLMClientWithFallback;
 // Exnoria · Cognitive · LLM Client with Fallback
 // Phase 4 B4 — Robust LLM client with automatic failover
 //
-// Provides createLLMClientWithFallback function that tries Groq first,
-// and falls back to OpenRouter if Groq fails.
+// Provides createLLMClientWithFallback function that tries OpenRouter first,
+// and falls back to Groq if OpenRouter fails.
 // ==============================================================================
 const openai_1 = __importDefault(require("openai"));
 const llm_1 = require("./llm");
 const logging_1 = require("../../../shared/logging");
 const logger = (0, logging_1.createLogger)('llm-fallback', 'cognitive');
 /**
- * Create LLM client with automatic fallback from Groq to OpenRouter
+ * Create LLM client with automatic fallback from OpenRouter to Groq
  *
- * Tries Groq first with a minimal test request, falls back to OpenRouter
- * if Groq fails (rate limit, auth error, model not found, etc.).
+ * Primary: OpenRouter (LLM_MODEL / LLM_BASE_URL / LLM_API_KEY)
+ * Fallback: Groq       (GROQ_MODEL / GROQ_BASE_URL / GROQ_API_KEY)
+ *
+ * This lets the Groq free tier sit as a backup for when OpenRouter
+ * rate-limits or has transient errors — rather than the other way
+ * around, where Groq's 6k TPM ceiling kills complex sessions.
  */
 async function createLLMClientWithFallback() {
-    // Primary: Groq
+    // Primary: OpenRouter
     try {
-        const groqClient = (0, llm_1.createLLMClient)('LLM_MODEL', 'LLM_BASE_URL', 'LLM_API_KEY');
-        // Test request to validate Groq is working
-        await groqClient.client.chat.completions.create({
-            model: groqClient.model,
+        const primaryClient = (0, llm_1.createLLMClient)('LLM_MODEL', 'LLM_BASE_URL', 'LLM_API_KEY');
+        // Test request to validate primary is working
+        await primaryClient.client.chat.completions.create({
+            model: primaryClient.model,
             messages: [{ role: 'user', content: 'test' }],
             max_tokens: 1,
         });
-        logger.info({ model: groqClient.model, provider: 'groq' }, 'Primary LLM ready');
-        return { ...groqClient, provider: 'groq' };
+        logger.info({ model: primaryClient.model, provider: 'openrouter' }, 'Primary LLM ready');
+        return { ...primaryClient, provider: 'openrouter' };
     }
     catch (error) {
-        logger.warn({ err: error instanceof Error ? error.message : String(error) }, 'Groq primary failed — switching to OpenRouter');
+        logger.warn({ err: error instanceof Error ? error.message : String(error) }, 'OpenRouter primary failed — switching to Groq');
     }
-    // Fallback: OpenRouter
-    const openrouterKey = process.env.OPENROUTER_API_KEY;
-    const openrouterUrl = process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
-    const openrouterModel = process.env.OPENROUTER_MODEL || 'meta-llama/llama-3.3-70b-instruct:free';
-    if (!openrouterKey) {
-        throw new Error('[llm-fallback] OPENROUTER_API_KEY required for fallback but not set');
+    // Fallback: Groq
+    const groqKey = process.env.GROQ_API_KEY;
+    const groqUrl = process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1';
+    const groqModel = process.env.GROQ_MODEL || 'qwen/qwen3-32b';
+    if (!groqKey) {
+        throw new Error('[llm-fallback] GROQ_API_KEY required for fallback but not set');
     }
     const backupClient = new openai_1.default({
-        apiKey: openrouterKey,
-        baseURL: openrouterUrl
+        apiKey: groqKey,
+        baseURL: groqUrl,
     });
     try {
-        // Test request to validate OpenRouter is working
+        // Test request to validate Groq is working
         await backupClient.chat.completions.create({
-            model: openrouterModel,
+            model: groqModel,
             messages: [{ role: 'user', content: 'test' }],
             max_tokens: 1,
         });
-        logger.info({ model: openrouterModel, provider: 'openrouter' }, 'Backup LLM ready');
+        logger.info({ model: groqModel, provider: 'groq' }, 'Backup LLM ready');
         return {
-            model: openrouterModel,
+            model: groqModel,
             client: backupClient,
-            provider: 'openrouter'
+            provider: 'groq',
         };
     }
     catch (error) {
-        throw new Error(`[llm-fallback] Both Groq and OpenRouter failed - ${error instanceof Error ? error.message : 'unknown error'}`);
+        throw new Error(`[llm-fallback] Both OpenRouter and Groq failed - ${error instanceof Error ? error.message : 'unknown error'}`);
     }
 }

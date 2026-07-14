@@ -171,6 +171,9 @@ services:
       LLM_BASE_URL: ${LLM_BASE_URL:-https://generativelanguage.googleapis.com/v1beta/openai}
       LLM_API_KEY: ${LLM_API_KEY}
       LLM_MODEL: ${LLM_MODEL:-gemini-2.0-flash}
+      GROQ_BASE_URL: ${GROQ_BASE_URL:-https://api.groq.com/openai/v1}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      GROQ_MODEL: ${GROQ_MODEL:-qwen/qwen3-32b}
       LLM_COORDINATOR_MODEL: ${LLM_COORDINATOR_MODEL:-llama-3.1-8b-instant}
       LLM_ACQSAL_MODEL: ${LLM_ACQSAL_MODEL:-llama-3.3-70b-versatile}
       LLM_ACQSAL_BASE_URL: ${LLM_ACQSAL_BASE_URL:-https://api.groq.com/openai/v1}

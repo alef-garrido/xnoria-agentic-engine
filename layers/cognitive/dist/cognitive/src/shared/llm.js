@@ -44,7 +44,7 @@ function createLLMClient(modelEnvVar, baseUrlEnvVar, apiKeyEnvVar) {
     logger.debug({ model, baseURL }, 'LLM client created');
     return {
         model,
-        client: new openai_1.default({ apiKey, baseURL }),
+        client: new openai_1.default({ apiKey, baseURL, timeout: 30000 }),
     };
 }
 /**

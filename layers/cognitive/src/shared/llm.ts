@@ -62,7 +62,7 @@ export function createLLMClient(
 
   return {
     model,
-    client: new OpenAI({ apiKey, baseURL }),
+    client: new OpenAI({ apiKey, baseURL, timeout: 30000 }),
   };
 }
 

@@ -21,6 +21,7 @@
     {
       "parameters": {
         "authentication": "appToken",
+        "resource": "contact",
         "operation": "get",
         "contactId": "={{ $json.body.contact_id }}",
         "additionalFields": {}
@@ -55,15 +56,15 @@
     {
       "parameters": {
         "authentication": "appToken",
-        "resource": "task",
+        "resource": "engagement",
         "operation": "create",
-        "taskTitle": "=Document Request: {{ $json.document_type }} \u2014 {{ $json.firstname }}",
-        "taskBody": "=Please collect the following document from this contact: {{ $json.document_type }}. Contact email: {{ $json.email }}",
-        "taskStatus": "NOT_STARTED",
-        "taskPriority": "MEDIUM",
-        "additionalFields": {
-          "associationType": "CONTACT",
-          "associationId": "={{ $json.contact_id }}"
+        "type": "task",
+        "dueDate": "={{ new Date().toISOString() }}",
+        "metadata": {
+          "subject": "=Document Request: {{ $json.document_type }} \u2014 {{ $json.firstname }}",
+          "body": "=Please collect the following document from this contact: {{ $json.document_type }}. Contact email: {{ $json.email }}",
+          "status": "NOT_STARTED",
+          "forObjectType": "CONTACT"
         }
       },
       "id": "hubspot-create-task-onb-1",

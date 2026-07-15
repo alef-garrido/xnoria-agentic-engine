@@ -330,6 +330,51 @@ export const TOOLS: ToolDefinition[] = [
       }
     }
   },
+  {
+    type: 'function',
+    function: {
+      name: 'onb_document_request',
+      description:
+        'Initiate a document collection request for an onboarding contact. ' +
+        'Creates a task in HubSpot for the assigned CSM to collect the specified document. ' +
+        'Use when signal_id is ONB_FRC_01 (abandoned setup — missing documents) or ' +
+        'when the contact needs to submit verification documents to proceed.',
+      parameters: {
+        type: 'object',
+        properties: {
+          contact_id:    { type: 'string', description: 'CRM contact ID' },
+          document_type: {
+            type: 'string',
+            enum: ['identity_document', 'proof_of_address', 'company_registration', 'tax_id', 'bank_statement', 'other'],
+            description: 'Type of document to request from the contact'
+          },
+          signal_id:     { type: 'string', description: 'Compass signal ID for context (optional)' }
+        },
+        required: ['contact_id', 'document_type']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'onb_document_validate',
+      description:
+        'Validate a submitted onboarding document and update the contact record in CRM. ' +
+        'If a valid media_url is provided, the document status is marked as approved in HubSpot. ' +
+        'If no media_url is provided (document missing or invalid), the status is marked as rejected.',
+      parameters: {
+        type: 'object',
+        properties: {
+          contact_id:    { type: 'string', description: 'CRM contact ID' },
+          document_type: { type: 'string', description: 'Type of document that was submitted' },
+          media_url:     { type: 'string', description: 'URL of the submitted document file for validation' },
+          email:         { type: 'string', description: 'Contact email address (required for CRM update)' },
+          signal_id:     { type: 'string', description: 'Compass signal ID for context (optional)' }
+        },
+        required: ['contact_id', 'document_type', 'media_url', 'email']
+      }
+    }
+  },
 
   // ---------------------------------------------------------------------------
   // Phase 3 — PRD (Product) tools
@@ -536,6 +581,8 @@ export const TOOL_TO_ACTION: Record<string, { action_id: string; stage: string }
   onb_contact_nudge:      { action_id: 'onb.contact.nudge',      stage: 'ONB' },
   onb_contact_assist:     { action_id: 'onb.contact.assist',     stage: 'ONB' },
   onb_ticket_escalate:    { action_id: 'onb.ticket.escalate',    stage: 'ONB' },
+  onb_document_request:   { action_id: 'onb.document.request',   stage: 'ONB' },
+  onb_document_validate:  { action_id: 'onb.document.validate',  stage: 'ONB' },
   prd_contact_nudge:      { action_id: 'prd.adoption.nudge',      stage: 'PRD' },
   prd_contact_educate:    { action_id: 'prd.contact.educate',    stage: 'PRD' },
   prd_feedback_log:       { action_id: 'prd.feedback.log',       stage: 'PRD' },

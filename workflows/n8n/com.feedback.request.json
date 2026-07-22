@@ -21,6 +21,7 @@
     {
       "parameters": {
         "authentication": "appToken",
+        "resource": "contact",
         "operation": "get",
         "contactId": "={{ $json.body.contact_id }}",
         "additionalFields": {}
@@ -42,7 +43,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Exnoria - com.feedback.request\n// Send feedback follow-up to contact with ignored feedback\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, signal_id } = webhook;\n\nconst firstname = contact.properties?.firstname?.value ?? 'Contact';\nconst lastname  = contact.properties?.lastname?.value  ?? '';\nconst email     = contact.properties?.email?.value     ?? '';\n\nconst whatsappMessage = \"Hi ${firstname}, we noticed your feedback hasn't received a response — we'd like to make it right.\";\n\nreturn [{\n  json: {\n    contact_id,\n    signal_id,\n    email,\n    firstname,\n    lastname,\n    whatsapp_message: whatsappMessage\n  }\n}];"
+        "jsCode": "// Exnoria - com.feedback.request\n// Send feedback follow-up to contact with ignored feedback\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, signal_id } = webhook;\n\nconst firstname = contact.properties?.firstname?.value ?? 'Contact';\nconst lastname  = contact.properties?.lastname?.value  ?? '';\nconst email     = contact.properties?.email?.value     ?? '';\n\nconst whatsappMessage = 'Hi ' + firstname + ', we noticed your feedback hasn\\'t received a response — we\\'d like to make it right.';\n\nreturn [{\n  json: {\n    contact_id,\n    signal_id,\n    email,\n    firstname,\n    lastname,\n    whatsapp_message: whatsappMessage\n  }\n}];"
       },
       "id": "code-generate-message-com-3",
       "name": "Code -- generate message",
@@ -69,6 +70,8 @@
     {
       "parameters": {
         "authentication": "appToken",
+        "resource": "contact",
+        "operation": "upsert",
         "email": "={{ $(\"Code -- generate message\").item.json.email }}",
         "additionalFields": {},
         "options": {}
@@ -91,13 +94,16 @@
     {
       "parameters": {
         "authentication": "appToken",
+        "resource": "engagement",
         "operation": "create",
-        "subject": "Follow up on unacknowledged feedback from {{ $(\"Code -- generate message\").item.json.contact_id }}",
-        "contactId": "={{ $(\"Code -- generate message\").item.json.contact_id }}", 
-        "status": "NOT_STARTED",
-        "priority": "HIGH",
-        "additionalFields": {},
-        "options": {}
+        "type": "task",
+        "dueDate": "={{ new Date().toISOString() }}",
+        "metadata": {
+          "subject": "=Follow up on unacknowledged feedback from {{ $(\"Code -- generate message\").item.json.contact_id }}",
+          "body": "=High-priority follow-up for unacknowledged feedback. Contact ID: {{ $(\"Code -- generate message\").item.json.contact_id }}",
+          "status": "NOT_STARTED",
+          "forObjectType": "CONTACT"
+        }
       },
       "id": "hubspot-create-task-com-3",
       "name": "HubSpot -- create task",

@@ -21,6 +21,7 @@
     {
       "parameters": {
         "authentication": "appToken",
+        "resource": "contact",
         "operation": "get",
         "contactId": "={{ $json.body.contact_id }}",
         "additionalFields": {}
@@ -69,14 +70,18 @@
     {
       "parameters": {
         "authentication": "appToken",
+        "resource": "contact",
+        "operation": "upsert",
         "email": "={{ $(\"Code -- branching logic\").item.json.email }}",
         "additionalFields": {
-          "properties": [
-            {
-              "name": "last_com_reengage_at",
-              "value": "={{ $(\"Code -- branching logic\").item.json.last_reengage_at }}"
-            }
-          ]
+          "customPropertiesUi": {
+            "customPropertiesValues": [
+              {
+                "property": "last_com_reengage_at",
+                "value": "={{ $(\"Code -- branching logic\").item.json.last_reengage_at }}"
+              }
+            ]
+          }
         },
         "options": {}
       },

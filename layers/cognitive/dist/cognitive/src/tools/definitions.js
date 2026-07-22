@@ -421,6 +421,65 @@ exports.TOOLS = [
         }
     },
     // ---------------------------------------------------------------------------
+    // Phase 4 — COM (Commercial) tools
+    // ---------------------------------------------------------------------------
+    {
+        type: 'function',
+        function: {
+            name: 'com_content_publish',
+            description: 'Trigger scheduled content publishing to social media channels (LinkedIn, Instagram, Threads). ' +
+                'The workflow reads from the content calendar spreadsheet and publishes any scheduled posts. ' +
+                'Requires HITL — operator must approve before publishing.',
+            parameters: {
+                type: 'object',
+                properties: {
+                    contact_id: { type: 'string', description: 'CRM contact ID for audit context' },
+                    signal_id: { type: 'string', description: 'Compass signal ID for context (optional)' }
+                },
+                required: ['contact_id']
+            }
+        }
+    },
+    {
+        type: 'function',
+        function: {
+            name: 'com_contact_reengage',
+            description: 'Re-engage a contact showing commercial disengagement signals. ' +
+                'COM_REL_01 (unsubscribed): enrolls in re-engagement sequence. ' +
+                'COM_REL_02 (low engagement): sends personalized WhatsApp nudge and updates HubSpot.',
+            parameters: {
+                type: 'object',
+                properties: {
+                    contact_id: { type: 'string', description: 'CRM contact ID' },
+                    signal_id: {
+                        type: 'string',
+                        enum: ['COM_REL_01', 'COM_REL_02'],
+                        description: 'Compass signal ID for re-engagement type'
+                    },
+                    cause_code: { type: 'string', description: 'Compass cause code (COM-REL)' }
+                },
+                required: ['contact_id', 'signal_id']
+            }
+        }
+    },
+    {
+        type: 'function',
+        function: {
+            name: 'com_feedback_request',
+            description: 'Send a follow-up to a contact whose feedback has not been acknowledged or responded to. ' +
+                'Creates a high-priority follow-up task in HubSpot and sends a WhatsApp notification.',
+            parameters: {
+                type: 'object',
+                properties: {
+                    contact_id: { type: 'string', description: 'CRM contact ID' },
+                    signal_id: { type: 'string', description: 'Compass signal ID (optional)' },
+                    feedback_ref: { type: 'string', description: 'Reference to the unacknowledged feedback (optional)' }
+                },
+                required: ['contact_id']
+            }
+        }
+    },
+    // ---------------------------------------------------------------------------
     // Reply — local handler, not dispatched to filter
     // ---------------------------------------------------------------------------
     {
@@ -549,6 +608,10 @@ exports.TOOL_TO_ACTION = {
     prd_contact_nudge: { action_id: 'prd.adoption.nudge', stage: 'PRD' },
     prd_contact_educate: { action_id: 'prd.contact.educate', stage: 'PRD' },
     prd_feedback_log: { action_id: 'prd.feedback.log', stage: 'PRD' },
+    // Phase 4 — COM
+    com_content_publish: { action_id: 'com.content.publish', stage: 'COM' },
+    com_contact_reengage: { action_id: 'com.contact.reengage', stage: 'COM' },
+    com_feedback_request: { action_id: 'com.feedback.request', stage: 'COM' },
     // Local handler — not dispatched to filter
     reply: null,
     // Phase 3 B3 — Compass context retrieval (MCP routed, not filter dispatched)

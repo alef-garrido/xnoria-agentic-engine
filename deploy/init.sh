@@ -199,7 +199,7 @@ docker compose up -d postgres
 
 info "Waiting for Postgres to be healthy..."
 RETRIES=30
-until docker compose exec -T postgres pg_isready -U xnoria -d exnoria >/dev/null 2>&1; do
+until docker compose exec -T postgres pg_isready -U ${PROJECT_ID:-exnoria} -d ${POSTGRES_DB:-exnoria} >/dev/null 2>&1; do
   RETRIES=$((RETRIES - 1))
   if [ "${RETRIES}" -eq 0 ]; then
     fatal "Postgres did not become healthy in time"
@@ -217,7 +217,7 @@ run_migration() {
   local file="$1"
   if [ -f "${file}" ]; then
     info "  Applying: $(basename "${file}")"
-    docker compose exec -T postgres psql -U xnoria -d exnoria < "${file}" >/dev/null
+    docker compose exec -T postgres psql -U ${PROJECT_ID:-exnoria} -d ${POSTGRES_DB:-exnoria} < "${file}" >/dev/null
   fi
 }
 

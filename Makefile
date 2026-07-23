@@ -53,9 +53,10 @@ export-all:
 	@echo "Exporting n8n workflows (manual step — run 'make verify-workflows' to check)..."
 	@mkdir -p backups
 	@echo "Backing up filter_log (audit history)..."
-	@if docker exec exnoria_postgres true >/dev/null 2>&1; then \
+	@PROJECT_ID=$${PROJECT_ID:-exnoria}; \
+	if docker exec $${PROJECT_ID}_postgres true >/dev/null 2>&1; then \
 		echo "PostgreSQL container is running..."; \
-		if docker exec exnoria_postgres pg_dump -U exnoria -t filter_log $(POSTGRES_DB) > backups/filter_log_$$(date +%Y%m%d_%H%M%S).sql 2>/dev/null; then \
+		if docker exec $${PROJECT_ID}_postgres pg_dump -U "$$PROJECT_ID" -t filter_log $(POSTGRES_DB) > backups/filter_log_$$(date +%Y%m%d_%H%M%S).sql 2>/dev/null; then \
 			echo "✅ Export complete. Safe to proceed."; \
 		else \
 			echo "⚠️  Failed to backup filter_log"; \

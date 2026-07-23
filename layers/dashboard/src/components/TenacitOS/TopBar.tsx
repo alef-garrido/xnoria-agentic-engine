@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { User } from "lucide-react";
+import { BRANDING } from "@/config/branding";
 
 export function TopBar() {
   return (
@@ -34,8 +35,24 @@ export function TopBar() {
               letterSpacing: "-0.5px",
             }}
           >
-            Exnoria
+            {BRANDING.agentName}
           </h1>
+          {BRANDING.subtitle && (
+            <span
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: "10px",
+                fontWeight: 500,
+                color: "var(--text-muted)",
+                padding: "2px 6px",
+                backgroundColor: "var(--surface-elevated)",
+                borderRadius: "4px",
+                border: "1px solid var(--border)",
+              }}
+            >
+              {BRANDING.subtitle}
+            </span>
+          )}
           {/* Version Badge */}
           <div
             style={{

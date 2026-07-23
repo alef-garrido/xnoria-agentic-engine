@@ -5,6 +5,7 @@
 
 set -euo pipefail
 
+PROJECT_ID="${PROJECT_ID:-exnoria}"
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
 
@@ -17,7 +18,7 @@ if [ ! -f .env ]; then
   cp .env.example .env
   
   # Generate cryptographically secure random keys for secrets
-  POSTGRES_PASS=$(openssl rand -hex 16 2>/dev/null || echo "exnoria_secret_pass_$(date +%s)")
+  POSTGRES_PASS=$(openssl rand -hex 16 2>/dev/null || echo "pg_$(date +%s)")
   N8N_KEY=$(openssl rand -hex 16 2>/dev/null || echo "n8n_secret_key_$(date +%s)")
   AUTH_SECRET=$(openssl rand -hex 32 2>/dev/null || echo "dashboard_auth_secret_$(date +%s)")
   ADMIN_PASS=$(openssl rand -hex 12 2>/dev/null || echo "admin123456")
@@ -47,7 +48,7 @@ if docker ps --format '{{.Names}}' | grep -q "postgres"; then
   for seed in config/seeds/*.sql; do
     if [ -f "$seed" ]; then
       echo "  -> Applying $seed..."
-      docker exec -i exnoria_postgres psql -U exnoria -d exnoria -f - < "$seed" >/dev/null 2>&1 || true
+      docker exec -i "${PROJECT_ID}_postgres" psql -U "$PROJECT_ID" -d "${POSTGRES_DB:-exnoria}" -f - < "$seed" >/dev/null 2>&1 || true
     fi
   done
   echo "✅ Seeds applied."

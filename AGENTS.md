@@ -109,29 +109,35 @@ Phase 3 delivers:
 - ✅ Stage-aware tool filtering (8 tools instead of 19+)
 - ✅ Memory persistence across container restarts
 
-Eight journey stages with registered actions:
-| Action ID | Stage | Description |
-|---|---|---|
-| `acq.lead.engage` | ACQ | Send immediate WhatsApp acknowledgment to inbound lead |
-| `acq.lead.nurture` | ACQ | AI nurture conversation for out-of-hours contacts |
-| `acq.contact.outreach` | ACQ | Cold outreach via WhatsApp + email, sync to HubSpot |
-| `sal.sequence.enroll` | SAL | Enroll contact in sales sequence |
-| `sal.contact.prioritize` | SAL | Flag contact for immediate SDR follow-up |
-| `sal.contact.message` | SAL | Send pre-composed WhatsApp message to contact |
-| `onb.document.request` | ONB | Initiate document collection request |
-| `onb.document.validate` | ONB | Validate submitted document, update CRM |
-| `onb.contact.nudge` | ONB | Send re-engagement nudge to stalled onboarding contact |
-| `onb.contact.assist` | ONB | Offer white-glove CSM assist to blocked onboarding contact (HITL) |
-| `onb.ticket.escalate` | ONB | Escalate technical onboarding blocker to support queue |
-| `sup.ticket.escalate` | SUP | Escalate ticket to senior support |
-| `sup.contact.notify` | SUP | Send resolution update to contact (HITL) |
-| `com.content.publish` | COM | Publish scheduled content to social media |
-| `prd.friction.flag` | PRD | Send adoption nudge to low-engagement contact (supersedes placeholder) |
-| `prd.adoption.nudge` | PRD | Send feature education message to workaround-using contact (supersedes placeholder) |
-| `prd.feedback.log` | PRD | Log enriched feature request to HubSpot product pipeline |
-| `ret.contact.winback` | RET | Enroll contact in winback sequence (HITL) |
-| `ret.account.flag` | RET | Flag account for CSM review |
-| `acq.contact.upsert` | ACQ | Create or update contact in HubSpot CRM, returns `contact_id` for chaining (migration 013) |
+Eight journey stages with registered actions (sorted by stage):
+| Action ID | Stage | HITL | Description |
+|---|---|---|---|
+| `acq.lead.engage` | ACQ | No | Send immediate WhatsApp acknowledgment to new inbound lead |
+| `acq.lead.nurture` | ACQ | No | Engage out-of-hours inbound contact with AI nurture conversation |
+| `acq.lead.score` | ACQ | No | Score incoming lead with rule-based logic, apply CRM tags |
+| `acq.contact.get` | ACQ | No | Retrieve contact from HubSpot by email or ID, including custom CX properties |
+| `acq.contact.upsert` | ACQ | No | Create or update contact in HubSpot CRM, returns `contact_id` for chaining |
+| `acq.contact.outreach` | ACQ | Yes | Send personalized cold outreach to qualified lead (email-primary, WhatsApp optional) |
+| `sal.sequence.enroll` | SAL | No | Enroll contact in sales outreach sequence |
+| `sal.contact.prioritize` | SAL | Yes | Flag contact for immediate SDR follow-up |
+| `sal.contact.message` | SAL | No | Send personalized message to SAL-stage contact (email-primary, WhatsApp optional) |
+| `onb.document.request` | ONB | No | Initiate document collection request for onboarding contact |
+| `onb.document.validate` | ONB | No | Validate submitted document, update CRM |
+| `onb.contact.nudge` | ONB | No | Send re-engagement nudge to stalled onboarding contact |
+| `onb.contact.assist` | ONB | Yes | Offer white-glove CSM assist to blocked onboarding contact |
+| `onb.ticket.escalate` | ONB | No | Escalate technical onboarding blocker to support queue |
+| `prd.friction.flag` | PRD | No | Send adoption nudge to low-engagement contact |
+| `prd.adoption.nudge` | PRD | No | Send feature education message to workaround-using contact |
+| `prd.contact.educate` | PRD | No | Send targeted feature education message to workaround-using contact |
+| `prd.feedback.log` | PRD | No | Log enriched feature request to HubSpot product pipeline |
+| `sup.ticket.escalate` | SUP | No | Escalate unresolved ticket to senior support queue |
+| `sup.contact.notify` | SUP | Yes | Send resolution status update directly to contact |
+| `com.content.publish` | COM | Yes | Trigger scheduled content publishing to social media |
+| `com.contact.reengage` | COM | No | Re-engage contact showing commercial disengagement signals |
+| `com.feedback.request` | COM | No | Send follow-up for unacknowledged contact feedback |
+| `ret.contact.winback` | RET | Yes | Enroll contact in winback sequence for churn prevention |
+| `ret.account.flag` | RET | No | Flag account for immediate CSM review due to churn risk |
+| `exp.contact.upgrade` | EXP | No | Notify expansion-ready contact about premium feature upgrade opportunity |
 
 Placeholder actions (disabled):
 | Action ID | Stage | Description |

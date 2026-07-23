@@ -35,7 +35,6 @@
       ],
       "credentials": {
         "hubspotAppToken": {
-          "id": "6qYgnpaGAK1L9USv",
           "name": "HubSpot Private App"
         }
       }
@@ -55,16 +54,30 @@
     },
     {
       "parameters": {
-        "jsCode": "// Simulate -- HubSpot ticket creation\n// Replace with real HubSpot ticket API when ready\n\nconst data = $(\"Code -- escalation logic\").first().json;\n\nreturn [{\n  json: {\n    ...data,\n    ticket_created: true,\n    ticket_id: 'ticket_sim_' + Date.now(),\n    simulated: true\n  }\n}];"
+        "authentication": "appToken",
+        "resource": "ticket",
+        "operation": "create",
+        "pipelineId": "0",
+        "stageId": "1",
+        "ticketName": "={{ $(\"Code -- escalation logic\").item.json.ticket_title }}",
+        "additionalFields": {
+          "description": "={{ $(\"Code -- escalation logic\").item.json.ticket_note }}",
+          "priority": "={{ $(\"Code -- escalation logic\").item.json.ticket_priority }}"
+        }
       },
-      "id": "simulate-create-ticket-onb5",
-      "name": "Simulate -- create ticket",
-      "type": "n8n-nodes-base.code",
+      "id": "hubspot-create-ticket-onb5",
+      "name": "HubSpot -- create ticket",
+      "type": "n8n-nodes-base.hubspot",
       "typeVersion": 2,
       "position": [
         960,
         300
-      ]
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "name": "HubSpot Private App"
+        }
+      }
     },
     {
       "parameters": {
@@ -83,7 +96,6 @@
       ],
       "credentials": {
         "hubspotAppToken": {
-          "id": "6qYgnpaGAK1L9USv",
           "name": "HubSpot Private App"
         }
       }
@@ -91,7 +103,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"onb.ticket.escalate\",\n  \"contact_id\": \"{{ $(\"Code -- escalation logic\").item.json.contact_id }}\",\n  \"signal_id\": \"{{ $(\"Code -- escalation logic\").item.json.signal_id }}\",\n  \"ticket_created\": {{ $(\"Simulate -- create ticket\").item.json.ticket_created }},\n  \"ticket_id\": \"{{ $(\"Simulate -- create ticket\").item.json.ticket_id }}\",\n  \"ticket_priority\": \"{{ $(\"Code -- escalation logic\").item.json.ticket_priority }}\",\n  \"escalated_at\": {{ $(\"Code -- escalation logic\").item.json.escalated_at }},\n  \"simulated\": {{ $(\"Simulate -- create ticket\").item.json.simulated }}\n}",
+        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"onb.ticket.escalate\",\n  \"contact_id\": \"{{ $(\"Code -- escalation logic\").item.json.contact_id }}\",\n  \"signal_id\": \"{{ $(\"Code -- escalation logic\").item.json.signal_id }}\",\n  \"ticket_created\": true,\n  \"ticket_priority\": \"{{ $(\"Code -- escalation logic\").item.json.ticket_priority }}\",\n  \"escalated_at\": {{ $(\"Code -- escalation logic\").item.json.escalated_at }}\n}",
         "options": {
           "responseCode": 200
         }
@@ -133,14 +145,14 @@
       "main": [
         [
           {
-            "node": "Simulate -- create ticket",
+            "node": "HubSpot -- create ticket",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Simulate -- create ticket": {
+    "HubSpot -- create ticket": {
       "main": [
         [
           {

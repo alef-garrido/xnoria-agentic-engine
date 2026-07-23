@@ -35,7 +35,6 @@
       ],
       "credentials": {
         "hubspotAppToken": {
-          "id": "6qYgnpaGAK1L9USv",
           "name": "HubSpot Private App"
         }
       }
@@ -89,16 +88,31 @@
     },
     {
       "parameters": {
-        "jsCode": "// Simulate -- HubSpot task creation for CSM follow-up\n// Replace with real HubSpot task API when ready\n\nconst data = $input.first().json;\nconst assist = $(\"Code -- assist logic\").first().json;\n\nreturn [{\n  json: {\n    ...assist,\n    task_created: true,\n    task_id: 'task_sim_' + Date.now(),\n    simulated: true\n  }\n}];"
+        "authentication": "appToken",
+        "resource": "engagement",
+        "operation": "create",
+        "type": "task",
+        "dueDate": "={{ new Date().toISOString() }}",
+        "metadata": {
+          "subject": "={{ $(\"Code -- assist logic\").item.json.task_subject }}",
+          "body": "={{ $(\"Code -- assist logic\").item.json.task_body }}",
+          "status": "NOT_STARTED",
+          "forObjectType": "CONTACT"
+        }
       },
-      "id": "simulate-create-task-onb4",
-      "name": "Simulate -- create CSM task",
-      "type": "n8n-nodes-base.code",
+      "id": "hubspot-create-task-onb4",
+      "name": "HubSpot -- create task",
+      "type": "n8n-nodes-base.hubspot",
       "typeVersion": 2,
       "position": [
         1200,
         300
-      ]
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "name": "HubSpot Private App"
+        }
+      }
     },
     {
       "parameters": {
@@ -117,7 +131,6 @@
       ],
       "credentials": {
         "hubspotAppToken": {
-          "id": "6qYgnpaGAK1L9USv",
           "name": "HubSpot Private App"
         }
       }
@@ -125,7 +138,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"onb.contact.assist\",\n  \"contact_id\": \"{{ $(\"Code -- assist logic\").item.json.contact_id }}\",\n  \"signal_id\": \"{{ $(\"Code -- assist logic\").item.json.signal_id }}\",\n  \"task_created\": {{ $(\"Simulate -- create CSM task\").item.json.task_created }},\n  \"task_id\": \"{{ $(\"Simulate -- create CSM task\").item.json.task_id }}\",\n  \"assisted_at\": {{ $(\"Code -- assist logic\").item.json.assisted_at }},\n  \"simulated\": {{ $(\"Simulate -- create CSM task\").item.json.simulated }}\n}",
+        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"onb.contact.assist\",\n  \"contact_id\": \"{{ $(\"Code -- assist logic\").item.json.contact_id }}\",\n  \"signal_id\": \"{{ $(\"Code -- assist logic\").item.json.signal_id }}\",\n  \"task_created\": true,\n  \"assisted_at\": {{ $(\"Code -- assist logic\").item.json.assisted_at }}\n}",
         "options": {
           "responseCode": 200
         }
@@ -178,14 +191,14 @@
       "main": [
         [
           {
-            "node": "Simulate -- create CSM task",
+            "node": "HubSpot -- create task",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Simulate -- create CSM task": {
+    "HubSpot -- create task": {
       "main": [
         [
           {

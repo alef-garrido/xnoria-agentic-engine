@@ -36,14 +36,13 @@
       ],
       "credentials": {
         "hubspotAppToken": {
-          "id": "6qYgnpaGAK1L9USv",
           "name": "HubSpot Private App"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "// Exnoria - com.feedback.request\n// Send feedback follow-up to contact with ignored feedback\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, signal_id } = webhook;\n\nconst firstname = contact.properties?.firstname?.value ?? 'Contact';\nconst lastname  = contact.properties?.lastname?.value  ?? '';\nconst email     = contact.properties?.email?.value     ?? '';\n\nconst whatsappMessage = 'Hi ' + firstname + ', we noticed your feedback hasn\\'t received a response — we\\'d like to make it right.';\n\nreturn [{\n  json: {\n    contact_id,\n    signal_id,\n    email,\n    firstname,\n    lastname,\n    whatsapp_message: whatsappMessage\n  }\n}];"
+        "jsCode": "// Exnoria - com.feedback.request\n// Send feedback follow-up to contact with ignored feedback\n// Primary: email via Gmail\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, signal_id } = webhook;\n\nconst firstname = contact.properties?.firstname?.value ?? 'Contact';\nconst lastname  = contact.properties?.lastname?.value  ?? '';\nconst email     = contact.properties?.email?.value     ?? '';\n\nconst gmail_body = 'Hi ' + firstname + ',\\n\\nWe noticed your feedback hasn\\'t received a response — we\\'d like to make it right. Please reply to this email or reach out to our team so we can address your concerns.\\n\\nBest,\\nExnoria Team';\n\nreturn [{\n  json: {\n    contact_id,\n    signal_id,\n    email,\n    firstname,\n    lastname,\n    gmail_subject: 'We value your feedback',\n    gmail_body\n  }\n}];"
       },
       "id": "code-generate-message-com-3",
       "name": "Code -- generate message",
@@ -56,16 +55,30 @@
     },
     {
       "parameters": {
-        "jsCode": "// Simulate -- WhatsApp message send\n// Replace with real WhatsApp API when ready\n\nconst data = $input.first().json;\n\nreturn [{\n  json: {\n    ...data,\n    message_sent: true,\n    simulated: true,\n    timestamp: Date.now()\n  }\n}];"
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $(\"Code -- generate message\").item.json.email }}",
+        "subject": "={{ $(\"Code -- generate message\").item.json.gmail_subject }}",
+        "emailType": "text",
+        "message": "={{ $(\"Code -- generate message\").item.json.gmail_body }}",
+        "options": {
+          "appendAttribution": false
+        }
       },
-      "id": "simulate-whatsapp-send-com-3",
-      "name": "Simulate -- WhatsApp send",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "id": "gmail-send-com-3",
+      "name": "Gmail -- send feedback request",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
       "position": [
         960,
         300
-      ]
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YMxwY3u929C0wtWe",
+          "name": "Gmail account"
+        }
+      }
     },
     {
       "parameters": {
@@ -86,7 +99,6 @@
       ],
       "credentials": {
         "hubspotAppToken": {
-          "id": "6qYgnpaGAK1L9USv",
           "name": "HubSpot Private App"
         }
       }
@@ -115,7 +127,6 @@
       ],
       "credentials": {
         "hubspotAppToken": {
-          "id": "6qYgnpaGAK1L9USv",
           "name": "HubSpot Private App"
         }
       }
@@ -123,7 +134,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"com.feedback.request\",\n  \"contact_id\": \"{{ $(\"Code -- generate message\").item.json.contact_id }}\",\n  \"whatsapp_sent\": {{ $(\"Simulate -- WhatsApp send\").item.json.message_sent ?? false }},\n  \"task_created\": true\n}",
+        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"com.feedback.request\",\n  \"contact_id\": \"{{ $(\"Code -- generate message\").item.json.contact_id }}\",\n  \"email_sent\": true,\n  \"task_created\": true\n}",
         "options": {
           "responseCode": 200
         }
@@ -165,14 +176,14 @@
       "main": [
         [
           {
-            "node": "Simulate -- WhatsApp send",
+            "node": "Gmail -- send feedback request",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Simulate -- WhatsApp send": {
+    "Gmail -- send feedback request": {
       "main": [
         [
           {

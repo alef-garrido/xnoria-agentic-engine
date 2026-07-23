@@ -1,0 +1,13 @@
+-- Migration 021: Deprecate seed.sql
+-- seed.sql deprecated as of migration 021. Use config/seeds/*.sql instead.
+--
+-- seed.sql at layers/orchestration/filter/db/seed.sql was 100% redundant:
+-- every action it contained is also present in config/seeds/*.sql.
+-- It was never mounted in docker-compose.yml, never referenced by init.sh,
+-- scaffold-project.sh, or any Makefile target — effectively dead code.
+--
+-- The canonical source for action seed data is now config/seeds/*.sql,
+-- loaded by scaffold-project.sh via ON CONFLICT DO UPDATE (safe to re-apply).
+--
+-- This migration is a no-op marker. No schema or data changes.
+SELECT 1; -- no-op

@@ -4,7 +4,6 @@
   "id": "BgKS1fB2FU9CtwTX",
   "name": "cxEngine_WF_SleepingBeauty_Ingestion_Engine_V1_Final",
   "description": null,
-  "active": true,
   "isArchived": false,
   "nodes": [
     {
@@ -455,7 +454,6 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": {},
   "versionId": "4725ce12-89d9-4382-b558-52422a125a16",
   "activeVersionId": "4725ce12-89d9-4382-b558-52422a125a16",
   "versionCounter": 93,

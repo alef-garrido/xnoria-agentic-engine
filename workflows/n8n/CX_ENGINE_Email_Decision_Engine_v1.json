@@ -4,7 +4,6 @@
   "id": "e9c1341170a5449c",
   "name": "cxEngine_WF_Email_Decision_Engine_v1",
   "description": null,
-  "active": true,
   "isArchived": false,
   "nodes": [
     {
@@ -723,7 +722,6 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": {},
   "versionId": "24203420-72e3-4b2d-bbde-64b1c77ad446",
   "activeVersionId": null,
   "versionCounter": 18,

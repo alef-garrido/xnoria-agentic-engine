@@ -53,7 +53,7 @@
           "parameters": [
             {
               "name": "properties.hs_task_subject",
-              "value": "=PRIORITY: Immediate follow-up required \u2014 {{ $json.contact_id }}"
+              "value": "=PRIORITY: Immediate follow-up required — {{ $json.contact_id }}"
             },
             {
               "name": "properties.hs_task_body",
@@ -320,7 +320,6 @@
       ]
     }
   },
-  "active": false,
   "settings": {},
   "versionId": "001",
   "id": "mvp-sal-contact-prioritize-v1",

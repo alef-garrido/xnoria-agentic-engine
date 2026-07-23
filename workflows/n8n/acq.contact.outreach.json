@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Exnoria - acq.contact.outreach\n// Build WhatsApp outreach payload from filter payload\n// contact_id, phone, email, name provided by cognitive layer\n\nconst body = $json.body;\n\nconst contact_id = body.contact_id;\nconst phone      = (body.phone ?? '').replace(/[^\\d]/g, '');\nconst email      = body.email ?? '';\nconst name       = body.name  ?? 'Contact';\nconst signal_id  = body.signal_id ?? '';\n\nconst wa_payload = phone ? {\n  messaging_product: 'whatsapp',\n  to: phone,\n  type: 'template',\n  template: { name: 'greeting', language: { code: 'en' } }\n} : null;\n\nconst gmail_subject = 'Quick Introduction';\nconst gmail_body    = 'Hello ' + name + ',\\n\\nI just sent you a message on WhatsApp, but wanted to reach out here as well. We would love to learn more about how we can help you.\\n\\n\u2014 Exnoria';\n\nreturn [{ json: { contact_id, signal_id, phone, email, name, wa_payload, gmail_subject, gmail_body } }];"
+        "jsCode": "// Exnoria - acq.contact.outreach\n// Build WhatsApp outreach payload from filter payload\n// contact_id, phone, email, name provided by cognitive layer\n\nconst body = $json.body;\n\nconst contact_id = body.contact_id;\nconst phone      = (body.phone ?? '').replace(/[^\\d]/g, '');\nconst email      = body.email ?? '';\nconst name       = body.name  ?? 'Contact';\nconst signal_id  = body.signal_id ?? '';\n\nconst wa_payload = phone ? {\n  messaging_product: 'whatsapp',\n  to: phone,\n  type: 'template',\n  template: { name: 'greeting', language: { code: 'en' } }\n} : null;\n\nconst gmail_subject = 'Quick Introduction';\nconst gmail_body    = 'Hello ' + name + ',\\n\\nI just sent you a message on WhatsApp, but wanted to reach out here as well. We would love to learn more about how we can help you.\\n\\n— Exnoria';\n\nreturn [{ json: { contact_id, signal_id, phone, email, name, wa_payload, gmail_subject, gmail_body } }];"
       },
       "id": "code-build-outreach",
       "name": "Code -- build outreach payload",
@@ -226,6 +226,5 @@
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all"
   },
-  "id": "7e050a27fb594926",
-  "active": true
+  "id": "7e050a27fb594926"
 }

@@ -4,7 +4,6 @@
   "id": "8ov3u2FcgYPYTdwJ",
   "name": "cxEngine_WF_SleepingBeauty_DBR_Engine_v1_Conversation",
   "description": null,
-  "active": true,
   "isArchived": false,
   "nodes": [
     {
@@ -396,7 +395,6 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "pinData": {},
   "versionId": "2040a7e9-860a-4498-89c1-b21d2c8e6cab",
   "activeVersionId": "2040a7e9-860a-4498-89c1-b21d2c8e6cab",
   "versionCounter": 51,

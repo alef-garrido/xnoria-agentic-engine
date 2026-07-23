@@ -4,7 +4,6 @@
   "id": "IE4oP93LKcJcLv2O",
   "name": "cxEngine_WF_WhatsApp_Decision_Engine_v1",
   "description": null,
-  "active": false,
   "isArchived": false,
   "nodes": [
     {
@@ -218,7 +217,6 @@
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "pinData": {},
   "versionId": "508a79a6-fb37-41a2-9a67-f9f7b0ea8409",
   "activeVersionId": null,
   "versionCounter": 9,

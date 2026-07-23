@@ -21,7 +21,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "={{ $json.body.message_context ?? 'Hola, gracias por escribirnos. \u00bfEn qu\u00e9 podemos ayudarte? Mientras tanto, cu\u00e9ntanos tu nombre.' }}",
+        "text": "={{ $json.body.message_context ?? 'Hola, gracias por escribirnos. ¿En qué podemos ayudarte? Mientras tanto, cuéntanos tu nombre.' }}",
         "options": {}
       },
       "id": "ai-nurture-bot",
@@ -153,6 +153,5 @@
     "saveDataOnSuccess": "all",
     "saveDataOnError": "all"
   },
-  "id": "85bb4409ae5c4171",
-  "active": true
+  "id": "85bb4409ae5c4171"
 }

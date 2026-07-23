@@ -1,6 +1,5 @@
 {
   "id": "acq-contact-upsert",
-  "active": false,
   "name": "W-ACQ-14 - Acq.contact.upsert (v2 cx_pain_points + cx_pci)",
   "nodes": [
     {
@@ -8,7 +7,10 @@
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "parameters": {
         "httpMethod": "POST",
         "path": "acq-contact-upsert",
@@ -21,7 +23,10 @@
       "name": "Code -- normalize payload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [460, 300],
+      "position": [
+        460,
+        300
+      ],
       "parameters": {
         "jsCode": "const body = $json.body || $json;\nconst p = body.payload || body;\nconst email = p.email || body.email || null;\nif (!email) throw new Error('email required');\n\nconst props = { email };\nif (p.first_name)       props.firstname              = p.first_name;\nif (p.last_name)        props.lastname               = p.last_name;\nif (p.phone)            props.phone                  = p.phone;\nif (p.company)          props.company                = p.company;\nif (p.industry)         props.industry               = p.industry;\nif (p.city)             props.city                   = p.city;\nif (p.address)          props.address                = p.address;\nif (p.colonia)          props.colonia                = p.colonia;\nif (p.postal_code)      props.zip                    = p.postal_code;\nif (p.website)          props.website                = p.website;\nif (p.linkedin)         props.hs_linkedin_url        = p.linkedin;\nif (p.contact_linkedin) props.contact_linkedin       = p.contact_linkedin;\nif (p.facebook)         props.hs_facebookid          = p.facebook;\nif (p.instagram)        props.instagram              = p.instagram;\nif (p.whatsapp)         props.hs_whatsapp_phone_number = p.whatsapp;\nif (p.secondary_phone)  props.secondary_phone        = p.secondary_phone;\nif (p.job_title)        props.jobtitle               = p.job_title;\nif (p.pain_points)      props.cx_pain_points         = p.pain_points;\nif (p.pci != null)      props.cx_pci                 = String(p.pci);\nif (p.source)           props.fuente                 = p.source;\nif (p.status)           props.hs_lead_status         = p.status.toUpperCase();\n\nreturn [{\n  json: {\n    email,\n    session_id: body.session_id || null,\n    properties: props\n  }\n}];"
       }
@@ -31,7 +36,10 @@
       "name": "HubSpot -- upsert contact",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [680, 300],
+      "position": [
+        680,
+        300
+      ],
       "parameters": {
         "method": "POST",
         "url": "https://api.hubapi.com/crm/v3/objects/contacts/batch/upsert",
@@ -39,8 +47,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "Content-Type", "value": "application/json" },
-            { "name": "Authorization", "value": "=Bearer {{ $env.HUBSPOT_PRIVATE_APP_TOKEN }}" }
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.HUBSPOT_PRIVATE_APP_TOKEN }}"
+            }
           ]
         },
         "sendBody": true,
@@ -54,7 +68,10 @@
       "name": "Code -- extract contact_id",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [900, 300],
+      "position": [
+        900,
+        300
+      ],
       "parameters": {
         "jsCode": "const res = ($json.results || []);\nif (!res.length) throw new Error('no results from HubSpot: ' + JSON.stringify($json));\nconst cid = res[0].id;\nif (!cid) throw new Error('no id in HubSpot response');\nconst norm = $('Code -- normalize payload').item.json;\nreturn [{\n  json: {\n    contact_id: cid,\n    email: norm.email,\n    session_id: norm.session_id,\n    hubspot_created: res[0].createdAt || null,\n    hubspot_updated: res[0].updatedAt || null\n  }\n}];"
       }
@@ -64,26 +81,63 @@
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1120, 300],
+      "position": [
+        1120,
+        300
+      ],
       "parameters": {
         "respondWith": "json",
         "responseBody": "={{ JSON.stringify({ status: 'executed', action_id: 'acq.contact.upsert', contact_id: $json.contact_id, email: $json.email, session_id: $json.session_id }) }}",
-        "options": { "responseCode": 200 }
+        "options": {
+          "responseCode": 200
+        }
       }
     }
   ],
   "connections": {
     "Webhook": {
-      "main": [[{ "node": "Code -- normalize payload", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Code -- normalize payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Code -- normalize payload": {
-      "main": [[{ "node": "HubSpot -- upsert contact", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "HubSpot -- upsert contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "HubSpot -- upsert contact": {
-      "main": [[{ "node": "Code -- extract contact_id", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Code -- extract contact_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Code -- extract contact_id": {
-      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {

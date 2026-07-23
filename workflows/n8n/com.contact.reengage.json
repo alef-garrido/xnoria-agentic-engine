@@ -182,6 +182,5 @@
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all"
   },
-  "id": "com-contact-reengage-id",
-  "active": true
+  "id": "com-contact-reengage-id"
 }

@@ -61,7 +61,7 @@
         "type": "task",
         "dueDate": "={{ new Date().toISOString() }}",
         "metadata": {
-          "subject": "=Document Request: {{ $json.document_type }} \u2014 {{ $json.firstname }}",
+          "subject": "=Document Request: {{ $json.document_type }} — {{ $json.firstname }}",
           "body": "=Please collect the following document from this contact: {{ $json.document_type }}. Contact email: {{ $json.email }}",
           "status": "NOT_STARTED",
           "forObjectType": "CONTACT"
@@ -152,6 +152,5 @@
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all"
   },
-  "id": "a935e30461fb44b8",
-  "active": true
+  "id": "a935e30461fb44b8"
 }

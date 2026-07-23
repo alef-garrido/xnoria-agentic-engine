@@ -213,6 +213,5 @@
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all"
   },
-  "id": "com-feedback-request-id",
-  "active": true
+  "id": "com-feedback-request-id"
 }

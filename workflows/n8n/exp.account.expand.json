@@ -194,6 +194,5 @@
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all"
   },
-  "id": "exp-account-expand-id",
-  "active": true
+  "id": "exp-account-expand-id"
 }

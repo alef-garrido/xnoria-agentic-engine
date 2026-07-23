@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Exnoria - acq.lead.engage\n// Receive filter payload and build WhatsApp acknowledgment\n// contact_id, phone, name provided by cognitive layer \u2014 no fallback generation\n\nconst body = $json.body;\n\nconst contact_id = body.contact_id;\nconst phone      = body.phone      ?? '';\nconst name       = body.name       ?? 'Contact';\nconst signal_id  = body.signal_id  ?? '';\n\nif (!phone) {\n  return [{ json: { contact_id, signal_id, ack_sent: false, reason: 'no_phone_number' } }];\n}\n\nconst cleanPhone = phone.replace(/[^\\d]/g, '');\n\nconst message = [\n  'Hi ' + name + '!',\n  '',\n  'Thank you for reaching out. We have received your message and our team will be in touch shortly.',\n  '',\n  '\u2014 Exnoria'\n].join('\\n');\n\nconst whatsapp_payload = {\n  messaging_product: 'whatsapp',\n  to: cleanPhone,\n  type: 'text',\n  text: { body: message }\n};\n\nreturn [{ json: { contact_id, signal_id, phone: cleanPhone, name, whatsapp_payload, ack_sent: true } }];"
+        "jsCode": "// Exnoria - acq.lead.engage\n// Receive filter payload and build WhatsApp acknowledgment\n// contact_id, phone, name provided by cognitive layer — no fallback generation\n\nconst body = $json.body;\n\nconst contact_id = body.contact_id;\nconst phone      = body.phone      ?? '';\nconst name       = body.name       ?? 'Contact';\nconst signal_id  = body.signal_id  ?? '';\n\nif (!phone) {\n  return [{ json: { contact_id, signal_id, ack_sent: false, reason: 'no_phone_number' } }];\n}\n\nconst cleanPhone = phone.replace(/[^\\d]/g, '');\n\nconst message = [\n  'Hi ' + name + '!',\n  '',\n  'Thank you for reaching out. We have received your message and our team will be in touch shortly.',\n  '',\n  '— Exnoria'\n].join('\\n');\n\nconst whatsapp_payload = {\n  messaging_product: 'whatsapp',\n  to: cleanPhone,\n  type: 'text',\n  text: { body: message }\n};\n\nreturn [{ json: { contact_id, signal_id, phone: cleanPhone, name, whatsapp_payload, ack_sent: true } }];"
       },
       "id": "code-build-ack-w-acq-1",
       "name": "Code -- build ack payload",
@@ -150,6 +150,5 @@
     "saveDataOnSuccess": "all",
     "saveDataOnError": "all"
   },
-  "id": "22b850f2c4664360",
-  "active": true
+  "id": "22b850f2c4664360"
 }

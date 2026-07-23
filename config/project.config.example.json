@@ -8,6 +8,7 @@
   },
   "branding": {
     "title": "Xnoria CX Dock",
+    "subtitle": "",
     "logo_url": "/logo.svg",
     "primary_color": "#0F172A"
   },

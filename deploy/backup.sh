@@ -14,6 +14,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+PROJECT_ID="${PROJECT_ID:-exnoria}"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -45,7 +46,7 @@ OUTPUT_DIR="${1:-${REPO_ROOT}/backups}"
 mkdir -p "${OUTPUT_DIR}"
 
 TIMESTAMP="$(date '+%Y%m%d_%H%M%S')"
-BACKUP_BASENAME="xnoria_backup_${TIMESTAMP}"
+BACKUP_BASENAME="${PROJECT_ID}_backup_${TIMESTAMP}"
 DUMP_FILE="${OUTPUT_DIR}/${BACKUP_BASENAME}.sql.gz"
 ENCRYPTED_FILE="${DUMP_FILE}.enc"
 
@@ -60,7 +61,7 @@ info "Output: ${ENCRYPTED_FILE}"
 
 # Dump and compress
 cd "${REPO_ROOT}"
-docker compose exec -T postgres pg_dump -U xnoria exnoria | gzip > "${DUMP_FILE}"
+docker compose exec -T postgres pg_dump -U "${PROJECT_ID}" "${POSTGRES_DB:-exnoria}" | gzip > "${DUMP_FILE}"
 
 if [ ! -s "${DUMP_FILE}" ]; then
   rm -f "${DUMP_FILE}"

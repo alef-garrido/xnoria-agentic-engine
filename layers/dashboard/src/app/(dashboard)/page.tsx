@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ActivityFeed } from "@/components/ActivityFeed";
+import { BRANDING } from "@/config/branding";
 import {
   Activity,
   History,
@@ -70,7 +71,7 @@ export default function DashboardPage() {
             letterSpacing: "-1.5px",
           }}
         >
-          🧠 Exnoria Overview
+          🧠 {BRANDING.appTitle} Overview
         </h1>
         <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
           CX Intelligence Engine — system health and recent activity

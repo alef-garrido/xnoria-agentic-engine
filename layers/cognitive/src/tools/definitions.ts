@@ -93,6 +93,41 @@ export const TOOLS: ToolDefinition[] = [
   {
     type: 'function',
     function: {
+      name: 'acq_lead_engage',
+      description:
+        'Send immediate WhatsApp acknowledgment to a new inbound lead. ' +
+        'Use when a new lead signal is received and no prior engagement has occurred.',
+      parameters: {
+        type: 'object',
+        properties: {
+          contact_id: { type: 'string', description: 'HubSpot contact ID' },
+          email:      { type: 'string', description: 'Contact email address for lookup' }
+        },
+        required: ['contact_id']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'acq_lead_nurture',
+      description:
+        'Engage an out-of-hours inbound contact with an AI-driven nurture conversation. ' +
+        'Use when a lead arrives outside business hours and needs immediate engagement.',
+      parameters: {
+        type: 'object',
+        properties: {
+          contact_id: { type: 'string', description: 'HubSpot contact ID' },
+          email:      { type: 'string', description: 'Contact email address for context' },
+          message:    { type: 'string', description: 'Nurture message to send to the contact' }
+        },
+        required: ['contact_id', 'message']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
       name: 'acq_contact_outreach',
       description:
         'Send cold outreach to a prospect via WhatsApp and email, and sync to HubSpot. ' +
@@ -406,6 +441,26 @@ export const TOOLS: ToolDefinition[] = [
   {
     type: 'function',
     function: {
+      name: 'prd_friction_flag',
+      description:
+        'Flag a contact experiencing product friction for review and intervention. ' +
+        'Use when signal_id is PRD_FRC_01 (task abandonment) with signal_severity >= 0.5. ' +
+        'Creates a review task in HubSpot for the CSM team.',
+      parameters: {
+        type: 'object',
+        properties: {
+          contact_id:    { type: 'string', description: 'CRM contact ID' },
+          signal_id:     { type: 'string', description: 'Compass signal ID (PRD_FRC_01)' },
+          signal_severity: { type: 'number', description: 'Signal severity 0–1 from Compass' },
+          cause_code:    { type: 'string', description: 'Compass cause code (PRD-FRC)' }
+        },
+        required: ['contact_id', 'signal_id', 'signal_severity']
+      }
+    }
+  },
+  {
+    type: 'function',
+    function: {
       name: 'prd_contact_educate',
       description:
         'Send a targeted feature education message to a contact using workarounds instead of native features. ' +
@@ -629,6 +684,8 @@ export const TOOL_TO_ACTION: Record<string, { action_id: string; stage: string }
   crm_contact_upsert:     { action_id: 'acq.contact.upsert',     stage: 'ACQ' },
   crm_contact_get:        { action_id: 'acq.contact.get',        stage: 'ACQ' },
   acq_lead_score:         { action_id: 'acq.lead.score',        stage: 'ACQ' },
+  acq_lead_engage:        { action_id: 'acq.lead.engage',       stage: 'ACQ' },
+  acq_lead_nurture:       { action_id: 'acq.lead.nurture',      stage: 'ACQ' },
   acq_contact_outreach:   { action_id: 'acq.contact.outreach',  stage: 'ACQ' },
   sal_sequence_enroll:    { action_id: 'sal.sequence.enroll',    stage: 'SAL' },
   sal_contact_prioritize: { action_id: 'sal.contact.prioritize', stage: 'SAL' },
@@ -647,6 +704,7 @@ export const TOOL_TO_ACTION: Record<string, { action_id: string; stage: string }
   onb_document_request:   { action_id: 'onb.document.request',   stage: 'ONB' },
   onb_document_validate:  { action_id: 'onb.document.validate',  stage: 'ONB' },
   prd_contact_nudge:      { action_id: 'prd.adoption.nudge',      stage: 'PRD' },
+  prd_friction_flag:      { action_id: 'prd.friction.flag',      stage: 'PRD' },
   prd_contact_educate:    { action_id: 'prd.contact.educate',    stage: 'PRD' },
   prd_feedback_log:       { action_id: 'prd.feedback.log',       stage: 'PRD' },
 

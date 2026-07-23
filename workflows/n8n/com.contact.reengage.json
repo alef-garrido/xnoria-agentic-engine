@@ -36,7 +36,6 @@
       ],
       "credentials": {
         "hubspotAppToken": {
-          "id": "6qYgnpaGAK1L9USv",
           "name": "HubSpot Private App"
         }
       }
@@ -56,16 +55,31 @@
     },
     {
       "parameters": {
-        "jsCode": "// Simulate -- HubSpot task creation and tagging\n// Replace with real HubSpot task API when ready\n\nconst data = $input.first().json;\n\nreturn [{\n  json: {\n    ...data,\n    task_created: data.sequence_enrollment ? true : false,\n    task_id: data.sequence_enrollment ? 'task_sim_' + Date.now() : null,\n    simulated: true\n  }\n}];"
+        "authentication": "appToken",
+        "resource": "engagement",
+        "operation": "create",
+        "type": "task",
+        "dueDate": "={{ new Date().toISOString() }}",
+        "metadata": {
+          "subject": "=Re-engagement follow-up: {{ $(\"Code -- branching logic\").item.json.signal_id }} — {{ $(\"Code -- branching logic\").item.json.firstname }} {{ $(\"Code -- branching logic\").item.json.lastname }}",
+          "body": "=Re-engagement initiated for {{ $(\"Code -- branching logic\").item.json.contact_id }}. Signal: {{ $(\"Code -- branching logic\").item.json.signal_id }}. Sequence enrollment: {{ $(\"Code -- branching logic\").item.json.sequence_enrollment }}.",
+          "status": "NOT_STARTED",
+          "forObjectType": "CONTACT"
+        }
       },
-      "id": "simulate-create-task-com-2",
-      "name": "Simulate -- create task",
-      "type": "n8n-nodes-base.code",
+      "id": "hubspot-create-task-com-2",
+      "name": "HubSpot -- create task",
+      "type": "n8n-nodes-base.hubspot",
       "typeVersion": 2,
       "position": [
         960,
         300
-      ]
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "name": "HubSpot Private App"
+        }
+      }
     },
     {
       "parameters": {
@@ -95,7 +109,6 @@
       ],
       "credentials": {
         "hubspotAppToken": {
-          "id": "6qYgnpaGAK1L9USv",
           "name": "HubSpot Private App"
         }
       }
@@ -103,7 +116,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"com.contact.reengage\",\n  \"contact_id\": \"{{ $(\"Code -- branching logic\").item.json.contact_id }}\",\n  \"tags_applied\": {{ $(\"Code -- branching logic\").item.json.tags | json }}\n}",
+        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"com.contact.reengage\",\n  \"contact_id\": \"{{ $(\"Code -- branching logic\").item.json.contact_id }}\",\n  \"tags_applied\": {{ $(\"Code -- branching logic\").item.json.tags | json }},\n  \"task_created\": true\n}",
         "options": {
           "responseCode": 200
         }
@@ -145,14 +158,14 @@
       "main": [
         [
           {
-            "node": "Simulate -- create task",
+            "node": "HubSpot -- create task",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Simulate -- create task": {
+    "HubSpot -- create task": {
       "main": [
         [
           {

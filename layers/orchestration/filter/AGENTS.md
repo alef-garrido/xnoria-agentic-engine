@@ -165,14 +165,14 @@ Partial index on `status = 'pending_hitl'` for fast queue queries.
 All 8 journey stages have at least one active action:
 | Stage | Active Actions |
 |---|---|
-| ACQ | `acq.lead.engage`, `acq.lead.nurture`, `acq.contact.outreach` |
+| ACQ | `acq.lead.engage`, `acq.lead.nurture`, `acq.lead.score`, `acq.contact.get`, `acq.contact.upsert`, `acq.contact.outreach` |
 | SAL | `sal.sequence.enroll`, `sal.contact.prioritize`, `sal.contact.message` |
 | ONB | `onb.document.request`, `onb.document.validate`, `onb.contact.nudge`, `onb.contact.assist`, `onb.ticket.escalate` |
-| PRD | `prd.friction.flag`, `prd.adoption.nudge`, `prd.feedback.log` |
+| PRD | `prd.friction.flag`, `prd.adoption.nudge`, `prd.contact.educate`, `prd.feedback.log` |
 | SUP | `sup.ticket.escalate`, `sup.contact.notify` |
-| COM | `com.content.publish` |
+| COM | `com.content.publish`, `com.contact.reengage`, `com.feedback.request` |
 | RET | `ret.contact.winback`, `ret.account.flag` |
-| EXP | (placeholder, disabled) |
+| EXP | `exp.contact.upgrade` |
 
 ## HITL Implementation Details
 

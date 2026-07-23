@@ -35,7 +35,6 @@
       ],
       "credentials": {
         "hubspotAppToken": {
-          "id": "6qYgnpaGAK1L9USv",
           "name": "HubSpot Private App"
         }
       }
@@ -55,16 +54,31 @@
     },
     {
       "parameters": {
-        "jsCode": "// Simulate -- HubSpot task creation\n// Replace with real HubSpot task API when ready\n\nconst data = $input.first().json;\n\nreturn [{\n  json: {\n    ...data,\n    task_created: true,\n    task_id: 'task_sim_' + Date.now(),\n    simulated: true\n  }\n}];"
+        "authentication": "appToken",
+        "resource": "engagement",
+        "operation": "create",
+        "type": "task",
+        "dueDate": "={{ new Date().toISOString() }}",
+        "metadata": {
+          "subject": "={{ $(\"Code -- escalation logic\").item.json.task_subject }}",
+          "body": "={{ $(\"Code -- escalation logic\").item.json.task_body }}",
+          "status": "NOT_STARTED",
+          "forObjectType": "CONTACT"
+        }
       },
-      "id": "simulate-create-task-w4",
-      "name": "Simulate -- create task",
-      "type": "n8n-nodes-base.code",
+      "id": "hubspot-create-task-w4",
+      "name": "HubSpot -- create task",
+      "type": "n8n-nodes-base.hubspot",
       "typeVersion": 2,
       "position": [
         960,
         300
-      ]
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "name": "HubSpot Private App"
+        }
+      }
     },
     {
       "parameters": {
@@ -83,7 +97,6 @@
       ],
       "credentials": {
         "hubspotAppToken": {
-          "id": "6qYgnpaGAK1L9USv",
           "name": "HubSpot Private App"
         }
       }
@@ -91,7 +104,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"sup.ticket.escalate\",\n  \"contact_id\": \"{{ $(\"Code -- escalation logic\").item.json.contact_id }}\",\n  \"ticket_id\": \"{{ $(\"Code -- escalation logic\").item.json.ticket_id }}\",\n  \"urgency\": \"{{ $(\"Code -- escalation logic\").item.json.urgency }}\",\n  \"task_created\": {{ $(\"Simulate -- create task\").item.json.task_created }},\n  \"task_id\": \"{{ $(\"Simulate -- create task\").item.json.task_id }}\",\n  \"escalated_at\": {{ $(\"Code -- escalation logic\").item.json.escalated_at }},\n  \"simulated\": {{ $(\"Simulate -- create task\").item.json.simulated }}\n}",
+        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"sup.ticket.escalate\",\n  \"contact_id\": \"{{ $(\"Code -- escalation logic\").item.json.contact_id }}\",\n  \"ticket_id\": \"{{ $(\"Code -- escalation logic\").item.json.ticket_id }}\",\n  \"urgency\": \"{{ $(\"Code -- escalation logic\").item.json.urgency }}\",\n  \"task_created\": true,\n  \"escalated_at\": {{ $(\"Code -- escalation logic\").item.json.escalated_at }}\n}",
         "options": {
           "responseCode": 200
         }
@@ -133,14 +146,14 @@
       "main": [
         [
           {
-            "node": "Simulate -- create task",
+            "node": "HubSpot -- create task",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Simulate -- create task": {
+    "HubSpot -- create task": {
       "main": [
         [
           {

@@ -35,14 +35,13 @@
       ],
       "credentials": {
         "hubspotAppToken": {
-          "id": "6qYgnpaGAK1L9USv",
           "name": "HubSpot Private App"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "// Exnoria - exp.contact.upgrade\n// Branch based on signal_id to handle different upgrade scenarios\n// This workflow executes AFTER HITL approval\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, signal_id, signal_severity } = webhook;\n\nconst firstname = contact.properties?.firstname?.value ?? 'Contact';\nconst lastname  = contact.properties?.lastname?.value  ?? '';\nconst email     = contact.properties?.email?.value     ?? '';\n\nlet tags = [];\nlet whatsappMessage = null;\nlet taskSubject = null;\nlet taskPriority = 'MEDIUM';\n\n// Branch based on signal_id\nif (signal_id === 'EXP_VAL_01') {\n  // Unwilling to pay more - send upgrade prompt with tier comparison\n  tags.push('exp-upgrade-initiated');\n  whatsappMessage = `Hi ${firstname}, thanks for being a valued customer! We'd love to show you how you can get even more from our platform. Here's a comparison of our tiers: [LINK]`;\n} else if (signal_id === 'EXP_VAL_02') {\n  // Low ROI perception - co-create business case\n  tags.push('exp-roi-case');\n  taskSubject = `Co-create ROI business case with ${contact_id}`;\n  taskPriority = 'HIGH';\n}\n\nreturn [{\n  json: {\n    contact_id,\n    signal_id,\n    signal_severity,\n    email,\n    firstname,\n    lastname,\n    tags,\n    whatsapp_message: whatsappMessage,\n    task_subject: taskSubject,\n    task_priority: taskPriority\n  }\n}];"
+        "jsCode": "// Exnoria - exp.contact.upgrade\n// Branch based on signal_id to handle different upgrade scenarios\n// Primary: email via Gmail\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, signal_id, signal_severity } = webhook;\n\nconst firstname = contact.properties?.firstname?.value ?? 'Contact';\nconst lastname  = contact.properties?.lastname?.value  ?? '';\nconst email     = contact.properties?.email?.value     ?? '';\n\nlet tags = [];\nlet gmailSubject = '';\nlet gmailBody = '';\nlet taskSubject = null;\nlet taskPriority = 'MEDIUM';\n\n// Branch based on signal_id\nif (signal_id === 'EXP_VAL_01') {\n  // Unwilling to pay more - send upgrade prompt with tier comparison\n  tags.push('exp-upgrade-initiated');\n  gmailSubject = 'Unlock more value with our premium tier';\n  gmailBody = 'Hi ' + firstname + ', thanks for being a valued customer! We\\'d love to show you how you can get even more from our platform. Here\\'s a comparison of our tiers: [LINK]';\n} else if (signal_id === 'EXP_VAL_02') {\n  // Low ROI perception - co-create business case\n  tags.push('exp-roi-case');\n  gmailSubject = 'Let\\'s build your ROI business case together';\n  gmailBody = 'Hi ' + firstname + ', we believe our platform is delivering value and we\\'d like to help you quantify it. Let\\'s schedule a call to build a business case together.';\n  taskSubject = 'Co-create ROI business case with ' + contact_id;\n  taskPriority = 'HIGH';\n}\n\nreturn [{\n  json: {\n    contact_id,\n    signal_id,\n    signal_severity,\n    email,\n    firstname,\n    lastname,\n    tags,\n    gmail_subject: gmailSubject,\n    gmail_body: gmailBody,\n    task_subject: taskSubject,\n    task_priority: taskPriority\n  }\n}];"
       },
       "id": "code-branching-logic-exp-2",
       "name": "Code -- branching logic",
@@ -55,16 +54,30 @@
     },
     {
       "parameters": {
-        "jsCode": "// Simulate -- WhatsApp message send (only if message exists)\n// Replace with real WhatsApp API when ready\n\nconst data = $input.first().json;\n\nif (data.whatsapp_message) {\n  return [{\n    json: {\n      ...data,\n      message_sent: true,\n      simulated: true,\n      timestamp: Date.now()\n    }\n  }];\n} else {\n  return [{\n    json: {\n      ...data,\n      message_sent: false\n    }\n  }];\n}"
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $(\"Code -- branching logic\").item.json.email }}",
+        "subject": "={{ $(\"Code -- branching logic\").item.json.gmail_subject }}",
+        "emailType": "text",
+        "message": "={{ $(\"Code -- branching logic\").item.json.gmail_body }}",
+        "options": {
+          "appendAttribution": false
+        }
       },
-      "id": "simulate-whatsapp-send-exp-2",
-      "name": "Simulate -- WhatsApp send",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "id": "gmail-send-exp-2",
+      "name": "Gmail -- send upgrade offer",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
       "position": [
         960,
         300
-      ]
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YMxwY3u929C0wtWe",
+          "name": "Gmail account"
+        }
+      }
     },
     {
       "parameters": {
@@ -83,7 +96,6 @@
       ],
       "credentials": {
         "hubspotAppToken": {
-          "id": "6qYgnpaGAK1L9USv",
           "name": "HubSpot Private App"
         }
       }
@@ -117,7 +129,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"exp.contact.upgrade\",\n  \"contact_id\": \"{{ $(\"Code -- branching logic\").item.json.contact_id }}\",\n  \"signal_id\": \"{{ $(\"Code -- branching logic\").item.json.signal_id }}\",\n  \"whatsapp_sent\": {{ $(\"Simulate -- WhatsApp send\").item.json.message_sent ?? false }},\n  \"task_created\": {{ $(\"Code -- branching logic\").item.json.task_subject != null }}\n}",
+        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"exp.contact.upgrade\",\n  \"contact_id\": \"{{ $(\"Code -- branching logic\").item.json.contact_id }}\",\n  \"signal_id\": \"{{ $(\"Code -- branching logic\").item.json.signal_id }}\",\n  \"email_sent\": true,\n  \"task_created\": {{ $(\"Code -- branching logic\").item.json.task_subject != null }}\n}",
         "options": {
           "responseCode": 200
         }
@@ -159,14 +171,14 @@
       "main": [
         [
           {
-            "node": "Simulate -- WhatsApp send",
+            "node": "Gmail -- send upgrade offer",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Simulate -- WhatsApp send": {
+    "Gmail -- send upgrade offer": {
       "main": [
         [
           {

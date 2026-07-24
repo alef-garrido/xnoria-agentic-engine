@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Xnoria — Postgres Restore Script
+# Exnoria — Postgres Restore Script
 # deploy/restore.sh
 #
 # Usage:
@@ -46,7 +46,7 @@ fi
 # Confirmation
 # ==============================================================================
 echo ""
-echo -e "${RED}${BOLD}⚠ WARNING: This will OVERWRITE all current Xnoria data.${NC}"
+echo -e "${RED}${BOLD}⚠ WARNING: This will OVERWRITE all current Exnoria data.${NC}"
 echo -e "${YELLOW}Backup file: ${BACKUP_FILE}${NC}"
 echo ""
 read -r -p "Type RESTORE to confirm: " CONFIRM

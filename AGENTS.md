@@ -70,7 +70,7 @@ xnoria-agentic-engine/
 │   │       │   └── shared/types.ts   # JourneyStage, FilterStatus, etc.
 │   │       └── db/
 │   │           ├── migrations/       # Versioned schema
-│   │           └── seed.sql          # MVP action seed data
+│   │           └── seed.sql          # ⚠️ DEPRECATED — use config/seeds/*.sql instead
 │   │
 │   └── dashboard/                    # Next.js 16 dashboard
 │       ├── AGENTS.md                 # Layer-specific guidance
@@ -83,6 +83,19 @@ xnoria-agentic-engine/
 │       │   ├── lib/db.ts             # Postgres pool wrapper
 │       │   └── proxy.ts              # Auth middleware
 │       └── data/                     # Example data files
+│
+├── config/                           # Multi-project configuration
+│   ├── project.schema.json           # JSON Schema for project config validation
+│   ├── project.config.example.json   # Example project config
+│   └── seeds/                        # Per-stage action seed data (replaces seed.sql)
+│       ├── 01_stage_acq.sql
+│       ├── 02_stage_sal.sql
+│       ├── 03_stage_onb.sql
+│       ├── 04_stage_sup.sql
+│       ├── 05_stage_prd.sql
+│       └── 06_stage_ret_com_exp.sql
+│
+├── workflows/n8n/                    # Exported n8n workflow JSONs
 │
 ├── docker-compose.yml
 ├── .env / .env.example
@@ -141,7 +154,7 @@ Placeholder actions (disabled):
 ### Adding a New Action (End-to-End)
 1. **Build n8n workflow** in n8n UI at `localhost:5678`
 2. **Export workflow JSON** to `workflows/n8n/`
-3. **Register action** in filter seed: `layers/orchestration/filter/db/seed.sql`
+3. **Register action** in seed data: add row to the appropriate `config/seeds/*.sql` file:
    ```sql
    INSERT INTO filter_action (action_id, stage, n8n_workflow_id, requires_hitl, enabled, description)
    VALUES ('stage.resource.verb', 'STAGE', 'n8n-webhook-id', false, true, 'Description');
@@ -156,7 +169,7 @@ Placeholder actions (disabled):
 6. **Test end-to-end** via cognitive layer
 ### Adding a New Journey Stage
 1. Add stage to `JourneyStage` type in `layers/orchestration/filter/src/shared/types.ts`
-2. Add seed rows to `layers/orchestration/filter/db/seed.sql`
+2. Add seed rows to the appropriate `config/seeds/*.sql` file
 3. Build n8n workflows for that stage
 4. Add tool definitions in cognitive layer
 ### Adding a Dashboard Page
@@ -168,7 +181,8 @@ Placeholder actions (disabled):
 - Migration files: `layers/orchestration/filter/db/migrations/NNN_description.sql`
 - Cognitive layer migrations: `layers/cognitive/db/migrations/NNN_description.sql`
 - Always add migration, never modify existing ones
-- **Post-MVP actions go in numbered migrations** — `seed.sql` is for MVP bootstrap only. Never add new actions to seed.sql.
+- **Post-MVP actions go in numbered migrations** — `config/seeds/*.sql` is for MVP bootstrap only. Never add new actions there.
+- **`seed.sql` deprecated** as of migration 021. The canonical source for action seed data is `config/seeds/*.sql`, loaded by `scaffold-project.sh` via `ON CONFLICT DO UPDATE`.
 
 ## Structured Logging Standards
 
@@ -233,6 +247,9 @@ The AcqSal specialist supports sequential filter dispatches for chained operatio
 | `TELEGRAM_BOT_TOKEN` | cognitive | Telegram bot token |
 | `TELEGRAM_OPERATOR_CHAT_ID` | cognitive | Operator chat for HITL notifications |
 | `COM_CONTENT_SHEET_ID` | orchestration | Google Sheets ID for content calendar (COM workflow) |
+| `PROJECT_ID` | all | Project namespace for service identity strings, logging, and Docker networks (default: xnoria) |
+| `ENGRA_PROJECT` | cognitive | Engram memory namespace — isolates contact memory between instances (default: xnoria-agentic-engine) |
+| `PROJECT_SUBTITLE` | dashboard | Subtitle shown next to agent name in dashboard top bar |
 ### Running the Stack
 ```bash
 cp .env.example .env
@@ -396,11 +413,11 @@ docker logs exnoria_cognitive | grep "PostHog MCP"
 
 ### Phase 4 — Multi-Operator
 **Goal:** Role-based access + multi-agent coordination for client handoff
-| Track | Item | Description |
-|---|---|---|
-| A4 | COM + EXP workflows | Engagement, upsell, expansion |
-| B4 | Multi-agent coordination | Specialist agents per stage |
-| C4 | Role-based access | Operator roles, client views |
+| Track | Item | Description | Status |
+|---|---|---|---|
+| A4 | COM + EXP workflows | Engagement, upsell, expansion | ✅ Done |
+| B4 | Multi-agent coordination | Specialist agents per stage | |
+| C4 | Role-based access | Operator roles, client views | ✅ Done |
 ### Phase 5 — Portability + Productization
 **Goal:** Commercial distribution — one-command deploy, client isolation
 | Item | Description |

@@ -14,7 +14,7 @@ ls layers/orchestration/
 # Must show: filter  (nothing else)
 
 ls workflows/n8n/
-# Must show all workflow JSON files including the four moved from layers/orchestration/workflows/
+# Must show all workflow JSON files (layers/orchestration/workflows/ has been removed)
 
 grep -r "mempalace" layers/
 # Must return nothing

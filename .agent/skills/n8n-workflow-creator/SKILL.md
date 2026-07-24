@@ -7,7 +7,7 @@ license: Private — Exnoria / Oscar Armando Perez Garrido
 metadata:
   author: aleflemat
   version: "1.1"
-  scope: [layers/orchestration/workflows]
+  scope: [workflows/n8n]
   auto_invoke: "Creating n8n workflows"
 allowed-tools: Read, Edit, Write, Glob, Grep, Bash, n8n_mcp
 ---
@@ -856,7 +856,7 @@ A workflow is only complete when step 4 shows status: executed with non-empty pa
 ## Export and Source Control
 
 ### MCP vs Source Control
-The n8n MCP manages the **live instance** at `localhost:5678`. Source control (`layers/orchestration/workflows/`) stores the **JSON export** for version history and disaster recovery.
+The n8n MCP manages the **live instance** at `localhost:5678`. Source control (`workflows/n8n/`) stores the **JSON export** for version history and disaster recovery.
 
 ### Flow: MCP → Test → Export
 1. Create and develop workflow via MCP (inactive)
@@ -864,7 +864,7 @@ The n8n MCP manages the **live instance** at `localhost:5678`. Source control (`
 3. Activate via MCP when ready
 4. Export to source control for version control:
    - In n8n: open the workflow → three-dot menu → Download
-   - Save to `layers/orchestration/workflows/{action-id}.json`
+   - Save to `workflows/n8n/{action-id}.json`
    - Verify valid JSON: `cat {file} | python3 -m json.tool > /dev/null`
 
 ### When to Update Source Control
@@ -887,7 +887,7 @@ Registers:
 ### Disaster Recovery
 If the n8n container is rebuilt, import workflows from source control:
 1. In n8n: Import from file
-2. Select the JSON from `layers/orchestration/workflows/`
+2. Select the JSON from `workflows/n8n/`
 3. Activate after confirming filter_action exists
 
 ---
@@ -936,5 +936,5 @@ Before marking a workflow as complete:
 - [ ] filter_action entry exists and is enabled
 
 ### Source Control
-- [ ] Workflow exported and saved to layers/orchestration/workflows/
+- [ ] Workflow exported and saved to workflows/n8n/
 - [ ] Workflow activated via `n8n_workflow_activate` (only after all above complete)

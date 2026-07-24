@@ -26,7 +26,7 @@ External systems / events
              │  Webhook trigger
              ▼
 ┌─────────────────────────────────┐
-│  n8n Workflows                  │  layers/orchestration/workflows/
+│  n8n Workflows                  │  workflows/n8n/
 │  Executes actions               │  n8n
 └────────────┬────────────────────┘
              │
@@ -140,7 +140,7 @@ Placeholder actions (disabled):
 ## Development Workflows
 ### Adding a New Action (End-to-End)
 1. **Build n8n workflow** in n8n UI at `localhost:5678`
-2. **Export workflow JSON** to `layers/orchestration/workflows/`
+2. **Export workflow JSON** to `workflows/n8n/`
 3. **Register action** in filter seed: `layers/orchestration/filter/db/seed.sql`
    ```sql
    INSERT INTO filter_action (action_id, stage, n8n_workflow_id, requires_hitl, enabled, description)

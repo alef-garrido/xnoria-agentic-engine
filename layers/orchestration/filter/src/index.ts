@@ -27,7 +27,7 @@ const db = new Pool({
 // Health check
 // ------------------------------------------------------------------------------
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', service: 'exnoria-filter' });
+  res.json({ status: 'ok', service: `${process.env.PROJECT_ID || 'xnoria'}-filter` });
 });
 
 // ==============================================================================

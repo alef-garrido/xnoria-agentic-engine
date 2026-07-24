@@ -130,7 +130,7 @@ Partial index on `status = 'pending_hitl'` for fast queue queries.
 4. **Migrations are immutable** — never modify existing ones, always add new.
 
 ## Adding a New Action
-1. Build n8n workflow, export JSON to `layers/orchestration/workflows/`
+1. Build n8n workflow, export JSON to `workflows/n8n/`
 2. Add seed row to `db/seed.sql`:
    ```sql
    INSERT INTO filter_action (action_id, stage, n8n_workflow_id, requires_hitl, enabled, description)

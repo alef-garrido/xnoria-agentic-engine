@@ -194,6 +194,8 @@ services:
       POSTHOG_AUTH_HEADER: ${POSTHOG_API_KEY}  # Bearer token format is handled by mcp-remote
       POSTHOG_HOST: ${POSTHOG_HOST}
       POSTHOG_PROJECT_ID: ${POSTHOG_PROJECT_ID}
+      # Engram memory namespace — set per-client to prevent cross-instance collision
+      ENGRA_PROJECT: ${ENGRA_PROJECT:-xnoria-agentic-engine}
     networks:
       - ${PROJECT_ID:-exnoria}_internal
     logging:

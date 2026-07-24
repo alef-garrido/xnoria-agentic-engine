@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Xnoria — Health Check Script
+# Exnoria — Health Check Script
 # deploy/health-check.sh
 #
-# Validates the full Xnoria stack is operational.
+# Validates the full Exnoria stack is operational.
 # Exit 0: all checks pass
 # Exit 1: one or more checks failed (summary printed to stdout)
 # ==============================================================================
@@ -55,7 +55,7 @@ if [ -f "${ENV_FILE}" ]; then
 fi
 
 echo ""
-echo -e "${BOLD}Xnoria Health Check${NC}"
+echo -e "${BOLD}Exnoria Health Check${NC}"
 echo -e "$(date '+%Y-%m-%d %H:%M:%S')"
 echo ""
 

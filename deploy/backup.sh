@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Xnoria — Postgres Backup Script
+# Exnoria — Postgres Backup Script
 # deploy/backup.sh
 #
 # Usage:
 #   ./deploy/backup.sh [output-dir]
 #
-# Default output: ./backups/xnoria_backup_YYYYMMDD_HHMMSS.sql.gz.enc
+# Default output: ./backups/exnoria_backup_YYYYMMDD_HHMMSS.sql.gz.enc
 # Requires BACKUP_PASSPHRASE env var for AES-256 encryption.
 # Optionally uploads to S3-compatible bucket if BACKUP_S3_BUCKET is set in .env.
 # ==============================================================================
@@ -56,7 +56,7 @@ if [ -z "${BACKUP_PASSPHRASE:-}" ]; then
     export BACKUP_PASSPHRASE='your-secure-passphrase'"
 fi
 
-info "Starting Xnoria Postgres backup..."
+info "Starting Exnoria Postgres backup..."
 info "Output: ${ENCRYPTED_FILE}"
 
 # Dump and compress

@@ -33,7 +33,7 @@ src/
 │   └── types.ts          # JourneyStage, FilterStatus, FilterAction, FilterRequest, FilterResponse
 db/
 ├── migrations/           # Versioned schema migrations
-└── seed.sql              # MVP action seed data
+└── seed.sql              # ⚠️ DEPRECATED — use config/seeds/*.sql instead
 ```
 
 ## API Endpoints
@@ -131,7 +131,7 @@ Partial index on `status = 'pending_hitl'` for fast queue queries.
 
 ## Adding a New Action
 1. Build n8n workflow, export JSON to `workflows/n8n/`
-2. Add seed row to `db/seed.sql`:
+2. Add seed row to the appropriate `config/seeds/*.sql` file:
    ```sql
    INSERT INTO filter_action (action_id, stage, n8n_workflow_id, requires_hitl, enabled, description)
    VALUES ('stage.resource.verb', 'STAGE', 'n8n-webhook-id', false, true, 'Description');
@@ -146,7 +146,7 @@ Partial index on `status = 'pending_hitl'` for fast queue queries.
 
 ## Adding a New Journey Stage
 1. Add stage to `JourneyStage` type in `src/shared/types.ts`
-2. Add seed rows to `db/seed.sql`
+2. Add seed rows to the appropriate `config/seeds/*.sql` file
 3. Build n8n workflows for that stage
 
 ## Environment Variables
@@ -160,6 +160,7 @@ Partial index on `status = 'pending_hitl'` for fast queue queries.
 | `TELEGRAM_OPERATOR_CHAT_ID` | Operator chat ID for HITL notifications |
 | `DASHBOARD_URL` | Dashboard URL for HITL deep links (default: `http://localhost:4000`) |
 | `COM_CONTENT_SHEET_ID` | Google Sheets ID for content calendar (COM workflow) |
+| `PROJECT_ID` | Project namespace for service identity strings and Docker networks (default: xnoria) |
 
 ## Current Action Coverage (Phase 3 A3 Complete)
 All 8 journey stages have at least one active action:

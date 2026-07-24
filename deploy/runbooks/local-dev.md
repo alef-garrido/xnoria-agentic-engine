@@ -166,7 +166,7 @@ docker compose up -d --build
 
 **Fix:**
 1. Open http://localhost:5678
-2. Import workflow JSONs from `layers/orchestration/workflows/n8n/`
+2. Import workflow JSONs from `workflows/n8n/`
 3. Activate each workflow
 4. Update `n8n_workflow_id` in the database to match the webhook path
 

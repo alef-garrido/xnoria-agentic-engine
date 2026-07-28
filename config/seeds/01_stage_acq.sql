@@ -4,7 +4,7 @@ VALUES
   (
     'acq.lead.score',
     'ACQ',
-    'acq-lead-score',
+    'xnoria-acq-lead-score-v1',
     false,
     true,
     'Score an incoming lead using rule-based logic and apply CRM tags in HubSpot'

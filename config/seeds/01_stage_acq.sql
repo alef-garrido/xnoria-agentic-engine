@@ -29,9 +29,9 @@ VALUES
     'acq.contact.outreach',
     'ACQ',
     'acq-contact-outreach',
-    false,
     true,
-    'Cold outreach via WhatsApp + email, sync to HubSpot'
+    true,
+    'Cold outreach via WhatsApp + email, sync to HubSpot — requires HITL operator review before sending'
   )
 ON CONFLICT (action_id) DO UPDATE
   SET

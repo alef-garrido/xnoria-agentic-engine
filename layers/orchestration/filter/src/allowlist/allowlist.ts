@@ -53,7 +53,7 @@ export async function lookupAction(
 
 export async function listActions(db: Pool): Promise<FilterAction[]> {
   const result = await db.query<FilterAction>(
-    `SELECT id, action_id, stage, n8n_workflow_id, requires_hitl, enabled, description, created_at, updated_at
+    `SELECT id, action_id, stage, n8n_workflow_id, requires_hitl, manual_action, enabled, description, created_at, updated_at
      FROM filter_action
      ORDER BY stage ASC, action_id ASC`
   );
@@ -65,20 +65,22 @@ export interface CreateActionInput {
   stage:           string;
   n8n_workflow_id: string;
   requires_hitl?:  boolean;
+  manual_action?:  boolean;
   enabled?:        boolean;
   description?:    string;
 }
 
 export async function createAction(db: Pool, input: CreateActionInput): Promise<FilterAction> {
   const result = await db.query<FilterAction>(
-    `INSERT INTO filter_action (action_id, stage, n8n_workflow_id, requires_hitl, enabled, description)
-     VALUES ($1, $2, $3, $4, $5, $6)
-     RETURNING id, action_id, stage, n8n_workflow_id, requires_hitl, enabled, description, created_at, updated_at`,
+    `INSERT INTO filter_action (action_id, stage, n8n_workflow_id, requires_hitl, manual_action, enabled, description)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     RETURNING id, action_id, stage, n8n_workflow_id, requires_hitl, manual_action, enabled, description, created_at, updated_at`,
     [
       input.action_id,
       input.stage,
       input.n8n_workflow_id,
       input.requires_hitl ?? false,
+      input.manual_action ?? false,
       input.enabled ?? true,
       input.description ?? null
     ]
@@ -88,6 +90,7 @@ export async function createAction(db: Pool, input: CreateActionInput): Promise<
 
 export interface UpdateActionInput {
   requires_hitl?:  boolean;
+  manual_action?:  boolean;
   enabled?:        boolean;
   description?:    string;
   n8n_workflow_id?: string;
@@ -102,6 +105,10 @@ export async function updateAction(db: Pool, id: string, input: UpdateActionInpu
   if (input.requires_hitl !== undefined) {
     setClauses.push(`requires_hitl = $${paramIndex++}`);
     values.push(input.requires_hitl);
+  }
+  if (input.manual_action !== undefined) {
+    setClauses.push(`manual_action = $${paramIndex++}`);
+    values.push(input.manual_action);
   }
   if (input.enabled !== undefined) {
     setClauses.push(`enabled = $${paramIndex++}`);
@@ -119,7 +126,7 @@ export async function updateAction(db: Pool, id: string, input: UpdateActionInpu
   if (setClauses.length === 0) {
     // Nothing to update — return current state
     const current = await db.query<FilterAction>(
-      `SELECT id, action_id, stage, n8n_workflow_id, requires_hitl, enabled, description, created_at, updated_at
+      `SELECT id, action_id, stage, n8n_workflow_id, requires_hitl, manual_action, enabled, description, created_at, updated_at
        FROM filter_action WHERE id = $1`,
       [id]
     );
@@ -131,7 +138,7 @@ export async function updateAction(db: Pool, id: string, input: UpdateActionInpu
     `UPDATE filter_action
      SET ${setClauses.join(', ')}
      WHERE id = $${paramIndex}
-     RETURNING id, action_id, stage, n8n_workflow_id, requires_hitl, enabled, description, created_at, updated_at`,
+     RETURNING id, action_id, stage, n8n_workflow_id, requires_hitl, manual_action, enabled, description, created_at, updated_at`,
     values
   );
 

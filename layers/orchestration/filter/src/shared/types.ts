@@ -44,6 +44,7 @@ export interface FilterAction {
   stage:           JourneyStage;
   n8n_workflow_id: string;
   requires_hitl:   boolean;
+  manual_action:   boolean;
   enabled:         boolean;
   description:     string | null;
   created_at?:     string;
@@ -51,13 +52,14 @@ export interface FilterAction {
 }
 
 export interface HITLPendingAction {
-  log_id:      string;
-  action_id:   string;
-  stage:       string;
-  session_id:  string;
-  payload_in:  Record<string, unknown>;
-  meta:        Record<string, unknown>;
-  created_at:  string;
+  log_id:        string;
+  action_id:     string;
+  stage:         string;
+  session_id:    string;
+  payload_in:    Record<string, unknown>;
+  meta:          Record<string, unknown>;
+  created_at:    string;
+  manual_action: boolean;
 }
 
 // Phase 2 — Health metrics aggregation per stage

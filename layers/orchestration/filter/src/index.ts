@@ -92,11 +92,12 @@ app.post('/filter/execute', async (req: Request, res: Response) => {
 
     // Fire-and-forget Telegram notification
     notifyOperator({
-      action_id:  body.action_id,
-      stage:      body.stage,
-      session_id: body.session_id,
-      payload:    body.payload,
-      meta:       body.meta
+      action_id:     body.action_id,
+      stage:         body.stage,
+      session_id:    body.session_id,
+      payload:       body.payload,
+      meta:          body.meta,
+      manual_action: action.manual_action
     });
 
     logger.info(
@@ -332,7 +333,7 @@ app.get('/filter/allowlist', async (_req: Request, res: Response) => {
 
 // POST /filter/allowlist — create a new action
 app.post('/filter/allowlist', async (req: Request, res: Response) => {
-  const { action_id, stage, n8n_workflow_id, requires_hitl, enabled, description } = req.body;
+  const { action_id, stage, n8n_workflow_id, requires_hitl, manual_action, enabled, description } = req.body;
 
   if (!action_id || !stage || !n8n_workflow_id) {
     return res.status(400).json({
@@ -342,7 +343,7 @@ app.post('/filter/allowlist', async (req: Request, res: Response) => {
 
   try {
     const action = await createAction(db, {
-      action_id, stage, n8n_workflow_id, requires_hitl, enabled, description
+      action_id, stage, n8n_workflow_id, requires_hitl, manual_action, enabled, description
     });
     return res.status(201).json({ action });
   } catch (err: unknown) {
@@ -359,11 +360,11 @@ app.post('/filter/allowlist', async (req: Request, res: Response) => {
 // PATCH /filter/allowlist/:id — update an action
 app.patch('/filter/allowlist/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { requires_hitl, enabled, description, n8n_workflow_id } = req.body;
+  const { requires_hitl, manual_action, enabled, description, n8n_workflow_id } = req.body;
 
   try {
     const action = await updateAction(db, id, {
-      requires_hitl, enabled, description, n8n_workflow_id
+      requires_hitl, manual_action, enabled, description, n8n_workflow_id
     });
 
     if (!action) {

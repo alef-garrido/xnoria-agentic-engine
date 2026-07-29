@@ -1,10 +1,11 @@
 -- Acquisition Stage Seed Pack
-INSERT INTO filter_action (action_id, stage, n8n_workflow_id, requires_hitl, enabled, description)
+INSERT INTO filter_action (action_id, stage, n8n_workflow_id, requires_hitl, manual_action, enabled, description)
 VALUES
   (
     'acq.lead.score',
     'ACQ',
     'xnoria-acq-lead-score-v1',
+    false,
     false,
     true,
     'Score an incoming lead using rule-based logic and apply CRM tags in HubSpot'
@@ -14,6 +15,7 @@ VALUES
     'ACQ',
     'acq-lead-engage',
     false,
+    false,
     true,
     'Send immediate WhatsApp acknowledgment to inbound lead'
   ),
@@ -21,6 +23,7 @@ VALUES
     'acq.lead.nurture',
     'ACQ',
     'acq-lead-nurture',
+    false,
     false,
     true,
     'AI nurture conversation for out-of-hours contacts'
@@ -30,6 +33,7 @@ VALUES
     'ACQ',
     'acq-contact-outreach',
     true,
+    false,
     true,
     'Cold outreach via WhatsApp + email, sync to HubSpot — requires HITL operator review before sending'
   )
@@ -38,6 +42,7 @@ ON CONFLICT (action_id) DO UPDATE
     stage           = EXCLUDED.stage,
     n8n_workflow_id = EXCLUDED.n8n_workflow_id,
     requires_hitl   = EXCLUDED.requires_hitl,
+    manual_action   = EXCLUDED.manual_action,
     enabled         = EXCLUDED.enabled,
     description     = EXCLUDED.description,
     updated_at      = now();

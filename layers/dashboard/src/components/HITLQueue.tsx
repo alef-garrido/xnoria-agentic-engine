@@ -24,6 +24,7 @@ interface PendingAction {
   payload_in: Record<string, unknown>;
   meta: Record<string, unknown>;
   created_at: string;
+  manual_action: boolean;
 }
 
 interface Toast {
@@ -92,8 +93,14 @@ export function HITLQueue() {
           delete next[logId];
           return next;
         });
+        const action = pending?.find((a) => a.log_id === logId);
+        const isManual = action?.manual_action;
         addToast(
-          edited ? "Action approved with edits and dispatched" : "Action approved and dispatched",
+          isManual
+            ? "Marked as complete (manual action)"
+            : edited
+              ? "Action approved with edits and dispatched"
+              : "Action approved and dispatched",
           "success"
         );
       } else {
@@ -278,6 +285,17 @@ export function HITLQueue() {
                         />
                         PENDING
                       </span>
+                      {action.manual_action && (
+                        <span
+                          className="badge"
+                          style={{
+                            backgroundColor: "var(--info-soft)",
+                            color: "var(--info)",
+                          }}
+                        >
+                          MANUAL
+                        </span>
+                      )}
                       <span
                         className="text-sm font-semibold"
                         style={{
@@ -331,8 +349,33 @@ export function HITLQueue() {
                       </div>
                     )}
 
-                    {/* Editable message field */}
-                    {Boolean(action.payload_in?.message) && (
+                    {/* Manual action instructions */}
+                    {action.manual_action && (
+                      <div
+                        className="mt-3 p-3 rounded-lg"
+                        style={{
+                          backgroundColor: "var(--info-soft)",
+                          border: "1px solid var(--info)",
+                        }}
+                      >
+                        <div
+                          className="text-xs font-semibold mb-1"
+                          style={{ color: "var(--info)" }}
+                        >
+                          MANUAL ACTION
+                        </div>
+                        <div
+                          className="text-xs"
+                          style={{ color: "var(--text-secondary)" }}
+                        >
+                          This action cannot be automated on the current HubSpot plan.
+                          Complete it manually in HubSpot, then click "Mark Complete".
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Editable message field (hidden for manual actions) */}
+                    {!action.manual_action && Boolean(action.payload_in?.message) && (
                       <div className="mt-3">
                         <div className="flex items-center gap-2 mb-1">
                           <span
@@ -442,7 +485,7 @@ export function HITLQueue() {
                     <button
                       onClick={() => handleApprove(action.log_id)}
                       disabled={isProcessing}
-                      title="Approve"
+                      title={action.manual_action ? "Mark Complete" : "Approve"}
                       style={{
                         display: "inline-flex",
                         alignItems: "center",
@@ -450,16 +493,16 @@ export function HITLQueue() {
                         gap: "6px",
                         padding: "8px 16px",
                         borderRadius: "var(--radius-md)",
-                        backgroundColor: "var(--positive-soft)",
-                        color: "var(--positive)",
-                        border: "1px solid var(--positive)",
+                        backgroundColor: action.manual_action ? "var(--info-soft)" : "var(--positive-soft)",
+                        color: action.manual_action ? "var(--info)" : "var(--positive)",
+                        border: `1px solid ${action.manual_action ? "var(--info)" : "var(--positive)"}`,
                         fontSize: "12px",
                         fontWeight: 600,
                         cursor: isProcessing ? "not-allowed" : "pointer",
                       }}
                     >
                       <Check className="w-4 h-4" />
-                      Approve
+                      {action.manual_action ? "Mark Complete" : "Approve"}
                     </button>
                     <button
                       onClick={() => handleReject(action.log_id)}

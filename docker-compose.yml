@@ -261,5 +261,6 @@ volumes:
 # No service reaches another except through declared dependencies
 # -----------------------------------------------------------------------------
 networks:
-  ${PROJECT_ID:-exnoria}_internal:
+  exnoria_internal:
+    name: exnoria_internal
     driver: bridge

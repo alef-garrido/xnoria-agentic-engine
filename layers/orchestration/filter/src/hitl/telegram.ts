@@ -13,11 +13,12 @@ const OPERATOR_CHAT_ID      = process.env.TELEGRAM_OPERATOR_CHAT_ID;
 const DASHBOARD_URL         = process.env.DASHBOARD_URL ?? 'http://localhost:4000';
 
 interface HITLNotification {
-  action_id:  string;
-  stage:      string;
-  session_id: string;
-  payload:    Record<string, unknown>;
-  meta?:      Record<string, unknown>;
+  action_id:     string;
+  stage:         string;
+  session_id:    string;
+  payload:       Record<string, unknown>;
+  meta?:         Record<string, unknown>;
+  manual_action?: boolean;
 }
 
 /**
@@ -49,19 +50,41 @@ export async function notifyOperator(notification: HITLNotification): Promise<vo
 
   const contactId = notification.payload?.contact_id ?? 'Unknown';
   const reason    = notification.payload?.reason ?? '';
+  const hubspotLink = contactId !== 'Unknown'
+    ? `\n👉 [Open in HubSpot](https://app.hubspot.com/contacts/${process.env.HUBSPORT_PORTAL_ID ?? '51103874'}/contact/${contactId})`
+    : '';
 
-  const message = [
-    '⚠️ *HITL Review Required*',
-    '',
-    `*Action:* \`${notification.action_id}\``,
-    `*Stage:* ${notification.stage}`,
-    `*Contact:* ${contactId}`,
-    `*Session:* \`${notification.session_id.substring(0, 12)}…\``,
-    reason ? `*Reason:* ${reason}` : '',
-    triggeredBy,
-    '',
-    `👉 [Review & Approve](${DASHBOARD_URL}/hitl)`
-  ].filter(Boolean).join('\n');
+  let message: string;
+  if (notification.manual_action) {
+    message = [
+      '🔧 *Manual Action Required*',
+      '',
+      `*Action:* \`${notification.action_id}\``,
+      `*Stage:* ${notification.stage}`,
+      `*Contact:* ${contactId}`,
+      `*Session:* \`${notification.session_id.substring(0, 12)}…\``,
+      reason ? `*Reason:* ${reason}` : '',
+      triggeredBy,
+      '',
+      `*What to do:* This action cannot be automated on your current HubSpot plan.`,
+      `Please complete it manually in HubSpot, then mark as done.`,
+      hubspotLink,
+      `👉 [Mark as Done](${DASHBOARD_URL}/hitl)`
+    ].filter(Boolean).join('\n');
+  } else {
+    message = [
+      '⚠️ *HITL Review Required*',
+      '',
+      `*Action:* \`${notification.action_id}\``,
+      `*Stage:* ${notification.stage}`,
+      `*Contact:* ${contactId}`,
+      `*Session:* \`${notification.session_id.substring(0, 12)}…\``,
+      reason ? `*Reason:* ${reason}` : '',
+      triggeredBy,
+      '',
+      `👉 [Review & Approve](${DASHBOARD_URL}/hitl)`
+    ].filter(Boolean).join('\n');
+  }
 
   try {
     await axios.post(

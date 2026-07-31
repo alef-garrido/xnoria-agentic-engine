@@ -17,6 +17,7 @@ import {
   HeartPulse,
   BrainCog,
 } from "lucide-react";
+import { BRANDING } from "@/config/branding";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -184,7 +185,7 @@ export function Sidebar() {
               letterSpacing: "-0.5px",
             }}
           >
-            Exnoria CX Intelligence
+            {BRANDING.appTitle}
           </h1>
         </div>
 
@@ -234,7 +235,7 @@ export function Sidebar() {
             className="px-4 py-2 text-xs"
             style={{ color: "var(--text-muted)" }}
           >
-            Exnoria CX Engine
+            {BRANDING.appTitle}
           </div>
 
           <button

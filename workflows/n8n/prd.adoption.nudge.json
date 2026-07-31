@@ -1,14 +1,195 @@
 {
-  "status": "superseded",
-  "superseded_by": "prd.contact.educate",
-  "n8n_workflow_name": "prd.contact.educate",
-  "note": "Database action ID prd.adoption.nudge maps to the prd.contact.educate workflow in n8n. This action was superseded during Phase 3 A3 when the adoption.nudge and friction.flag actions were consolidated into the contact.educate workflow.",
-  "original_name": "W-PRD-2 - Prd.adoption.nudge",
-  "action_id": "prd.adoption.nudge",
-  "stage": "PRD",
-  "requires_hitl": false,
-  "enabled": true,
-  "description": "Send feature education message to contact using workarounds — consolidated into prd.contact.educate",
-  "superseded_in": "Phase 3 — A3 track (migration 007_onb_prd_actions.sql)",
-  "id": "d02d80ab7e714481"
+  "name": "W-PRD-1 - Prd.contact.nudge",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "prd-contact-nudge",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-prd-contact-nudge",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "prd-contact-nudge"
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "operation": "get",
+        "contactId": "={{ $json.body.contact_id }}",
+        "additionalFields": {}
+      },
+      "id": "hubspot-get-contact-prd1",
+      "name": "HubSpot -- get contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Exnoria - prd.contact.nudge\n// Branch on signal_id: PRD_FRC_01 (task abandonment) vs PRD_FRC_02 (low usage)\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, signal_id, cause_code, interventions } = webhook;\n\nconst firstname = contact.properties?.firstname?.value ?? 'there';\nconst email     = contact.properties?.email?.value     ?? '';\nconst phone     = contact.properties?.phone?.value     ?? '';\n\nconst cleanPhone = phone.replace(/[^\\d]/g, '');\n\nlet message = '';\nlet action_type = '';\n\nif (signal_id === 'PRD_FRC_01') {\n  // Task abandonment — re-engagement tip\n  message = [\n    'Hi ' + firstname + ',',\n    '',\n    'You left something unfinished — and we think you\\'re really close to a great result.',\n    '',\n    'Here\\'s a quick tip to pick up where you left off: [Feature Tip Link]',\n    '',\n    'Need a hand? Just reply to this message.',\n    '',\n    '-- Exnoria Product Team'\n  ].join('\\n');\n  action_type = 'reengagement_tip';\n} else if (signal_id === 'PRD_FRC_02') {\n  // Low usage of core features — enroll in adoption sequence\n  message = [\n    'Hi ' + firstname + ',',\n    '',\n    'We\\'ve put together a short series of tips to help you get more value from your account.',\n    '',\n    'You\\'ll receive 3 quick emails over the next week with practical tips tailored to your use case.',\n    '',\n    '-- Exnoria Product Team'\n  ].join('\\n');\n  action_type = 'adoption_sequence_enrollment';\n} else {\n  message = 'Hi ' + firstname + ', we have some tips to help you get more from your account. Reply if interested!';\n  action_type = 'generic_nudge';\n}\n\nconst whatsapp_payload = cleanPhone ? {\n  messaging_product: 'whatsapp',\n  to: cleanPhone,\n  type: 'text',\n  text: { body: message }\n} : null;\n\nconst nudgedAt = new Date(new Date().setUTCHours(0,0,0,0)).getTime();\n\nreturn [{\n  json: {\n    contact_id,\n    signal_id,\n    cause_code,\n    email,\n    firstname,\n    phone: cleanPhone,\n    whatsapp_payload,\n    action_type,\n    sequence_id: signal_id === 'PRD_FRC_02' ? 'prd-adoption-series' : null,\n    nudged_at: nudgedAt\n  }\n}];"
+      },
+      "id": "code-nudge-logic-prd1",
+      "name": "Code -- nudge logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/{{ $env.META_PHONE_NUMBER_ID }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($(\"Code -- nudge logic\").item.json.whatsapp_payload) }}",
+        "options": {}
+      },
+      "id": "http-meta-whatsapp-prd1",
+      "name": "Meta WA -- send nudge",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Meta WhatsApp Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "email": "={{ $(\"Code -- nudge logic\").item.json.email }}",
+        "additionalFields": {},
+        "options": {}
+      },
+      "id": "hubspot-update-contact-prd1",
+      "name": "HubSpot -- update contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        300
+      ],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"prd.contact.nudge\",\n  \"contact_id\": \"{{ $(\"Code -- nudge logic\").item.json.contact_id }}\",\n  \"signal_id\": \"{{ $(\"Code -- nudge logic\").item.json.signal_id }}\",\n  \"action_type\": \"{{ $(\"Code -- nudge logic\").item.json.action_type }}\",\n  \"sequence_id\": \"{{ $(\"Code -- nudge logic\").item.json.sequence_id }}\",\n  \"nudged_at\": {{ $(\"Code -- nudge logic\").item.json.nudged_at }}\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-prd1",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- get contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- get contact": {
+      "main": [
+        [
+          {
+            "node": "Code -- nudge logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code -- nudge logic": {
+      "main": [
+        [
+          {
+            "node": "Meta WA -- send nudge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta WA -- send nudge": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- update contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- update contact": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "id": "f1fbf71e024d42fb"
 }

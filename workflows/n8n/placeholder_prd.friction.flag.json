@@ -1,5 +1,5 @@
 {
-  "status": "superseded \u2014 see prd.contact.nudge and prd.contact.educate",
+  "status": "superseded — see prd.contact.nudge and prd.contact.educate",
   "name": "W-PRD-1 - Prd.friction.flag",
   "action_id": "prd.friction.flag",
   "stage": "PRD",
@@ -8,7 +8,6 @@
   "enabled": false,
   "description": "SUPERSEDED by prd.contact.nudge (Phase 3 A3). Original placeholder: Flag contact experiencing product friction for CSM or product team review.",
   "superseded_by": "prd.contact.nudge",
-  "superseded_in": "Phase 3 \u2014 A3 track (migration 007_onb_prd_actions.sql)",
-  "id": "d3ec7d08841e4085",
-  "active": true
+  "superseded_in": "Phase 3 — A3 track (migration 007_onb_prd_actions.sql)",
+  "id": "d3ec7d08841e4085"
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Xnoria — Instance Initialization Script
+# Exnoria — Instance Initialization Script
 # deploy/init.sh
 #
 # Usage:
@@ -22,10 +22,10 @@ BLUE='\033[0;34m'
 BOLD='\033[1m'
 NC='\033[0m'
 
-info()    { echo -e "${BLUE}[xnoria]${NC} $*"; }
-success() { echo -e "${GREEN}[xnoria]${NC} $*"; }
-warn()    { echo -e "${YELLOW}[xnoria]${NC} $*"; }
-error()   { echo -e "${RED}[xnoria] ERROR:${NC} $*" >&2; }
+info()    { echo -e "${BLUE}[exnoria]${NC} $*"; }
+success() { echo -e "${GREEN}[exnoria]${NC} $*"; }
+warn()    { echo -e "${YELLOW}[exnoria]${NC} $*"; }
+error()   { echo -e "${RED}[exnoria] ERROR:${NC} $*" >&2; }
 fatal()   { error "$*"; exit 1; }
 
 prompt_if_unset() {
@@ -79,7 +79,7 @@ ENV_TARGET="${1:-}"
 
 if [ -z "${ENV_TARGET}" ]; then
   echo ""
-  echo -e "${BOLD}Xnoria Instance Initialization${NC}"
+  echo -e "${BOLD}Exnoria Instance Initialization${NC}"
   echo ""
   echo "Select deployment target:"
   echo "  1) local  — Local development machine"
@@ -94,7 +94,7 @@ case "${ENV_TARGET}" in
   *) fatal "Invalid environment '${ENV_TARGET}'. Choose: local, vps, or edge" ;;
 esac
 
-info "Initializing Xnoria instance for environment: ${BOLD}${ENV_TARGET}${NC}"
+info "Initializing Exnoria instance for environment: ${BOLD}${ENV_TARGET}${NC}"
 
 # ==============================================================================
 # Step 2: Copy environment template (idempotent — skip if .env exists)
@@ -199,7 +199,7 @@ docker compose up -d postgres
 
 info "Waiting for Postgres to be healthy..."
 RETRIES=30
-until docker compose exec -T postgres pg_isready -U xnoria -d exnoria >/dev/null 2>&1; do
+until docker compose exec -T postgres pg_isready -U ${PROJECT_ID:-exnoria} -d ${POSTGRES_DB:-exnoria} >/dev/null 2>&1; do
   RETRIES=$((RETRIES - 1))
   if [ "${RETRIES}" -eq 0 ]; then
     fatal "Postgres did not become healthy in time"
@@ -217,7 +217,7 @@ run_migration() {
   local file="$1"
   if [ -f "${file}" ]; then
     info "  Applying: $(basename "${file}")"
-    docker compose exec -T postgres psql -U xnoria -d exnoria < "${file}" >/dev/null
+    docker compose exec -T postgres psql -U ${PROJECT_ID:-exnoria} -d ${POSTGRES_DB:-exnoria} < "${file}" >/dev/null
   fi
 }
 
@@ -251,7 +251,7 @@ fi
 # Step 7: Start full stack
 # ==============================================================================
 echo ""
-info "Starting full Xnoria stack..."
+info "Starting full Exnoria stack..."
 
 if [ "${ENV_TARGET}" = "vps" ]; then
   docker compose -f docker-compose.yml -f deploy/environments/vps/docker-compose.override.yml up -d
@@ -276,7 +276,7 @@ sleep 5
 # ==============================================================================
 echo ""
 echo -e "${BOLD}════════════════════════════════════════${NC}"
-echo -e "${BOLD}  Xnoria Instance Ready${NC}"
+echo -e "${BOLD}  Exnoria Instance Ready${NC}"
 echo -e "${BOLD}════════════════════════════════════════${NC}"
 echo ""
 

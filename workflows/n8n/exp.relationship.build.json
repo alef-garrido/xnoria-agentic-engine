@@ -192,6 +192,5 @@
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all"
   },
-  "id": "exp-relationship-build-id",
-  "active": true
+  "id": "exp-relationship-build-id"
 }

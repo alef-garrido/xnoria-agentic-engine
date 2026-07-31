@@ -3,7 +3,7 @@
 # NEVER use 'docker compose down -v' directly — use 'make' targets only
 # Volumes contain critical data including customer interactions and audit logs
 
-.PHONY: help up down restart rebuild down-hard export-all verify-workflows
+.PHONY: help up down restart rebuild down-hard export-all verify-workflows project-init clean sanitize-workflows
 
 # Safe operations — these preserve all volumes and data
 up:
@@ -25,6 +25,23 @@ rebuild:
 	@echo "🔨 Rebuilding and restarting Xnoria services..."
 	docker compose build && docker compose up -d
 
+# Initialize a new project configuration & seed dependencies
+project-init:
+	@echo "🚀 Initializing project environment..."
+	@./scripts/scaffold-project.sh
+
+# Clean temporary logs, dumps, and scratch files
+clean:
+	@echo "🧹 Cleaning temporary logs and scratch files..."
+	@rm -f tmp/*.json backups/*.sql backups/*.csv validation/*.csv 2>/dev/null || true
+	@touch tmp/.gitkeep backups/.gitkeep validation/.gitkeep
+	@echo "✅ Cleaned."
+
+# Sanitize n8n workflow templates for source control
+sanitize-workflows:
+	@echo "🧹 Sanitizing n8n workflow templates..."
+	@./scripts/sanitize-workflows.sh
+
 # Verify all enabled workflows have corresponding JSON exports
 verify-workflows:
 	@echo "🔍 Verifying workflow exports..."
@@ -36,9 +53,10 @@ export-all:
 	@echo "Exporting n8n workflows (manual step — run 'make verify-workflows' to check)..."
 	@mkdir -p backups
 	@echo "Backing up filter_log (audit history)..."
-	@if docker exec exnoria_postgres true >/dev/null 2>&1; then \
+	@PROJECT_ID=$${PROJECT_ID:-exnoria}; \
+	if docker exec $${PROJECT_ID}_postgres true >/dev/null 2>&1; then \
 		echo "PostgreSQL container is running..."; \
-		if docker exec exnoria_postgres pg_dump -U exnoria -t filter_log $(POSTGRES_DB) > backups/filter_log_$$(date +%Y%m%d_%H%M%S).sql 2>/dev/null; then \
+		if docker exec $${PROJECT_ID}_postgres pg_dump -U "$$PROJECT_ID" -t filter_log $(POSTGRES_DB) > backups/filter_log_$$(date +%Y%m%d_%H%M%S).sql 2>/dev/null; then \
 			echo "✅ Export complete. Safe to proceed."; \
 		else \
 			echo "⚠️  Failed to backup filter_log"; \
@@ -74,17 +92,22 @@ down-hard:
 help:
 	@echo "Xnoria Docker Compose Wrapper"
 	@echo ""
+	@echo "Project Setup & Scaffolding:"
+	@echo "  make project-init       - Initialize fresh project configuration & secrets"
+	@echo "  make clean              - Purge temporary logs and scratch dumps"
+	@echo "  make sanitize-workflows - Sanitize n8n JSON templates for source control"
+	@echo ""
 	@echo "Safe operations (preserve data):"
-	@echo "  make up        - Start services"
-	@echo "  make down      - Stop services (SAFE — preserves volumes)"
-	@echo "  make restart   - Restart services"
-	@echo "  make rebuild   - Rebuild and restart"
+	@echo "  make up                 - Start services"
+	@echo "  make down               - Stop services (SAFE — preserves volumes)"
+	@echo "  make restart            - Restart services"
+	@echo "  make rebuild            - Rebuild and restart"
 	@echo ""
 	@echo "Data protection:"
-	@echo "  make export-all      - Backup filter_log and critical data"
-	@echo "  make verify-workflows - Check all enabled workflows are exported"
+	@echo "  make export-all         - Backup filter_log and critical data"
+	@echo "  make verify-workflows   - Check all enabled workflows are exported"
 	@echo ""
 	@echo "DESTRUCTIVE operations (DATA LOSS):"
-	@echo "  make down-hard - ⚠️  NUCLEAR OPTION — destroys ALL volumes"
+	@echo "  make down-hard          - ⚠️  NUCLEAR OPTION — destroys ALL volumes"
 	@echo ""
 	@echo "NEVER use 'docker compose down -v' directly. Use 'make' targets only."

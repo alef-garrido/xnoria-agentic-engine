@@ -17,6 +17,7 @@ interface FilterAction {
   stage: string;
   n8n_workflow_id: string;
   requires_hitl: boolean;
+  manual_action: boolean;
   enabled: boolean;
   description: string | null;
   created_at: string;
@@ -66,7 +67,7 @@ export function AllowlistManager() {
 
   const handleToggle = async (
     id: string,
-    field: "enabled" | "requires_hitl",
+    field: "enabled" | "requires_hitl" | "manual_action",
     value: boolean
   ) => {
     // Optimistic update
@@ -128,6 +129,7 @@ export function AllowlistManager() {
     stage: string;
     n8n_workflow_id: string;
     requires_hitl: boolean;
+    manual_action: boolean;
     description: string;
   }) => {
     try {
@@ -299,7 +301,7 @@ export function AllowlistManager() {
                 textAlign: "left",
               }}
             >
-              {["Action ID", "Stage", "n8n Workflow", "HITL", "Enabled", "Description", ""].map(
+              {["Action ID", "Stage", "n8n Workflow", "HITL", "Manual", "Enabled", "Description", ""].map(
                 (header) => (
                   <th
                     key={header}
@@ -394,6 +396,17 @@ export function AllowlistManager() {
                         handleToggle(action.id, "requires_hitl", v)
                       }
                       activeColor="var(--warning)"
+                    />
+                  </td>
+
+                  {/* Manual action toggle */}
+                  <td style={{ padding: "12px 16px" }}>
+                    <ToggleSwitch
+                      checked={action.manual_action}
+                      onChange={(v) =>
+                        handleToggle(action.id, "manual_action", v)
+                      }
+                      activeColor="var(--info)"
                     />
                   </td>
 
@@ -546,6 +559,7 @@ function AddActionModal({
     stage: string;
     n8n_workflow_id: string;
     requires_hitl: boolean;
+    manual_action: boolean;
     description: string;
   }) => Promise<void>;
 }) {
@@ -553,6 +567,7 @@ function AddActionModal({
   const [stage, setStage] = useState("ACQ");
   const [workflowId, setWorkflowId] = useState("");
   const [requiresHitl, setRequiresHitl] = useState(false);
+  const [isManualAction, setIsManualAction] = useState(false);
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -566,6 +581,7 @@ function AddActionModal({
       stage,
       n8n_workflow_id: workflowId,
       requires_hitl: requiresHitl,
+      manual_action: isManualAction,
       description,
     });
     setSubmitting(false);
@@ -715,6 +731,26 @@ function AddActionModal({
               checked={requiresHitl}
               onChange={setRequiresHitl}
               activeColor="var(--warning)"
+            />
+          </div>
+
+          {/* Manual action toggle */}
+          <div className="flex items-center justify-between">
+            <div>
+              <label
+                className="block text-sm font-medium"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                Manual Action
+              </label>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                Skip n8n dispatch — operator completes manually
+              </p>
+            </div>
+            <ToggleSwitch
+              checked={isManualAction}
+              onChange={setIsManualAction}
+              activeColor="var(--info)"
             />
           </div>
 

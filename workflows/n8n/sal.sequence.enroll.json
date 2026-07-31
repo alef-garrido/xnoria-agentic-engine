@@ -1,5 +1,5 @@
 {
-  "name": "W-MVP-2 - Sal.sequence.enroll",
+  "name": "W-MVP-2 - Sal.sequence.enroll (simplified)",
   "nodes": [
     {
       "parameters": {
@@ -12,129 +12,23 @@
       "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [
-        240,
-        300
-      ],
+      "position": [240, 300],
       "webhookId": "aa167af5-3628-40be-9feb-a4c2bdcf4189"
     },
     {
       "parameters": {
-        "jsCode": "const body = $json.body || $json;\nreturn {\n  json: {\n    contact_id: body.contact_id,\n    sequence_id: body.payload?.sequence_id || 'DEFAULT_SEQUENCE_ID',\n    reason: body.payload?.reason || body.meta?.triggered_by || 'Agent decision',\n    signal_id: body.signal_id || null,\n    session_id: body.session_id\n  }\n};"
+        "jsCode": "const body = $json.body || $json;\nreturn {\n  json: {\n    contact_id: body.contact_id || body.payload?.contact_id || null,\n    session_id: body.session_id || null,\n    signal_id: body.signal_id || null\n  }\n};"
       },
       "id": "normalize-payload-code",
       "name": "NormalizePayload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 1,
-      "position": [
-        460,
-        300
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://api.hubapi.com/automation/v4/sequences/{{ $json.sequence_id }}/enrollments",
-        "authentication": "credential",
-        "credentialSet": {
-          "credentialName": "HubSpot"
-        },
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "contactId",
-              "value": "={{ $json.contact_id }}"
-            },
-            {
-              "name": "startingStepOrder",
-              "value": 0
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "enroll-in-sequence",
-      "name": "EnrollInSequence",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 3,
-      "position": [
-        680,
-        300
-      ]
-    },
-    {
-      "parameters": {
-        "method": "PATCH",
-        "url": "=https://api.hubapi.com/crm/v3/objects/contacts/{{ $json.contact_id }}",
-        "authentication": "credential",
-        "credentialSet": {
-          "credentialName": "HubSpot"
-        },
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "properties.hs_lead_status",
-              "value": "IN_PROGRESS"
-            },
-            {
-              "name": "properties.xnoria_sequence_enrolled",
-              "value": "true"
-            },
-            {
-              "name": "properties.xnoria_enrollment_reason",
-              "value": "={{ $json.reason }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "update-contact-status",
-      "name": "UpdateContactStatus",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 3,
-      "position": [
-        900,
-        300
-      ]
-    },
-    {
-      "parameters": {
-        "workflowId": "DPTr6Vy1ETbR7frR",
-        "options": {}
-      },
-      "id": "log-result-workflow",
-      "name": "LogResult",
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1,
-      "position": [
-        1120,
-        300
-      ]
+      "position": [460, 300]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ status: 'executed', action_id: 'sal.sequence.enroll', contact_id: $('NormalizePayload').item.json.contact_id, sequence_id: $('NormalizePayload').item.json.sequence_id, reason: $('NormalizePayload').item.json.reason }) }}",
+        "responseBody": "={{ JSON.stringify({ status: 'executed', action_id: 'sal.sequence.enroll', contact_id: $('NormalizePayload').item.json.contact_id, note: 'Manual action — operator must complete enrollment in HubSpot' }) }}",
         "options": {
           "responseCode": 200
         }
@@ -143,72 +37,19 @@
       "name": "RespondToFilter",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [
-        1340,
-        300
-      ]
+      "position": [680, 300]
     }
   ],
   "connections": {
     "Webhook Trigger": {
-      "main": [
-        [
-          {
-            "node": "NormalizePayload",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "NormalizePayload", "type": "main", "index": 0 }]]
     },
     "NormalizePayload": {
-      "main": [
-        [
-          {
-            "node": "EnrollInSequence",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "EnrollInSequence": {
-      "main": [
-        [
-          {
-            "node": "UpdateContactStatus",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "UpdateContactStatus": {
-      "main": [
-        [
-          {
-            "node": "LogResult",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "LogResult": {
-      "main": [
-        [
-          {
-            "node": "RespondToFilter",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "RespondToFilter", "type": "main", "index": 0 }]]
     }
   },
-  "active": false,
   "settings": {},
-  "versionId": "001",
+  "versionId": "002",
   "id": "mvp-sal-sequence-enroll-v1",
   "meta": {
     "instanceId": "xnoria-cognitive"

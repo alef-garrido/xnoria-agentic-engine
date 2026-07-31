@@ -35,13 +35,14 @@
       ],
       "credentials": {
         "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
           "name": "HubSpot Private App"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "// Exnoria - prd.contact.educate\n// Feature education for contacts using workarounds (PRD_CAP_01)\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, signal_id } = webhook;\nconst feature_area = webhook.payload?.feature_area ?? webhook.feature_area ?? 'your workflow';\n\nconst firstname = contact.properties?.firstname?.value ?? 'there';\nconst email     = contact.properties?.email?.value     ?? '';\nconst phone     = contact.properties?.phone?.value     ?? '';\n\nconst cleanPhone = phone.replace(/[^\\d]/g, '');\n\nconst message = [\n  'Hi ' + firstname + ',',\n  '',\n  'Did you know there\\'s a built-in way to handle ' + feature_area + '?',\n  '',\n  'We noticed you might be using a workaround — here\\'s a quick guide to the native feature that can save you time: [Feature Guide Link]',\n  '',\n  'Let us know if you have any questions!',\n  '',\n  '-- Exnoria Product Team'\n].join('\\n');\n\nconst whatsapp_payload = cleanPhone ? {\n  messaging_product: 'whatsapp',\n  to: cleanPhone,\n  type: 'text',\n  text: { body: message }\n} : null;\n\nconst educatedAt = new Date(new Date().setUTCHours(0,0,0,0)).getTime();\n\nreturn [{\n  json: {\n    contact_id,\n    signal_id,\n    feature_area,\n    email,\n    firstname,\n    phone: cleanPhone,\n    whatsapp_payload,\n    csm_task_subject: '[Exnoria PRD] Check in on feature adoption for ' + contact_id,\n    csm_task_body: 'Feature education sent for ' + feature_area + '. Follow up in 7 days. Signal: ' + signal_id,\n    educated_at: educatedAt\n  }\n}];"
+        "jsCode": "// Exnoria - prd.contact.educate\n// Feature education for contacts using workarounds (PRD_CAP_01)\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, signal_id } = webhook;\nconst feature_area = webhook.payload?.feature_area ?? webhook.feature_area ?? 'your workflow';\n\nconst firstname = contact.properties?.firstname?.value ?? 'there';\nconst email     = contact.properties?.email?.value     ?? '';\nconst phone     = contact.properties?.phone?.value     ?? '';\n\nconst cleanPhone = phone.replace(/[^\\d]/g, '');\n\nconst message = [\n  'Hi ' + firstname + ',',\n  '',\n  'Did you know there\\'s a built-in way to handle ' + feature_area + '?',\n  '',\n  'We noticed you might be using a workaround — here\\'s a quick guide to the native feature that can save you time: [Feature Guide Link]',\n  '',\n  'Let us know if you have any questions!',\n  '',\n  '-- Exnoria Product Team'\n].join('\\n');\n\nconst whatsapp_payload = cleanPhone ? {\n  messaging_product: 'whatsapp',\n  to: cleanPhone,\n  type: 'text',\n  text: { body: message }\n} : null;\n\nconst educatedAt = new Date(new Date().setUTCHours(0,0,0,0)).getTime();\n\nreturn [{\n  json: {\n    contact_id,\n    signal_id,\n    feature_area,\n    email,\n    firstname,\n    phone: cleanPhone,\n    whatsapp_payload,\n    csm_task_subject: '[Exnoria PRD] Check in on feature adoption for ' + contact_id,\n    csm_task_due_days: 7,\n    educated_at: educatedAt\n  }\n}];"
       },
       "id": "code-educate-logic-prd2",
       "name": "Code -- educate logic",
@@ -88,31 +89,16 @@
     },
     {
       "parameters": {
-        "authentication": "appToken",
-        "resource": "engagement",
-        "operation": "create",
-        "type": "task",
-        "dueDate": "={{ new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() }}",
-        "metadata": {
-          "subject": "={{ $(\"Code -- educate logic\").item.json.csm_task_subject }}",
-          "body": "={{ $(\"Code -- educate logic\").item.json.csm_task_body }}",
-          "status": "NOT_STARTED",
-          "forObjectType": "CONTACT"
-        }
+        "jsCode": "// Simulate -- HubSpot task creation for CSM follow-up in 7 days\n// Replace with real HubSpot task API when ready\n\nconst data = $(\"Code -- educate logic\").first().json;\n\nreturn [{\n  json: {\n    ...data,\n    task_created: true,\n    task_id: 'task_sim_' + Date.now(),\n    simulated: true\n  }\n}];"
       },
-      "id": "hubspot-create-task-prd2",
-      "name": "HubSpot -- create task (+7 days)",
-      "type": "n8n-nodes-base.hubspot",
+      "id": "simulate-create-task-prd2",
+      "name": "Simulate -- create CSM task",
+      "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
         1200,
         300
-      ],
-      "credentials": {
-        "hubspotAppToken": {
-          "name": "HubSpot Private App"
-        }
-      }
+      ]
     },
     {
       "parameters": {
@@ -131,6 +117,7 @@
       ],
       "credentials": {
         "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
           "name": "HubSpot Private App"
         }
       }
@@ -138,7 +125,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"prd.contact.educate\",\n  \"contact_id\": \"{{ $(\"Code -- educate logic\").item.json.contact_id }}\",\n  \"signal_id\": \"{{ $(\"Code -- educate logic\").item.json.signal_id }}\",\n  \"feature_area\": \"{{ $(\"Code -- educate logic\").item.json.feature_area }}\",\n  \"task_created\": true,\n  \"educated_at\": {{ $(\"Code -- educate logic\").item.json.educated_at }}\n}",
+        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"prd.contact.educate\",\n  \"contact_id\": \"{{ $(\"Code -- educate logic\").item.json.contact_id }}\",\n  \"signal_id\": \"{{ $(\"Code -- educate logic\").item.json.signal_id }}\",\n  \"feature_area\": \"{{ $(\"Code -- educate logic\").item.json.feature_area }}\",\n  \"task_created\": {{ $(\"Simulate -- create CSM task\").item.json.task_created }},\n  \"educated_at\": {{ $(\"Code -- educate logic\").item.json.educated_at }},\n  \"simulated\": {{ $(\"Simulate -- create CSM task\").item.json.simulated }}\n}",
         "options": {
           "responseCode": 200
         }
@@ -191,14 +178,14 @@
       "main": [
         [
           {
-            "node": "HubSpot -- create task (+7 days)",
+            "node": "Simulate -- create CSM task",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "HubSpot -- create task (+7 days)": {
+    "Simulate -- create CSM task": {
       "main": [
         [
           {

@@ -219,6 +219,5 @@
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all"
   },
-  "id": "exp-contact-upgrade-id",
-  "active": true
+  "id": "exp-contact-upgrade-id"
 }

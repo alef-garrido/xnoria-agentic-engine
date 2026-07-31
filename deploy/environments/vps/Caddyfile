@@ -1,5 +1,5 @@
 # ==============================================================================
-# Xnoria VPS — Caddyfile
+# Exnoria VPS — Caddyfile
 # deploy/environments/vps/Caddyfile
 #
 # Subdomain-based routing. Caddy handles TLS automatically via Let's Encrypt.

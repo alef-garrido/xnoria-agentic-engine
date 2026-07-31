@@ -18,21 +18,26 @@ export async function getPendingActions(db: Pool): Promise<HITLPendingAction[]> 
     payload_in: Record<string, unknown>;
     meta: Record<string, unknown>;
     created_at: string;
+    manual_action: boolean;
   }>(
-    `SELECT id, action_id, stage, session_id, payload_in, meta, created_at
-     FROM filter_log
-     WHERE status = 'pending_hitl'
-     ORDER BY created_at DESC`
+    `SELECT fl.id, fl.action_id, fl.stage, fl.session_id,
+            fl.payload_in, fl.meta, fl.created_at,
+            COALESCE(fa.manual_action, false) AS manual_action
+     FROM filter_log fl
+     LEFT JOIN filter_action fa ON fa.action_id = fl.action_id
+     WHERE fl.status = 'pending_hitl'
+     ORDER BY fl.created_at DESC`
   );
 
   return result.rows.map(row => ({
-    log_id:     row.id,
-    action_id:  row.action_id,
-    stage:      row.stage,
-    session_id: row.session_id,
-    payload_in: row.payload_in,
-    meta:       row.meta,
-    created_at: row.created_at
+    log_id:        row.id,
+    action_id:     row.action_id,
+    stage:         row.stage,
+    session_id:    row.session_id,
+    payload_in:    row.payload_in,
+    meta:          row.meta,
+    created_at:    row.created_at,
+    manual_action: row.manual_action
   }));
 }
 
@@ -84,9 +89,9 @@ export async function approveAction(
     };
   }
 
-  // 2. Look up the action to get n8n_workflow_id
-  const actionResult = await db.query<{ n8n_workflow_id: string }>(
-    `SELECT n8n_workflow_id FROM filter_action WHERE action_id = $1 LIMIT 1`,
+  // 2. Look up the action to get n8n_workflow_id + manual_action flag
+  const actionResult = await db.query<{ n8n_workflow_id: string; manual_action: boolean }>(
+    `SELECT n8n_workflow_id, manual_action FROM filter_action WHERE action_id = $1 LIMIT 1`,
     [entry.action_id]
   );
 
@@ -99,13 +104,36 @@ export async function approveAction(
     };
   }
 
-  // 3. Dispatch to n8n
+  const action = actionResult.rows[0];
   const now = new Date().toISOString();
+
+  // 3a. Manual action — skip n8n dispatch, mark as executed directly
+  if (action.manual_action) {
+    await db.query(
+      `UPDATE filter_log
+       SET status = 'executed',
+           payload_out              = '{"manual_action":true}'::jsonb,
+           payload_reviewed         = $1,
+           reviewed_at              = now(),
+           reviewed_by              = $2,
+           reviewed_by_operator_id  = $3
+       WHERE id = $4`,
+      [
+        payloadOverride ? JSON.stringify(payloadOverride) : null,
+        reviewedBy,
+        operatorId ?? null,
+        logId
+      ]
+    );
+
+    return { success: true, log_id: logId, status: 'executed', dispatched_at: now };
+  }
+
+  // 3b. Dispatch to n8n — use operator-edited payload if provided
   try {
-    // 3. Dispatch to n8n — use operator-edited payload if provided
     const dispatchPayload = payloadOverride ?? entry.payload_in;
     const workflowResult = await dispatchToN8n(
-      actionResult.rows[0].n8n_workflow_id,
+      action.n8n_workflow_id,
       dispatchPayload
     );
 

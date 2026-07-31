@@ -208,7 +208,6 @@
       ]
     }
   },
-  "active": false,
   "settings": {
     "saveDataOnSuccess": "all",
     "saveDataOnError": "all",

@@ -36,7 +36,7 @@ export async function getContactHistory(
       : `${contactId} | ${stage}`;
     const result = await executeMcpTool('mem_search', {
       query: searchQuery,
-      project: 'xnoria-agentic-engine'
+      project: process.env.ENGRA_PROJECT || 'xnoria-agentic-engine'
     });
 
     if (!result.success) {
@@ -127,7 +127,7 @@ export async function recordSessionOutcome(
     await executeMcpTool('mem_save', {
       title: title,
       content: content,
-      project: 'xnoria-agentic-engine'
+      project: process.env.ENGRA_PROJECT || 'xnoria-agentic-engine'
     });
   } catch (err) {
     logger.warn({ err, action_id: actionId }, 'Session outcome recording failed');

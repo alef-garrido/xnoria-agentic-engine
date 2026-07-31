@@ -129,7 +129,7 @@ External systems / events
              │  Webhook trigger
              ▼
 ┌─────────────────────────────────┐
-│  n8n workflows                  │  packages/orchestration/workflows/
+│  n8n workflows                  │  workflows/n8n/
 │  Executes actions               │  n8n
 └────────────┬────────────────────┘
              │
@@ -301,7 +301,7 @@ All variables are documented in `.env.example`. Required for the MVP:
 ### Adding a new n8n workflow
 
 1. Build and test the workflow in the n8n UI at `localhost:5678`
-2. Export it as JSON and save to `packages/orchestration/workflows/`
+2. Export it as JSON and save to `workflows/n8n/`
 3. Register the action in `packages/orchestration/contracts/actions.ts`
 4. Add a row to `packages/orchestration/filter/db/seed.sql`
 5. Test via curl against the filter endpoint before running end-to-end

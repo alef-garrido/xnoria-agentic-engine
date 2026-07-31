@@ -50,7 +50,7 @@ services:
 
   caddy:
     image: caddy:2-alpine
-    container_name: xnoria_caddy
+    container_name: ${PROJECT_ID:-exnoria}_caddy
     restart: always
     ports:
       - "80:80"
@@ -60,7 +60,7 @@ services:
       - caddy_data:/data
       - caddy_certs:/etc/caddy/certs
     networks:
-      - xnoria_internal
+      - ${PROJECT_ID:-exnoria}_internal
     depends_on:
       - n8n
       - dashboard

@@ -23,8 +23,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Exnoria CX Intelligence",
-  description: "Exnoria CX Intelligence Engine Dashboard",
+  title: process.env.NEXT_PUBLIC_APP_TITLE || "Exnoria CX Intelligence",
+  description: process.env.NEXT_PUBLIC_APP_DESCRIPTION || "Exnoria CX Intelligence Engine Dashboard",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

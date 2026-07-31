@@ -26,6 +26,9 @@ export const BRANDING = {
 
   // App title (shown in browser tab)
   appTitle: process.env.NEXT_PUBLIC_APP_TITLE || "Exnoria",
+
+  // Instance subtitle (e.g. "Bajio Outbound") — shown next to the agent name in the top bar
+  subtitle: process.env.NEXT_PUBLIC_PROJECT_SUBTITLE || "",
 } as const;
 
 // Helper to get full agent display name

@@ -8,10 +8,11 @@ set -e
 
 # Get database name from environment, fallback to default
 POSTGRES_DB=${POSTGRES_DB:-exnoria}
+PROJECT_ID="${PROJECT_ID:-exnoria}"
 
 # PostgreSQL connection check
 echo "🔍 Checking PostgreSQL connection..."
-if ! docker compose exec -T postgres psql -U exnoria -d "$POSTGRES_DB" -c "SELECT 1" >/dev/null 2>!; then
+if ! docker compose exec -T postgres psql -U "${PROJECT_ID}" -d "$POSTGRES_DB" -c "SELECT 1" >/dev/null 2>&1; then
     echo "❌ PostgreSQL is not running or connection failed"
     exit 1
 fi
@@ -46,7 +47,7 @@ else
     echo "✅ Found: $workflow_file"
 fi
 
-done < <( docker compose exec -T postgres psql -U exnoria -d "$POSTGRES_DB" -t -c "$SQL" )
+done < <( docker compose exec -T postgres psql -U "${PROJECT_ID}" -d "$POSTGRES_DB" -t -c "$SQL" )
 
 echo ""
 echo "📊 Summary:"

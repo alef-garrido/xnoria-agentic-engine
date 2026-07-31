@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { ActivityFeed } from '@/components/ActivityFeed';
 
 export const metadata: Metadata = {
-  title: 'Activity Feed | Exnoria',
+  title: `Activity Feed | ${process.env.NEXT_PUBLIC_APP_TITLE || 'Exnoria'}`,
 };
 
 export default function ActivityPage() {

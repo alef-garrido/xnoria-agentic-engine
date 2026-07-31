@@ -5,10 +5,10 @@ services:
   # ---------------------------------------------------------------------------
   postgres:
     image: pgvector/pgvector:pg16
-    container_name: exnoria_postgres
+    container_name: ${PROJECT_ID:-exnoria}_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: exnoria
+      POSTGRES_USER: ${PROJECT_ID:-exnoria}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-exnoria}
     volumes:
@@ -18,12 +18,12 @@ services:
     ports:
       - "5433:5432"                         # exposed for local DB inspection only
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U exnoria -d ${POSTGRES_DB:-exnoria}"]
+      test: ["CMD-SHELL", "pg_isready -U ${PROJECT_ID:-exnoria} -d ${POSTGRES_DB:-exnoria}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - exnoria_internal
+      - ${PROJECT_ID:-exnoria}_internal
     logging:
       driver: "json-file"
       options:
@@ -35,7 +35,7 @@ services:
   # ---------------------------------------------------------------------------
   n8n:
     image: n8nio/n8n:latest
-    container_name: exnoria_n8n
+    container_name: ${PROJECT_ID:-exnoria}_n8n
     restart: unless-stopped
     depends_on:
       postgres:
@@ -46,7 +46,7 @@ services:
       DB_POSTGRESDB_HOST: postgres
       DB_POSTGRESDB_PORT: 5432
       DB_POSTGRESDB_DATABASE: ${POSTGRES_DB:-exnoria}
-      DB_POSTGRESDB_USER: exnoria
+      DB_POSTGRESDB_USER: ${PROJECT_ID:-exnoria}
       DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
       # Encryption
       N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
@@ -87,7 +87,7 @@ services:
     ports:
       - "5678:5678"
     networks:
-      - exnoria_internal
+      - ${PROJECT_ID:-exnoria}_internal
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:5678/healthz || exit 1"]
       interval: 15s
@@ -107,7 +107,7 @@ services:
     build:
       context: .
       dockerfile: layers/orchestration/filter/Dockerfile
-    container_name: exnoria_filter
+    container_name: ${PROJECT_ID:-exnoria}_filter
     restart: unless-stopped
     depends_on:
       postgres:
@@ -117,7 +117,7 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       FILTER_PORT: ${FILTER_PORT:-3000}
-      POSTGRES_URL: postgresql://exnoria:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
+      POSTGRES_URL: postgresql://${PROJECT_ID:-exnoria}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
       N8N_BASE_URL: http://n8n:5678
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       TELEGRAM_OPERATOR_CHAT_ID: ${TELEGRAM_OPERATOR_CHAT_ID}
@@ -132,7 +132,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - exnoria_internal
+      - ${PROJECT_ID:-exnoria}_internal
     logging:
       driver: "json-file"
       options:
@@ -148,7 +148,7 @@ services:
     build:
       context: .
       dockerfile: layers/cognitive/Dockerfile
-    container_name: exnoria_cognitive
+    container_name: ${PROJECT_ID:-exnoria}_cognitive
     restart: unless-stopped
     read_only: true
     tmpfs:
@@ -187,15 +187,17 @@ services:
       EMBEDDING_API_KEY: ${EMBEDDING_API_KEY}
       COGNITIVE_MEMORY_PORT: ${COGNITIVE_MEMORY_PORT:-3001}
       FILTER_URL: http://filter:3000
-      POSTGRES_URL: postgresql://exnoria:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
+      POSTGRES_URL: postgresql://${PROJECT_ID:-exnoria}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       # PostHog MCP (optional — cognitive degrades gracefully if not set)
       POSTHOG_API_KEY: ${POSTHOG_API_KEY}
       POSTHOG_AUTH_HEADER: ${POSTHOG_API_KEY}  # Bearer token format is handled by mcp-remote
       POSTHOG_HOST: ${POSTHOG_HOST}
       POSTHOG_PROJECT_ID: ${POSTHOG_PROJECT_ID}
+      # Engram memory namespace — set per-client to prevent cross-instance collision
+      ENGRA_PROJECT: ${ENGRA_PROJECT:-xnoria-agentic-engine}
     networks:
-      - exnoria_internal
+      - ${PROJECT_ID:-exnoria}_internal
     logging:
       driver: "json-file"
       options:
@@ -209,13 +211,15 @@ services:
     build:
       context: .
       dockerfile: layers/dashboard/Dockerfile
-    container_name: exnoria_dashboard
+    container_name: ${PROJECT_ID:-exnoria}_dashboard
     restart: unless-stopped
     depends_on:
       postgres:
         condition: service_healthy
     environment:
-      POSTGRES_URL: postgresql://exnoria:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
+      PROJECT_ID: ${PROJECT_ID:-exnoria}
+      NEXT_PUBLIC_PROJECT_SUBTITLE: ${NEXT_PUBLIC_PROJECT_SUBTITLE:-}
+      POSTGRES_URL: postgresql://${PROJECT_ID:-exnoria}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
       ADMIN_PASSWORD: ${DASHBOARD_ADMIN_PASSWORD}
       AUTH_SECRET: ${DASHBOARD_AUTH_SECRET}
       FILTER_URL: http://filter:3000
@@ -226,7 +230,7 @@ services:
     ports:
       - "${DASHBOARD_PORT:-4000}:4000"
     networks:
-      - exnoria_internal
+      - ${PROJECT_ID:-exnoria}_internal
     logging:
       driver: "json-file"
       options:
@@ -258,4 +262,5 @@ volumes:
 # -----------------------------------------------------------------------------
 networks:
   exnoria_internal:
+    name: exnoria_internal
     driver: bridge

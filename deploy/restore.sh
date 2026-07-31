@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Xnoria — Postgres Restore Script
+# Exnoria — Postgres Restore Script
 # deploy/restore.sh
 #
 # Usage:
@@ -13,6 +13,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+PROJECT_ID="${PROJECT_ID:-exnoria}"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -45,7 +46,7 @@ fi
 # Confirmation
 # ==============================================================================
 echo ""
-echo -e "${RED}${BOLD}⚠ WARNING: This will OVERWRITE all current Xnoria data.${NC}"
+echo -e "${RED}${BOLD}⚠ WARNING: This will OVERWRITE all current Exnoria data.${NC}"
 echo -e "${YELLOW}Backup file: ${BACKUP_FILE}${NC}"
 echo ""
 read -r -p "Type RESTORE to confirm: " CONFIRM
@@ -67,7 +68,7 @@ success "Application containers stopped"
 # ==============================================================================
 # Step 2: Decrypt backup
 # ==============================================================================
-TEMP_DUMP="/tmp/xnoria_restore_$$.sql"
+TEMP_DUMP="/tmp/${PROJECT_ID}_restore_$$.sql"
 
 info "Decrypting backup..."
 openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 \
@@ -85,18 +86,18 @@ success "Backup decrypted"
 # Step 3: Terminate active connections and restore
 # ==============================================================================
 info "Terminating active database connections..."
-docker compose exec -T postgres psql -U xnoria -d postgres -c \
-  "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'exnoria' AND pid <> pg_backend_pid();" \
+docker compose exec -T postgres psql -U "${PROJECT_ID}" -d postgres -c \
+  "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${POSTGRES_DB:-exnoria}' AND pid <> pg_backend_pid();" \
   >/dev/null 2>&1 || true
 
 info "Dropping and recreating database..."
-docker compose exec -T postgres psql -U xnoria -d postgres -c \
-  "DROP DATABASE IF EXISTS exnoria;" >/dev/null
-docker compose exec -T postgres psql -U xnoria -d postgres -c \
-  "CREATE DATABASE exnoria OWNER xnoria;" >/dev/null
+docker compose exec -T postgres psql -U "${PROJECT_ID}" -d postgres -c \
+  "DROP DATABASE IF EXISTS ${POSTGRES_DB:-exnoria};" >/dev/null
+docker compose exec -T postgres psql -U "${PROJECT_ID}" -d postgres -c \
+  "CREATE DATABASE ${POSTGRES_DB:-exnoria} OWNER ${PROJECT_ID};" >/dev/null
 
 info "Restoring from backup..."
-docker compose exec -T postgres psql -U xnoria -d exnoria < "${TEMP_DUMP}" >/dev/null
+docker compose exec -T postgres psql -U "${PROJECT_ID}" -d "${POSTGRES_DB:-exnoria}" < "${TEMP_DUMP}" >/dev/null
 rm -f "${TEMP_DUMP}"
 
 success "Database restored"

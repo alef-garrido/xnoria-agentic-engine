@@ -1,5 +1,7 @@
 #!/bin/bash
 
+PROJECT_ID="${PROJECT_ID:-exnoria}"
+
 echo "=== Testing Telegram Bot Flow ==="
 
 # Send test message
@@ -12,11 +14,11 @@ echo "2. Waiting 10 seconds for processing..."
 sleep 10
 
 echo "3. Checking session count..."
-SESSION_COUNT=$(docker exec exnoria_postgres psql -U exnoria -d exnoria -t -c "SELECT COUNT(*) FROM cognitive_session;" 2>/dev/null | xargs)
+SESSION_COUNT=$(docker exec "${PROJECT_ID}_postgres" psql -U "${PROJECT_ID}" -d "${POSTGRES_DB:-exnoria}" -t -c "SELECT COUNT(*) FROM cognitive_session;" 2>/dev/null | xargs)
 echo "   Sessions: $SESSION_COUNT"
 
 echo "4. Checking history count..."
-HISTORY_COUNT=$(docker exec exnoria_postgres psql -U exnoria -d exnoria -t -c "SELECT COUNT(*) FROM cognitive_history;" 2>/dev/null | xargs)
+HISTORY_COUNT=$(docker exec "${PROJECT_ID}_postgres" psql -U "${PROJECT_ID}" -d "${POSTGRES_DB:-exnoria}" -t -c "SELECT COUNT(*) FROM cognitive_history;" 2>/dev/null | xargs)
 echo "   History entries: $HISTORY_COUNT"
 
 echo "5. Checking recent cognitive logs..."

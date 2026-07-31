@@ -7,7 +7,13 @@ export async function GET() {
   try {
     const containers = await fetchDockerAPI('/containers/json?all=true');
 
-    const targetServices = ['exnoria_postgres', 'exnoria_n8n', 'exnoria_filter', 'exnoria_cognitive'];
+    const projectId = process.env.PROJECT_ID || 'exnoria';
+    const targetServices = [
+      `${projectId}_postgres`,
+      `${projectId}_n8n`,
+      `${projectId}_filter`,
+      `${projectId}_cognitive`,
+    ];
     
     const services = targetServices.map(target => {
       // Find container ignoring leading slash in name

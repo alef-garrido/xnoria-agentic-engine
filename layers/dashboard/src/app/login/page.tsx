@@ -3,6 +3,7 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Terminal, Lock, User, AlertCircle, KeyRound } from "lucide-react";
+import { BRANDING } from "@/config/branding";
 
 function LoginForm() {
   const [handle, setHandle]   = useState("");
@@ -73,7 +74,7 @@ function LoginForm() {
               letterSpacing: "-0.5px",
             }}
           >
-            Exnoria
+            {BRANDING.agentName}
           </h1>
         </div>
         <p
@@ -164,7 +165,7 @@ function LoginForm() {
         className="text-center text-xs mt-6"
         style={{ color: "var(--text-muted)" }}
       >
-        Exnoria CX Intelligence Engine
+        {BRANDING.agentName} CX Intelligence Engine
       </p>
     </div>
   );

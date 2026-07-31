@@ -1,5 +1,5 @@
 {
-  "name": "W-ONB-1 - Onb.document.request",
+  "name": "W-ONB-1 - Onb.document.request (simplified)",
   "nodes": [
     {
       "parameters": {
@@ -12,137 +12,38 @@
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [
-        240,
-        300
-      ],
+      "position": [240, 300],
       "webhookId": "onb-document-request"
     },
     {
       "parameters": {
-        "authentication": "appToken",
-        "resource": "contact",
-        "operation": "get",
-        "contactId": "={{ $json.body.contact_id }}",
-        "additionalFields": {}
+        "jsCode": "const body = $json.body || $json;\nreturn {\n  json: {\n    contact_id: body.contact_id || body.payload?.contact_id || null,\n    session_id: body.session_id || null,\n    signal_id: body.signal_id || null\n  }\n};"
       },
-      "id": "hubspot-get-contact-onb-1",
-      "name": "HubSpot -- get contact",
-      "type": "n8n-nodes-base.hubspot",
-      "typeVersion": 2,
-      "position": [
-        480,
-        300
-      ],
-      "credentials": {
-        "hubspotAppToken": {
-          "name": "HubSpot Private App"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "// Exnoria - onb.document.request\n// Initiate document collection request for an onboarding contact\n\nconst body    = $('Webhook').first().json.body;\nconst contact = $input.first().json;\n\nconst contact_id    = body.contact_id;\nconst signal_id     = body.signal_id ?? '';\nconst document_type = body.document_type ?? 'identity_document';\n\nconst firstname = contact.properties?.firstname?.value ?? 'Contact';\nconst email     = contact.properties?.email?.value     ?? '';\nconst ownerId   = contact.properties?.hubspot_owner_id?.value ?? null;\n\nconst requestedAt = new Date(new Date().setUTCHours(0,0,0,0)).getTime();\n\nreturn [{ json: { contact_id, signal_id, document_type, firstname, email, owner_id: ownerId, requested_at: requestedAt } }];"
-      },
-      "id": "code-build-doc-request",
-      "name": "Code -- build doc request",
+      "id": "normalize-payload-onb",
+      "name": "NormalizePayload",
       "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        720,
-        300
-      ]
-    },
-    {
-      "parameters": {
-        "authentication": "appToken",
-        "resource": "engagement",
-        "operation": "create",
-        "type": "task",
-        "dueDate": "={{ new Date().toISOString() }}",
-        "metadata": {
-          "subject": "=Document Request: {{ $json.document_type }} \u2014 {{ $json.firstname }}",
-          "body": "=Please collect the following document from this contact: {{ $json.document_type }}. Contact email: {{ $json.email }}",
-          "status": "NOT_STARTED",
-          "forObjectType": "CONTACT"
-        }
-      },
-      "id": "hubspot-create-task-onb-1",
-      "name": "HubSpot -- create task",
-      "type": "n8n-nodes-base.hubspot",
-      "typeVersion": 2,
-      "position": [
-        960,
-        300
-      ],
-      "credentials": {
-        "hubspotAppToken": {
-          "name": "HubSpot Private App"
-        }
-      }
+      "typeVersion": 1,
+      "position": [460, 300]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ status: 'executed', action_id: 'onb.document.request', contact_id: $('Code -- build doc request').item.json.contact_id, document_type: $('Code -- build doc request').item.json.document_type, task_created: true, requested_at: $('Code -- build doc request').item.json.requested_at }) }}",
-        "options": {
-          "responseCode": 200
-        }
+        "responseBody": "={{ JSON.stringify({ status: 'executed', action_id: 'onb.document.request', contact_id: $('NormalizePayload').item.json.contact_id, note: 'Manual action — operator must create document request task in HubSpot' }) }}",
+        "options": { "responseCode": 200 }
       },
       "id": "respond-onb-document-request",
       "name": "Respond",
       "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [
-        1200,
-        300
-      ]
+      "typeVersion": 1.1,
+      "position": [680, 300]
     }
   ],
   "connections": {
     "Webhook": {
-      "main": [
-        [
-          {
-            "node": "HubSpot -- get contact",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{ "node": "NormalizePayload", "type": "main", "index": 0 }]]
     },
-    "HubSpot -- get contact": {
-      "main": [
-        [
-          {
-            "node": "Code -- build doc request",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Code -- build doc request": {
-      "main": [
-        [
-          {
-            "node": "HubSpot -- create task",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HubSpot -- create task": {
-      "main": [
-        [
-          {
-            "node": "Respond",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "NormalizePayload": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
     }
   },
   "settings": {
@@ -152,6 +53,5 @@
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all"
   },
-  "id": "a935e30461fb44b8",
-  "active": true
+  "id": "a935e30461fb44b8"
 }

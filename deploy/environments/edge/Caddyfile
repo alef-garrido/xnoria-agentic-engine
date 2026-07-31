@@ -1,5 +1,5 @@
 # ==============================================================================
-# Xnoria Edge Device — Caddyfile
+# Exnoria Edge Device — Caddyfile
 # deploy/environments/edge/Caddyfile
 #
 # Serves via local hostnames (mDNS .local or router-assigned DNS).

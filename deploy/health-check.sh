@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Xnoria — Health Check Script
+# Exnoria — Health Check Script
 # deploy/health-check.sh
 #
-# Validates the full Xnoria stack is operational.
+# Validates the full Exnoria stack is operational.
 # Exit 0: all checks pass
 # Exit 1: one or more checks failed (summary printed to stdout)
 # ==============================================================================
@@ -11,6 +11,7 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+PROJECT_ID="${PROJECT_ID:-exnoria}"
 
 # Colors
 RED='\033[0;31m'
@@ -54,7 +55,7 @@ if [ -f "${ENV_FILE}" ]; then
 fi
 
 echo ""
-echo -e "${BOLD}Xnoria Health Check${NC}"
+echo -e "${BOLD}Exnoria Health Check${NC}"
 echo -e "$(date '+%Y-%m-%d %H:%M:%S')"
 echo ""
 
@@ -63,7 +64,7 @@ cd "${REPO_ROOT}"
 # ------------------------------------------------------------------------------
 # 1. Postgres — pg_isready
 # ------------------------------------------------------------------------------
-if docker compose exec -T postgres pg_isready -U exnoria -d exnoria >/dev/null 2>&1; then
+if docker compose exec -T postgres pg_isready -U "${PROJECT_ID}" -d "${POSTGRES_DB:-exnoria}" >/dev/null 2>&1; then
   check "Postgres (pg_isready)" "pass"
 else
   check "Postgres (pg_isready)" "fail" "postgres container not healthy"
@@ -102,7 +103,7 @@ fi
 # ------------------------------------------------------------------------------
 # 5. Cognitive container — running
 # ------------------------------------------------------------------------------
-COGNITIVE_STATUS="$(docker inspect --format='{{.State.Status}}' exnoria_cognitive 2>/dev/null || echo "not_found")"
+COGNITIVE_STATUS="$(docker inspect --format='{{.State.Status}}' "${PROJECT_ID}_cognitive" 2>/dev/null || echo "not_found")"
 if [ "${COGNITIVE_STATUS}" = "running" ]; then
   check "Cognitive container (running)" "pass"
 else
@@ -112,7 +113,7 @@ fi
 # ------------------------------------------------------------------------------
 # 6. Filter actions — at least 3 enabled rows
 # ------------------------------------------------------------------------------
-ACTION_COUNT="$(docker compose exec -T postgres psql -U exnoria -d exnoria -t -c \
+ACTION_COUNT="$(docker compose exec -T postgres psql -U "${PROJECT_ID}" -d "${POSTGRES_DB:-exnoria}" -t -c \
   "SELECT COUNT(*) FROM filter_action WHERE enabled = true;" 2>/dev/null | tr -d ' \n' || echo "0")"
 if [ "${ACTION_COUNT:-0}" -ge 3 ] 2>/dev/null; then
   check "Filter actions (>= 3 enabled)" "pass"
@@ -123,7 +124,7 @@ fi
 # ------------------------------------------------------------------------------
 # 7. pgvector extension
 # ------------------------------------------------------------------------------
-VECTOR_EXT="$(docker compose exec -T postgres psql -U exnoria -d exnoria -t -c \
+VECTOR_EXT="$(docker compose exec -T postgres psql -U "${PROJECT_ID}" -d "${POSTGRES_DB:-exnoria}" -t -c \
   "SELECT COUNT(*) FROM pg_extension WHERE extname = 'vector';" 2>/dev/null | tr -d ' \n' || echo "0")"
 if [ "${VECTOR_EXT:-0}" -eq 1 ] 2>/dev/null; then
   check "pgvector extension" "pass"

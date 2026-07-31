@@ -32,8 +32,10 @@ src/
 ├── shared/
 │   └── types.ts          # JourneyStage, FilterStatus, FilterAction, FilterRequest, FilterResponse
 db/
-├── migrations/           # Versioned schema migrations
-└── seed.sql              # ⚠️ DEPRECATED — use config/seeds/*.sql instead
+└── migrations/
+    ├── 001_create_filter_tables.sql  # Canonical schema (squash of 001–025)
+    ├── 002_squash_marker.sql         # No-op marker (squash date: 2026-07-30)
+    └── init.sh                       # Docker entrypoint runner
 ```
 
 ## API Endpoints
@@ -89,6 +91,9 @@ db/
 
 ## Database Schema
 
+Canonical schema defined in `db/migrations/001_create_filter_tables.sql` (squashed 2026-07-30).
+New migrations should be numbered `003_*` onwards (002 is the squash marker).
+
 ### filter_action
 | Column | Type | Description |
 |---|---|---|
@@ -97,6 +102,7 @@ db/
 | `stage` | TEXT | Journey stage (ACQ, SAL, etc.) |
 | `n8n_workflow_id` | TEXT | Webhook path suffix |
 | `requires_hitl` | BOOLEAN | Whether human approval is needed |
+| `manual_action` | BOOLEAN | Operator completes manually — no n8n dispatch |
 | `enabled` | BOOLEAN | Whether action is live |
 | `description` | TEXT | Human-readable description |
 
@@ -108,11 +114,36 @@ Immutable audit log — every action attempt is recorded with status, rejection 
 | `action_id` | TEXT | Action that was attempted |
 | `status` | TEXT | executed, pending_hitl, rejected, error |
 | `rejection_code` | TEXT | Null unless rejected/errored |
-| `created_at` | TIMESTAMPTZ | When action was logged |
+| `payload_in` | JSONB | What the agent sent |
+| `payload_out` | JSONB | What n8n returned (if executed) |
+| `payload_reviewed` | JSONB | Operator-edited payload (HITL override, nullable) |
 | `reviewed_at` | TIMESTAMPTZ | When HITL action was reviewed (nullable) |
-| `reviewed_by` | TEXT | Who reviewed the HITL action (nullable) |
+| `reviewed_by` | TEXT | Operator handle who reviewed (nullable) |
+| `reviewed_by_operator_id` | UUID | FK → operators(id) (nullable) |
+| `created_at` | TIMESTAMPTZ | When action was logged |
 
 Partial index on `status = 'pending_hitl'` for fast queue queries.
+
+### operators
+Dashboard operator identities and RBAC.
+| Column | Type | Description |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `handle` | TEXT UNIQUE | Login username |
+| `role` | TEXT | admin \| operator \| viewer |
+| `password_hash` | TEXT | bcrypt(12) — set via init.sh or bootstrap API |
+| `failed_attempts` | INTEGER | Lockout counter |
+| `locked_until` | TIMESTAMPTZ | Lockout expiry (nullable) |
+
+### operator_sessions
+Active sessions with token hash. TTL: 8-hour sliding window.
+| Column | Type | Description |
+|---|---|---|
+| `id` | UUID | Primary key |
+| `operator_id` | UUID | FK → operators(id) CASCADE DELETE |
+| `token_hash` | TEXT UNIQUE | bcrypt(session_token) — raw token never stored |
+| `expires_at` | TIMESTAMPTZ | Session expiry (8h from creation) |
+| `last_seen_at` | TIMESTAMPTZ | Updated on each authenticated request |
 
 ## Domain Language
 | Term | Meaning |
@@ -127,7 +158,9 @@ Partial index on `status = 'pending_hitl'` for fast queue queries.
 1. **The filter is the security boundary** — the cognitive layer is not trusted.
 2. **Every action is logged** — whether executed, rejected, or pending.
 3. **The allowlist is managed at runtime** via the database, not by redeploying code.
-4. **Migrations are immutable** — never modify existing ones, always add new.
+4. **The canonical schema is `001_create_filter_tables.sql`** — do NOT alter it. Add new migrations as `003_*`, `004_*`, etc.
+5. **Action seed data lives in `config/seeds/*.sql`** — never in migration files. The migration/seed split is intentional.
+6. **`manual_action = true` actions** reuse HITL infrastructure but skip n8n dispatch — operator completes the action manually in HubSpot.
 
 ## Adding a New Action
 1. Build n8n workflow, export JSON to `workflows/n8n/`
@@ -162,18 +195,20 @@ Partial index on `status = 'pending_hitl'` for fast queue queries.
 | `COM_CONTENT_SHEET_ID` | Google Sheets ID for content calendar (COM workflow) |
 | `PROJECT_ID` | Project namespace for service identity strings and Docker networks (default: xnoria) |
 
-## Current Action Coverage (Phase 3 A3 Complete)
+## Current Action Coverage (Phase 3 Complete)
 All 8 journey stages have at least one active action:
 | Stage | Active Actions |
 |---|---|
-| ACQ | `acq.lead.engage`, `acq.lead.nurture`, `acq.contact.outreach` |
-| SAL | `sal.sequence.enroll`, `sal.contact.prioritize`, `sal.contact.message` |
-| ONB | `onb.document.request`, `onb.document.validate`, `onb.contact.nudge`, `onb.contact.assist`, `onb.ticket.escalate` |
+| ACQ | `acq.lead.engage`, `acq.lead.nurture`, `acq.contact.outreach`, `acq.contact.upsert`, `acq.contact.get` |
+| SAL | `sal.sequence.enroll` ⚙️, `sal.contact.prioritize`, `sal.contact.message` |
+| ONB | `onb.document.request` ⚙️, `onb.document.validate`, `onb.contact.nudge`, `onb.contact.assist`, `onb.ticket.escalate` |
 | PRD | `prd.friction.flag`, `prd.adoption.nudge`, `prd.feedback.log` |
 | SUP | `sup.ticket.escalate`, `sup.contact.notify` |
-| COM | `com.content.publish` |
+| COM | `com.content.publish`, `com.contact.reengage`, `com.feedback.request` ⚙️ |
 | RET | `ret.contact.winback`, `ret.account.flag` |
 | EXP | (placeholder, disabled) |
+
+⚙️ = `manual_action = true` (HITL flow, no n8n dispatch — operator completes manually in HubSpot)
 
 ## HITL Implementation Details
 

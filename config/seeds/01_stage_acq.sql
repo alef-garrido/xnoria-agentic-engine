@@ -36,6 +36,24 @@ VALUES
     false,
     true,
     'Cold outreach via WhatsApp + email, sync to HubSpot — requires HITL operator review before sending'
+  ),
+  (
+    'acq.contact.upsert',
+    'ACQ',
+    'acq-contact-upsert',
+    false,
+    false,
+    true,
+    'Create or update a contact in HubSpot CRM, returns contact_id for chaining'
+  ),
+  (
+    'acq.contact.get',
+    'ACQ',
+    'acq-contact-get',
+    false,
+    false,
+    true,
+    'Retrieve contact properties from HubSpot including CX pain points and PCI score'
   )
 ON CONFLICT (action_id) DO UPDATE
   SET

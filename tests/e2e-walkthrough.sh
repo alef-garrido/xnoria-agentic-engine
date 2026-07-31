@@ -194,8 +194,8 @@ dispatch_and_verify_manual "com.feedback.request" "com.feedback.request" "COM" '
 # ═══════════════════════════════════════════════
 banner "PHASE 4: Error cases"
 
-assert_rejected "prd.friction.flag — disabled"      "prd.friction.flag"      "PRD" '{}' "ACTION_DISABLED"
-assert_rejected "exp.contact.upgrade — disabled"      "exp.contact.upgrade"    "EXP" '{}' "ACTION_DISABLED"
+assert_rejected "prd.friction.flag — non-existent (removed in squash)" "prd.friction.flag" "PRD" '{}' "ACTION_NOT_IN_ALLOWLIST"
+assert_rejected "exp.contact.upgrade — non-existent (removed in squash)" "exp.contact.upgrade" "EXP" '{}' "ACTION_NOT_IN_ALLOWLIST"
 assert_rejected "exp.account.flag — disabled"         "exp.account.flag"       "EXP" '{}' "ACTION_DISABLED"
 assert_rejected "foo.bar.baz — non-existent"          "foo.bar.baz"            "ACQ" '{}' "ACTION_NOT_IN_ALLOWLIST"
 

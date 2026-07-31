@@ -180,9 +180,11 @@ Placeholder actions (disabled):
 ### Database Migrations
 - Migration files: `layers/orchestration/filter/db/migrations/NNN_description.sql`
 - Cognitive layer migrations: `layers/cognitive/db/migrations/NNN_description.sql`
-- Always add migration, never modify existing ones
-- **Post-MVP actions go in numbered migrations** — `config/seeds/*.sql` is for MVP bootstrap only. Never add new actions there.
-- **`seed.sql` deprecated** as of migration 021. The canonical source for action seed data is `config/seeds/*.sql`, loaded by `scaffold-project.sh` via `ON CONFLICT DO UPDATE`.
+- **Canonical schema is `001_create_filter_tables.sql`** (squashed 2026-07-30, consolidates 001–025) — do NOT alter it
+- New migrations start at `003_*` (002 is the squash marker)
+- **Action seed data goes in `config/seeds/*.sql`** — never in migrations. Seeds are idempotent (`ON CONFLICT DO UPDATE`) and loaded by `scaffold-project.sh`.
+- **`seed.sql` deprecated** (removed from repo). The canonical source for action seed data is `config/seeds/*.sql`.
+
 
 ## Structured Logging Standards
 

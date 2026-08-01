@@ -81,6 +81,13 @@
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+
+  /* Layout chrome (single source of truth for dashboard shell dimensions) */
+  --layout-topbar-h: 48px;
+  --layout-statusbar-h: 32px;
+  --layout-main-pad-y: 24px;
+  --layout-sidebar-w: 256px;
+  --layout-main-inset-y: calc(var(--layout-topbar-h) + var(--layout-statusbar-h) + var(--layout-main-pad-y) * 2);
 }
 
 /* Base Styles */

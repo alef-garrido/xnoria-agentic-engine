@@ -12,6 +12,7 @@
     "@tailwindcss/typography": "^0.5.19",
     "bcrypt": "^5.1.1",
     "date-fns": "^4.1.0",
+    "framer-motion": "^11.18.2",
     "lucide-react": "^0.468.0",
     "next": "^16.2.2",
     "pg": "^8.11.3",
@@ -28,7 +29,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "15.1.6",
+    "eslint-config-next": "^16.2.12",
     "tailwindcss": "^4.0.0",
     "typescript": "^5"
   }

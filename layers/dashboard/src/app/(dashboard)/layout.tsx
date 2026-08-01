@@ -17,11 +17,11 @@ export default function DashboardLayout({
         
         <main
           style={{
-            marginLeft: "256px", // Width of sidebar (16rem = 256px)
-            marginTop: "48px", // Height of top bar
-            marginBottom: "32px", // Height of status bar
-            minHeight: "calc(100vh - 48px - 32px)",
-            padding: "24px",
+            marginLeft: "var(--layout-sidebar-w)", // Width of sidebar (16rem = 256px)
+            marginTop: "var(--layout-topbar-h)", // Height of top bar
+            marginBottom: "var(--layout-statusbar-h)", // Height of status bar
+            minHeight: "calc(100vh - var(--layout-topbar-h) - var(--layout-statusbar-h))",
+            padding: "var(--layout-main-pad-y)",
           }}
         >
           {children}

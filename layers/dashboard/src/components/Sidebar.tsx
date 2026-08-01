@@ -16,11 +16,15 @@ import {
   ListChecks,
   HeartPulse,
   BrainCog,
+  Radar,
+  Compass,
 } from "lucide-react";
 import { BRANDING } from "@/config/branding";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/compass", label: "Compass", icon: Compass },
+  { href: "/radar", label: "Radar", icon: Radar },
   { href: "/health", label: "Health", icon: HeartPulse },
   { href: "/hitl", label: "Approvals", icon: ShieldCheck },
   { href: "/allowlist", label: "Allowlist", icon: ListChecks },

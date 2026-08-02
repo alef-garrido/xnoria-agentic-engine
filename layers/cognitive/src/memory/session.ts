@@ -32,8 +32,8 @@ export async function logSessionToDb(
     // 1. Insert the session record
     await db.query(
       `INSERT INTO cognitive_session
-         (id, contact_id, channel, stage, input, actions_taken, model)
-       VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7)
+         (id, contact_id, channel, stage, input, actions_taken, model, signal_id, signal_severity, cause_code)
+       VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10)
        ON CONFLICT (id) DO NOTHING`,
       [
         session_id,
@@ -43,6 +43,9 @@ export async function logSessionToDb(
         event.input ?? '(no input)',
         JSON.stringify(actionsTaken),
         model,
+        event.signal_id ?? null,
+        event.signal_severity ?? null,
+        event.cause_code ?? null,
       ]
     );
 

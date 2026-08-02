@@ -87,6 +87,46 @@ exports.TOOLS = [
     {
         type: 'function',
         function: {
+            name: 'acq_lead_engage',
+            description: 'Send an immediate WhatsApp acknowledgment to a new inbound lead. ' +
+                'Use as the first response when a lead makes contact during business hours. ' +
+                'Confirms receipt and sets expectation that the team will follow up shortly. ' +
+                'Requires a valid phone number — skip if not available.',
+            parameters: {
+                type: 'object',
+                properties: {
+                    contact_id: { type: 'string', description: 'HubSpot contact ID (from crm_contact_upsert)' },
+                    phone: { type: 'string', description: 'Contact WhatsApp phone number with country code' },
+                    name: { type: 'string', description: 'Contact first name for personalized greeting' },
+                    signal_id: { type: 'string', description: 'CX signal identifier for audit trail' }
+                },
+                required: ['contact_id', 'phone']
+            }
+        }
+    },
+    {
+        type: 'function',
+        function: {
+            name: 'acq_lead_nurture',
+            description: 'Start an AI nurture conversation with an out-of-hours inbound lead. ' +
+                'Use when a lead contacts outside business hours and needs immediate engagement. ' +
+                'An AI bot (Gemini) will hold the conversation and collect context until the team is available. ' +
+                'Provide message_context to guide the opening message.',
+            parameters: {
+                type: 'object',
+                properties: {
+                    contact_id: { type: 'string', description: 'HubSpot contact ID (from crm_contact_upsert)' },
+                    phone: { type: 'string', description: 'Contact WhatsApp phone number with country code' },
+                    message_context: { type: 'string', description: 'Context about the lead to personalize the nurture opening message (pain points, source, initial inquiry)' },
+                    signal_id: { type: 'string', description: 'CX signal identifier for audit trail' }
+                },
+                required: ['contact_id']
+            }
+        }
+    },
+    {
+        type: 'function',
+        function: {
             name: 'acq_contact_outreach',
             description: 'Send cold outreach to a prospect via WhatsApp and email, and sync to HubSpot. ' +
                 'Use when you have a qualified lead that needs initial contact. ' +
@@ -590,6 +630,8 @@ exports.TOOL_TO_ACTION = {
     crm_contact_upsert: { action_id: 'acq.contact.upsert', stage: 'ACQ' },
     crm_contact_get: { action_id: 'acq.contact.get', stage: 'ACQ' },
     acq_lead_score: { action_id: 'acq.lead.score', stage: 'ACQ' },
+    acq_lead_engage: { action_id: 'acq.lead.engage', stage: 'ACQ' },
+    acq_lead_nurture: { action_id: 'acq.lead.nurture', stage: 'ACQ' },
     acq_contact_outreach: { action_id: 'acq.contact.outreach', stage: 'ACQ' },
     sal_sequence_enroll: { action_id: 'sal.sequence.enroll', stage: 'SAL' },
     sal_contact_prioritize: { action_id: 'sal.contact.prioritize', stage: 'SAL' },

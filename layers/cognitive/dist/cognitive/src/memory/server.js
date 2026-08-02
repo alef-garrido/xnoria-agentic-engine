@@ -111,7 +111,7 @@ function parseEngramOutput(output) {
 }
 // Health check
 app.get('/health', (_req, res) => {
-    res.json({ status: 'ok', service: 'exnoria-cognitive-memory' });
+    res.json({ status: 'ok', service: `${process.env.PROJECT_ID || 'xnoria'}-cognitive-memory` });
 });
 // Export start function for integration with main server
 function startServer(db) {

@@ -94,7 +94,7 @@ function createLogger(module, service = 'cognitive') {
         // Level configuration
         level: process.env.LOG_LEVEL || types_1.LOGGING_DEFAULTS.LEVEL,
         // Basic metadata
-        name: `exnoria/${service}/${module}`,
+        name: `${process.env.PROJECT_ID || 'xnoria'}/${service}/${module}`,
         timestamp: pino_1.default.stdTimeFunctions.isoTime,
         // Custom serializers for PII protection
         serializers,

@@ -25,7 +25,7 @@ async function getContactHistory(contactId, stage, query = 'general', maxEntries
             : `${contactId} | ${stage}`;
         const result = await (0, client_1.executeMcpTool)('mem_search', {
             query: searchQuery,
-            project: 'xnoria-agentic-engine'
+            project: process.env.ENGRA_PROJECT || 'xnoria-agentic-engine'
         });
         if (!result.success) {
             return `Memory unavailable — ${result.error}`;
@@ -91,7 +91,7 @@ async function recordSessionOutcome(event, actionId, filterResponse, session_id,
         await (0, client_1.executeMcpTool)('mem_save', {
             title: title,
             content: content,
-            project: 'xnoria-agentic-engine'
+            project: process.env.ENGRA_PROJECT || 'xnoria-agentic-engine'
         });
     }
     catch (err) {

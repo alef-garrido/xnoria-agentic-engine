@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
 import {
-  ShieldCheck,
   Check,
   X,
   Clock,
@@ -36,6 +35,10 @@ interface Toast {
 export function HITLQueue() {
   const [pending, setPending] = useState<PendingAction[] | null>(null);
   const [error, setError] = useState(false);
+  const pendingRef = useRef(pending);
+  useEffect(() => {
+    pendingRef.current = pending;
+  });
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -58,12 +61,12 @@ export function HITLQueue() {
       setPending(data.pending ?? []);
       setError(false);
     } catch {
-      if (!pending) setError(true);
+      if (!pendingRef.current) setError(true);
     }
   }, []);
 
   useEffect(() => {
-    fetchPending();
+    setTimeout(fetchPending, 0);
     const interval = setInterval(fetchPending, 10_000);
     return () => clearInterval(interval);
   }, [fetchPending]);
@@ -369,7 +372,7 @@ export function HITLQueue() {
                           style={{ color: "var(--text-secondary)" }}
                         >
                           This action cannot be automated on the current HubSpot plan.
-                          Complete it manually in HubSpot, then click "Mark Complete".
+                          Complete it manually in HubSpot, then click &quot;Mark Complete&quot;.
                         </div>
                       </div>
                     )}

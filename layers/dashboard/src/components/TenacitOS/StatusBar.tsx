@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentType, type CSSProperties } from "react";
 import { Cpu, HardDrive, MemoryStick, Clock } from "lucide-react";
 import { clientLogger } from "@/lib/client-logger";
 
@@ -13,52 +13,16 @@ interface SystemStats {
   uptime: string;
 }
 
-export function StatusBar() {
-  const [stats, setStats] = useState<SystemStats>({
-    cpu: 0,
-    ram: { used: 0, total: 4 },
-    disk: { used: 0, total: 100 },
-    activeServices: 0,
-    totalServices: 4,
-    uptime: "0d 0h",
-  });
+interface StatusMetricProps {
+  icon: ComponentType<{ style?: CSSProperties }>;
+  label: string;
+  value: string;
+  barPercent?: number;
+  color: string;
+}
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const res = await fetch("/api/system");
-        if (res.ok) {
-          const data = await res.json();
-          const runningServices = data.services.filter((s: any) => s.status === 'running').length;
-          
-          setStats({
-            cpu: data.host.cpuPercent * 100,
-            ram: { used: data.host.ramUsed / 1e9, total: data.host.ramTotal / 1e9 },
-            disk: { used: data.host.diskUsed, total: data.host.diskTotal || 100 },
-            activeServices: runningServices,
-            totalServices: data.services.length,
-            uptime: data.services[0]?.uptime || "0s",
-          });
-        }
-      } catch (error) {
-        clientLogger.error("Failed to fetch system stats", { error });
-      }
-    };
-
-    fetchStats();
-    const interval = setInterval(fetchStats, 10000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const cpuColor = stats.cpu < 60 ? "var(--positive)" : stats.cpu < 85 ? "var(--warning)" : "var(--negative)";
-  const ramPercent = (stats.ram.used / stats.ram.total) * 100;
-  const ramColor = ramPercent < 60 ? "var(--positive)" : ramPercent < 85 ? "var(--warning)" : "var(--negative)";
-  const diskPercent = (stats.disk.used / stats.disk.total) * 100;
-  const diskColor = diskPercent < 60 ? "var(--positive)" : diskPercent < 85 ? "var(--warning)" : "var(--negative)";
-
-  // StatusMetric component
-  const StatusMetric = ({ icon: Icon, label, value, barPercent, color }: any) => (
+function StatusMetric({ icon: Icon, label, value, barPercent, color }: StatusMetricProps) {
+  return (
     <div className="flex items-center gap-1.5" style={{ height: "24px" }}>
       <Icon style={{ width: "14px", height: "14px", color: "var(--text-muted)" }} />
       <span
@@ -104,6 +68,51 @@ export function StatusBar() {
       )}
     </div>
   );
+}
+
+export function StatusBar() {
+  const [stats, setStats] = useState<SystemStats>({
+    cpu: 0,
+    ram: { used: 0, total: 4 },
+    disk: { used: 0, total: 100 },
+    activeServices: 0,
+    totalServices: 4,
+    uptime: "0d 0h",
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch("/api/system");
+        if (res.ok) {
+          const data = await res.json();
+          const runningServices = data.services.filter((s: { status: string }) => s.status === 'running').length;
+          
+          setStats({
+            cpu: data.host.cpuPercent * 100,
+            ram: { used: data.host.ramUsed / 1e9, total: data.host.ramTotal / 1e9 },
+            disk: { used: data.host.diskUsed, total: data.host.diskTotal || 100 },
+            activeServices: runningServices,
+            totalServices: data.services.length,
+            uptime: data.services[0]?.uptime || "0s",
+          });
+        }
+      } catch (error) {
+        clientLogger.error("Failed to fetch system stats", { error });
+      }
+    };
+
+    fetchStats();
+    const interval = setInterval(fetchStats, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const cpuColor = stats.cpu < 60 ? "var(--positive)" : stats.cpu < 85 ? "var(--warning)" : "var(--negative)";
+  const ramPercent = (stats.ram.used / stats.ram.total) * 100;
+  const ramColor = ramPercent < 60 ? "var(--positive)" : ramPercent < 85 ? "var(--warning)" : "var(--negative)";
+  const diskPercent = (stats.disk.used / stats.disk.total) * 100;
+  const diskColor = diskPercent < 60 ? "var(--positive)" : diskPercent < 85 ? "var(--warning)" : "var(--negative)";
 
   return (
     <div

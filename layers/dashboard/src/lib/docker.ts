@@ -1,10 +1,17 @@
 import http from 'http';
 
+export interface DockerContainer {
+  Names: string[];
+  State: string;
+  Status: string;
+  RestartCount: number;
+}
+
 /**
  * Make an HTTP request to the Docker Engine API over the local unix socket.
  * Requires /var/run/docker.sock to be mounted in the container.
  */
-export async function fetchDockerAPI(path: string): Promise<any> {
+export async function fetchDockerAPI<T = unknown>(path: string): Promise<T> {
   return new Promise((resolve, reject) => {
     const options = {
       socketPath: '/var/run/docker.sock',
@@ -23,7 +30,7 @@ export async function fetchDockerAPI(path: string): Promise<any> {
         if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
           try {
             resolve(JSON.parse(data));
-          } catch (e) {
+          } catch {
             reject(new Error('Failed to parse Docker API response'));
           }
         } else {

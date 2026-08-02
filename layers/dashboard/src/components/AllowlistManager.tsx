@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import {
   Plus,
   Trash2,
@@ -8,7 +8,6 @@ import {
   AlertTriangle,
   X,
   Search,
-  ListChecks,
 } from "lucide-react";
 
 interface FilterAction {
@@ -40,6 +39,10 @@ export function AllowlistManager() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const actionsRef = useRef(actions);
+  useEffect(() => {
+    actionsRef.current = actions;
+  });
 
   const addToast = useCallback((message: string, type: "success" | "error") => {
     const id = crypto.randomUUID();
@@ -57,12 +60,12 @@ export function AllowlistManager() {
       setActions(data.actions ?? []);
       setError(false);
     } catch {
-      if (!actions) setError(true);
+      if (!actionsRef.current) setError(true);
     }
   }, []);
 
   useEffect(() => {
-    fetchActions();
+    setTimeout(fetchActions, 0);
   }, [fetchActions]);
 
   const handleToggle = async (

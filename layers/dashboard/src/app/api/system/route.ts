@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { fetchDockerAPI } from '@/lib/docker';
+import { fetchDockerAPI, type DockerContainer } from '@/lib/docker';
 import os from 'os';
 import { logger } from '@/lib/logger';
 
 export async function GET() {
   try {
-    const containers = await fetchDockerAPI('/containers/json?all=true');
+    const containers = await fetchDockerAPI<DockerContainer[]>('/containers/json?all=true');
 
     const projectId = process.env.PROJECT_ID || 'exnoria';
     const targetServices = [
@@ -17,7 +17,7 @@ export async function GET() {
     
     const services = targetServices.map(target => {
       // Find container ignoring leading slash in name
-      const container = containers.find((c: any) => c.Names.some((n: string) => n === `/${target}`));
+      const container = containers.find((c) => c.Names.some((n: string) => n === `/${target}`));
       
       if (!container) {
         return {

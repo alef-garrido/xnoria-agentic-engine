@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import {
   Zap,
@@ -40,6 +40,10 @@ const statusConfig: Record<string, {
 export function ActivityFeed() {
   const [activities, setActivities] = useState<Activity[] | null>(null);
   const [error, setError] = useState<boolean>(false);
+  const activitiesRef = useRef(activities);
+  useEffect(() => {
+    activitiesRef.current = activities;
+  });
 
   useEffect(() => {
     const fetchActivities = async () => {
@@ -49,8 +53,8 @@ export function ActivityFeed() {
         const data: ActivitiesResponse = await res.json();
         setActivities(data.activities);
         setError(false);
-      } catch (err) {
-        if (!activities) {
+      } catch {
+        if (!activitiesRef.current) {
           setError(true);
         }
       }

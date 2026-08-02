@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import {
-  Activity,
   TrendingUp,
   Shield,
   AlertTriangle,
@@ -84,6 +83,10 @@ export function JourneyHealthMap() {
   const [error, setError] = useState(false);
   const [days, setDays] = useState(30);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const metricsRef = useRef(metrics);
+  useEffect(() => {
+    metricsRef.current = metrics;
+  });
 
   const fetchHealth = useCallback(async () => {
     try {
@@ -94,15 +97,17 @@ export function JourneyHealthMap() {
       setError(false);
       setLastUpdated(new Date());
     } catch {
-      if (metrics.length === 0) setError(true);
+      if (metricsRef.current.length === 0) setError(true);
     } finally {
       setLoading(false);
     }
   }, [days]);
 
   useEffect(() => {
-    setLoading(true);
-    fetchHealth();
+    setTimeout(() => {
+      setLoading(true);
+      fetchHealth();
+    }, 0);
     const interval = setInterval(fetchHealth, 30000);
     return () => clearInterval(interval);
   }, [fetchHealth]);

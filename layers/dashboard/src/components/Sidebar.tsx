@@ -18,6 +18,8 @@ import {
   BrainCog,
   Radar,
   Compass,
+  LayoutGrid,
+  Pencil,
 } from "lucide-react";
 import { BRANDING } from "@/config/branding";
 
@@ -25,6 +27,8 @@ const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/compass", label: "Compass", icon: Compass },
   { href: "/radar", label: "Radar", icon: Radar },
+  { href: "/matriz", label: "Matriz", icon: LayoutGrid },
+  { href: "/editor", label: "Editor", icon: Pencil },
   { href: "/health", label: "Health", icon: HeartPulse },
   { href: "/hitl", label: "Approvals", icon: ShieldCheck },
   { href: "/allowlist", label: "Allowlist", icon: ListChecks },
@@ -57,7 +61,7 @@ export function Sidebar() {
   // Close sidebar when navigating on mobile
   useEffect(() => {
     if (isMobile) {
-      setIsOpen(false);
+      setTimeout(() => setIsOpen(false), 0);
     }
   }, [pathname, isMobile]);
 

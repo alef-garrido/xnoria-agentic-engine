@@ -3,7 +3,7 @@
  * GET /api/health - Check health of Exnoria CX services
  */
 import { NextResponse } from 'next/server';
-import { fetchDockerAPI } from '@/lib/docker';
+import { fetchDockerAPI, type DockerContainer } from '@/lib/docker';
 
 interface ServiceCheck {
   name: string;
@@ -22,10 +22,10 @@ export async function GET() {
   ];
 
   try {
-    const containers = await fetchDockerAPI('/containers/json?all=true');
+    const containers = await fetchDockerAPI<DockerContainer[]>('/containers/json?all=true');
 
     for (const target of targetServices) {
-      const container = containers.find((c: any) =>
+      const container = containers.find((c) =>
         c.Names.some((n: string) => n === `/${target}`)
       );
 
@@ -40,7 +40,7 @@ export async function GET() {
         });
       }
     }
-  } catch (error) {
+  } catch {
     // Docker socket not available
     for (const target of targetServices) {
       checks.push({ name: target, status: 'unknown', details: 'docker socket unavailable' });

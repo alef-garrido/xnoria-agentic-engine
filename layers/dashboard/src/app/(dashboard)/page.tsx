@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { BRANDING } from "@/config/branding";
 import {
@@ -24,6 +24,10 @@ interface OverviewStats {
 export default function DashboardPage() {
   const [stats, setStats] = useState<OverviewStats | null>(null);
   const [error, setError] = useState(false);
+  const statsRef = useRef(stats);
+  useEffect(() => {
+    statsRef.current = stats;
+  });
 
   useEffect(() => {
     const fetchOverview = async () => {
@@ -40,7 +44,8 @@ export default function DashboardPage() {
           sysRes.ok ? sysRes.json() : null,
         ]);
 
-        const running = sysData?.services?.filter((s: any) => s.status === "running").length ?? 0;
+        const running =
+          sysData?.services?.filter((s: { status: string }) => s.status === "running").length ?? 0;
 
         setStats({
           activityTotal: actData?.total ?? 0,
@@ -49,8 +54,8 @@ export default function DashboardPage() {
           servicesTotal: sysData?.services?.length ?? 4,
         });
         setError(false);
-      } catch (err) {
-        if (!stats) setError(true);
+      } catch {
+        if (!statsRef.current) setError(true);
       }
     };
 

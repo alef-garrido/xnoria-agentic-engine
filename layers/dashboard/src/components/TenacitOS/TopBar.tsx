@@ -1,7 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { User } from "lucide-react";
 import { BRANDING } from "@/config/branding";
 
 export function TopBar() {

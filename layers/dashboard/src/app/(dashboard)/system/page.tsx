@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Server, Activity, ArrowUpRight, Cpu, MemoryStick, HardDrive } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Server, Activity, Cpu, MemoryStick, HardDrive } from "lucide-react";
 
 interface Service {
   name: string;
@@ -49,6 +49,10 @@ function bytesToGB(bytes: number) {
 export default function SystemMonitorPage() {
   const [data, setData] = useState<SystemData | null>(null);
   const [error, setError] = useState(false);
+  const dataRef = useRef(data);
+  useEffect(() => {
+    dataRef.current = data;
+  });
 
   useEffect(() => {
     const fetchSystem = async () => {
@@ -58,8 +62,8 @@ export default function SystemMonitorPage() {
         const json = await res.json();
         setData(json);
         setError(false);
-      } catch (err) {
-        if (!data) setError(true);
+      } catch {
+        if (!dataRef.current) setError(true);
       }
     };
 

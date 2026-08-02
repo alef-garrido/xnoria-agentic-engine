@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatDistanceToNow, format } from "date-fns";
 import { History as HistoryIcon, MessagesSquare, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { clientLogger } from "@/lib/client-logger";
@@ -84,7 +84,7 @@ function SessionRow({ session }: { session: Session }) {
 
           {/* Truncated input */}
           <div className="flex-1 truncate text-sm" style={{ color: 'var(--text-primary)' }}>
-            "{session.input.length > 80 ? session.input.substring(0, 80) + '...' : session.input}"
+            &quot;{session.input.length > 80 ? session.input.substring(0, 80) + '...' : session.input}&quot;
           </div>
 
           {/* Metadata */}
@@ -149,6 +149,10 @@ function SessionRow({ session }: { session: Session }) {
 export default function SessionsPage() {
   const [sessions, setSessions] = useState<Session[] | null>(null);
   const [error, setError] = useState(false);
+  const sessionsRef = useRef(sessions);
+  useEffect(() => {
+    sessionsRef.current = sessions;
+  });
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -158,8 +162,8 @@ export default function SessionsPage() {
         const data: SessionsResponse = await res.json();
         setSessions(data.sessions);
         setError(false);
-      } catch (err) {
-        if (!sessions) setError(true);
+      } catch {
+        if (!sessionsRef.current) setError(true);
       }
     };
 

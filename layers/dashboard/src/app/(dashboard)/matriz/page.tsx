@@ -1,8 +1,5 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { MatrizDashboard } from "@/components/matriz/MatrizDashboard";
-import { matrizDataEn } from "@/lib/matriz/matrizDataEn";
-
-export default function MatrizPage() {
-  return <MatrizDashboard data={matrizDataEn} />;
+export default function MatrizRedirect() {
+  redirect("/tools/matriz");
 }

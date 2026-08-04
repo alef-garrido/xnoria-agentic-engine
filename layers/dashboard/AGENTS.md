@@ -26,6 +26,14 @@ src/
 ├── app/
 │   ├── (dashboard)/      # Dashboard pages (route group)
 │   │   ├── page.tsx      # Dashboard home
+│   │   ├── tools/        # CX Tools section
+│   │   │   ├── page.tsx  # CX Tools launcher (card grid)
+│   │   │   ├── layout.tsx # Section strip with breadcrumb
+│   │   │   ├── compass/  # Compass tool route
+│   │   │   ├── radar/    # Radar tool route
+│   │   │   ├── matriz/   # Matriz tool route
+│   │   │   └── editor/   # Editor tool route
+│   │   ├── compass/ radar/ matriz/ editor/  # Redirect stubs → /tools/*
 │   │   ├── hitl/         # HITL approval queue
 │   │   └── allowlist/    # Allowlist manager
 │   ├── api/              # API routes (proxy to filter, etc.)
@@ -33,6 +41,13 @@ src/
 │   │       ├── hitl/     # HITL queue + approve/reject
 │   │       └── allowlist/ # Allowlist CRUD
 │   └── login/            # Auth pages
+├── features/
+│   └── cx-tools/         # Merged CX decision-support tools (self-contained)
+│       ├── shared/       # Shared domain/data/theme/types (radar engine, wheel, registry)
+│       ├── compass/      # Compass wheel (components, context, theme, utils)
+│       ├── radar/        # Radar signal explorer (cx-radar + signals components)
+│       ├── matriz/       # Impact/effort matrix
+│       └── editor/       # Wheel editor
 ├── components/           # UI components
 │   ├── TenacitOS/        # Shared design system components
 │   ├── HITLQueue.tsx     # Polling HITL queue component
@@ -184,6 +199,14 @@ docker exec exnoria_postgres psql -U xnoria -d exnoria -c \
 2. Create API proxy route if needed: `src/app/api/your-api/route.ts`
 3. Use existing TenacitOS components from `src/components/TenacitOS/`
 4. Follow existing auth pattern (protect with proxy.ts middleware)
+
+## Adding a New CX Tool
+1. Create tool feature at `src/features/cx-tools/<tool>/` (components + lib)
+2. Add route at `src/app/(dashboard)/tools/<tool>/page.tsx` (thin wrapper importing the feature page component)
+3. Add entry to `navSections` CX Tools group in `src/components/Sidebar.tsx`
+4. Add card to the launcher at `src/app/(dashboard)/tools/page.tsx`
+5. Put truly shared code in `src/features/cx-tools/shared/` (domain, wheel data/types, theme tokens, translations, pdf) — never import from another tool's private dir
+6. Old flat routes (`/compass`, `/radar`, `/matriz`, `/editor`) must remain as redirect stubs → `/tools/<tool>`
 
 ## Adding an API Route
 1. Create route at `src/app/api/your-endpoint/route.ts`

@@ -23,19 +23,31 @@ import {
 } from "lucide-react";
 import { BRANDING } from "@/config/branding";
 
-const navItems = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/compass", label: "Compass", icon: Compass },
-  { href: "/radar", label: "Radar", icon: Radar },
-  { href: "/matriz", label: "Matriz", icon: LayoutGrid },
-  { href: "/editor", label: "Editor", icon: Pencil },
-  { href: "/health", label: "Health", icon: HeartPulse },
-  { href: "/hitl", label: "Approvals", icon: ShieldCheck },
-  { href: "/allowlist", label: "Allowlist", icon: ListChecks },
-  { href: "/memory", label: "Memory", icon: BrainCog },
-  { href: "/activity", label: "Activity", icon: Activity },
-  { href: "/sessions", label: "Sessions", icon: History },
-  { href: "/system", label: "System", icon: Server },
+const navSections = [
+  {
+    items: [{ href: "/", label: "Dashboard", icon: LayoutDashboard }],
+  },
+  {
+    label: "CX Tools",
+    items: [
+      { href: "/tools/compass", label: "Compass", icon: Compass },
+      { href: "/tools/radar", label: "Radar", icon: Radar },
+      { href: "/tools/matriz", label: "Matriz", icon: LayoutGrid },
+      { href: "/tools/editor", label: "Editor", icon: Pencil },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { href: "/health", label: "Health", icon: HeartPulse },
+      { href: "/hitl", label: "Approvals", icon: ShieldCheck },
+      { href: "/allowlist", label: "Allowlist", icon: ListChecks },
+      { href: "/memory", label: "Memory", icon: BrainCog },
+      { href: "/activity", label: "Activity", icon: Activity },
+      { href: "/sessions", label: "Sessions", icon: History },
+      { href: "/system", label: "System", icon: Server },
+    ],
+  },
 ];
 
 export function Sidebar() {
@@ -200,37 +212,53 @@ export function Sidebar() {
         {/* Navigation */}
         <nav className="flex-1 pt-4">
           <ul className="space-y-0.5">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href;
-              const Icon = item.icon;
-
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className={`nav-item w-full ${isActive ? "active" : ""}`}
-                    style={
-                      !isActive
-                        ? {
-                            color: "var(--text-secondary)",
-                          }
-                        : {
-                            backgroundColor: "var(--accent)",
-                            color: "var(--text-primary)",
-                            fontFamily: "var(--font-heading)",
-                            fontWeight: 600,
-                          }
-                    }
+            {navSections.map((section) => (
+              <li key={section.label ?? "primary"}>
+                {section.label && (
+                  <div
+                    className="px-4 py-2 text-xs uppercase tracking-wider"
+                    style={{ color: "var(--text-muted)" }}
                   >
-                    <Icon
-                      className="w-5 h-5"
-                      style={!isActive ? { color: "var(--text-muted)" } : undefined}
-                    />
-                    {item.label}
-                  </Link>
-                </li>
-              );
-            })}
+                    {section.label}
+                  </div>
+                )}
+                <ul className="space-y-0.5">
+                  {section.items.map((item) => {
+                    const isActive =
+                      pathname === item.href ||
+                      (item.href !== "/" && pathname.startsWith(item.href + "/"));
+                    const Icon = item.icon;
+
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          className={`nav-item w-full ${isActive ? "active" : ""}`}
+                          style={
+                            !isActive
+                              ? {
+                                  color: "var(--text-secondary)",
+                                }
+                              : {
+                                  backgroundColor: "var(--accent)",
+                                  color: "var(--text-primary)",
+                                  fontFamily: "var(--font-heading)",
+                                  fontWeight: 600,
+                                }
+                          }
+                        >
+                          <Icon
+                            className="w-5 h-5"
+                            style={!isActive ? { color: "var(--text-muted)" } : undefined}
+                          />
+                          {item.label}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </li>
+            ))}
           </ul>
         </nav>
 

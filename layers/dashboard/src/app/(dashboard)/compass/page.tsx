@@ -1,5 +1,5 @@
-import CompassPage from "@/components/cx-compass/CompassPage";
+import { redirect } from "next/navigation";
 
-export default function Compass() {
-  return <CompassPage />;
+export default function CompassRedirect() {
+  redirect("/tools/compass");
 }

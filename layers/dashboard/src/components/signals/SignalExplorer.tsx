@@ -10,6 +10,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { CxRadar } from "@/components/cx-radar/CxRadar";
 import { RadarSignal } from "@/lib/radar/types/radar";
 import type { FlatSignal } from "@/lib/radar/types/signal";
+import { generateActionPlanPdf } from "@/lib/radar/pdf/generateActionPlanPdf";
+import { clientLogger } from "@/lib/client-logger";
+import { FileDown, Loader2 } from "lucide-react";
+
+interface Toast {
+  message: string;
+  type: "success" | "error";
+}
 
 export default function SignalExplorer() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -18,6 +26,13 @@ export default function SignalExplorer() {
     const [selectedSignalIds, setSelectedSignalIds] = useState<string[]>([]);
     const [focusedSignalId, setFocusedSignalId] = useState<string | null>(null);
     const [hoveredDomainId, setHoveredDomainId] = useState<string | null>(null);
+    const [generating, setGenerating] = useState(false);
+    const [toast, setToast] = useState<Toast | null>(null);
+
+    const showToast = (message: string, type: "success" | "error" = "success") => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
+    };
 
     const allSignals = useMemo(() => getCachedSignals("en"), []);
 
@@ -95,6 +110,25 @@ export default function SignalExplorer() {
     const handleClearAll = () => {
         setSelectedSignalIds([]);
         setFocusedSignalId(null);
+    };
+
+    const handleGeneratePdf = () => {
+        setGenerating(true);
+        // Defer to let the UI update with the spinner
+        setTimeout(() => {
+            try {
+                generateActionPlanPdf({
+                    signals: allSignals,
+                    selectedIds: selectedSignalIds,
+                });
+                showToast("Action plan downloaded");
+            } catch (err) {
+                clientLogger.error("PDF generation failed", { error: err });
+                showToast("Failed to generate PDF", "error");
+            } finally {
+                setGenerating(false);
+            }
+        }, 50);
     };
 
     return (
@@ -214,6 +248,19 @@ export default function SignalExplorer() {
                                     </h4>
                                     <div className="flex items-center gap-4">
                                         <button
+                                            onClick={handleGeneratePdf}
+                                            disabled={generating}
+                                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-semibold transition-opacity disabled:opacity-50"
+                                            style={{ backgroundColor: "var(--accent)", color: "#fff" }}
+                                        >
+                                            {generating ? (
+                                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                            ) : (
+                                                <FileDown className="w-3.5 h-3.5" />
+                                            )}
+                                            {generating ? "Generating…" : "Export Action Plan"}
+                                        </button>
+                                        <button
                                             onClick={handleClearAll}
                                             className="text-[10px] uppercase tracking-widest font-bold transition-colors"
                                             style={{ color: "var(--text-muted)" }}
@@ -238,6 +285,14 @@ export default function SignalExplorer() {
                                     You have {selectedSignalIds.length} active friction points across{" "}
                                     {new Set(selectedRadarSignals.map((s) => s.domain)).size} lifecycle stages.
                                 </p>
+                                {toast && (
+                                    <div
+                                        className="text-xs font-medium"
+                                        style={{ color: toast.type === "success" ? "var(--positive)" : "var(--negative)" }}
+                                    >
+                                        {toast.message}
+                                    </div>
+                                )}
                             </motion.div>
                         )}
                     </AnimatePresence>

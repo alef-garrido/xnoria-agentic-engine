@@ -13,13 +13,13 @@
  */
 
 import { describe, it, expect, beforeAll } from "vitest";
-import { getCachedSignals, buildFlatSignals } from "@/lib/radar/domain/signalBuilder";
-import { validateWheelStructure } from "@/lib/radar/domain/schemaValidation";
+import { getCachedSignals, buildFlatSignals } from "@/features/cx-tools/shared/domain/signalBuilder";
+import { validateWheelStructure } from "@/features/cx-tools/shared/domain/schemaValidation";
 import {
   getInterventionOrThrow,
   validateInterventionId,
-} from "@/lib/radar/domain/interventionRegistry";
-import type { FlatSignal } from "@/lib/radar/types/signal";
+} from "@/features/cx-tools/shared/domain/interventionRegistry";
+import type { FlatSignal } from "@/features/cx-tools/shared/types/signal";
 
 describe("CX Tools Integration Testing", () => {
   let signals_en: FlatSignal[];

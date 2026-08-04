@@ -1,11 +1,5 @@
-import SignalExplorer from "@/components/signals/SignalExplorer";
-import LiveSignalsPanel from "@/components/signals/LiveSignalsPanel";
+import { redirect } from "next/navigation";
 
-export default function RadarPage() {
-  return (
-    <div className="flex flex-col gap-6">
-      <LiveSignalsPanel />
-      <SignalExplorer />
-    </div>
-  );
+export default function RadarRedirect() {
+  redirect("/tools/radar");
 }

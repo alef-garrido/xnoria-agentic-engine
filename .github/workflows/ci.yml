@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  dashboard:
+    name: Dashboard (gate)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: layers/dashboard
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: layers/dashboard/package-lock.json
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build
+
+  cognitive:
+    name: Cognitive (build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: layers/cognitive
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: layers/cognitive/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+  filter:
+    name: Filter (build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: layers/orchestration/filter
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: layers/orchestration/filter/package-lock.json
+      - run: npm ci
+      - run: npm run build

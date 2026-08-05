@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { usePolling } from "@/hooks/usePolling";
+import { apiFetch } from "@/lib/client-api";
 import {
   Activity,
   History,
@@ -30,17 +31,15 @@ export default function DashboardPage() {
 
   const { data: stats, error } = usePolling(
     async () => {
-      const [actRes, sessRes, sysRes] = await Promise.all([
-        fetch("/api/activity?limit=1&page=1"),
-        fetch("/api/sessions?limit=1&page=1"),
-        fetch("/api/system"),
+      const [actData, sessData, sysData] = await Promise.all([
+        apiFetch<{ total?: number }>("/api/activity?limit=1&page=1").catch(() => null),
+        apiFetch<{ total?: number }>("/api/sessions?limit=1&page=1").catch(() => null),
+        apiFetch<{ services?: Array<{ status: string }> }>("/api/system").catch(() => null),
       ]);
 
-      const [actData, sessData, sysData] = await Promise.all([
-        actRes.ok ? actRes.json() : null,
-        sessRes.ok ? sessRes.json() : null,
-        sysRes.ok ? sysRes.json() : null,
-      ]);
+      if (actData === null && sessData === null && sysData === null) {
+        throw new Error("Failed to load overview");
+      }
 
       const running =
         sysData?.services?.filter((s: { status: string }) => s.status === "running").length ?? 0;

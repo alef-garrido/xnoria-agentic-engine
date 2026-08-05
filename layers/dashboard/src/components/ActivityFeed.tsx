@@ -8,6 +8,7 @@ import type { LucideIcon } from "lucide-react";
 import { getLocale } from "@/i18n/locale";
 import { usePolling } from "@/hooks/usePolling";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { apiFetch } from "@/lib/client-api";
 
 interface Activity {
   id: string;
@@ -36,9 +37,7 @@ export function ActivityFeed() {
   const t = useTranslations("activity");
   const { data: activities, error } = usePolling(
     async () => {
-      const res = await fetch("/api/activity?limit=50&page=1");
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data: ActivitiesResponse = await res.json();
+      const data = await apiFetch<ActivitiesResponse>("/api/activity?limit=50&page=1");
       return data.activities;
     },
     { intervalMs: 5_000 }

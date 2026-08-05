@@ -3,6 +3,7 @@
 import { History as HistoryIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePolling } from "@/hooks/usePolling";
+import { apiFetch } from "@/lib/client-api";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -19,9 +20,7 @@ export default function SessionsPage() {
   const t = useTranslations("sessions");
   const { data: sessions, error } = usePolling(
     async () => {
-      const res = await fetch("/api/sessions?limit=25&page=1");
-      if (!res.ok) throw new Error("Failed to fetch sessions");
-      const data: SessionsResponse = await res.json();
+      const data = await apiFetch<SessionsResponse>("/api/sessions?limit=25&page=1");
       return data.sessions;
     },
     { intervalMs: 10_000 }

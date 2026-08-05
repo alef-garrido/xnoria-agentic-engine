@@ -3,10 +3,10 @@
 // Credential-based login: handle + password → bcrypt verify → session cookie
 // ==============================================================================
 
-import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcrypt';
-import { query } from '@/lib/db';
-import { createSession, SESSION_COOKIE } from '@/lib/auth';
+import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcrypt";
+import { query } from "@/lib/db";
+import { createSession, SESSION_COOKIE } from "@/lib/auth";
 
 const SESSION_MAX_AGE = 8 * 60 * 60; // 8 hours in seconds
 
@@ -16,14 +16,14 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    handle   = body.handle;
+    handle = body.handle;
     password = body.password;
   } catch {
-    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
   if (!handle || !password) {
-    return NextResponse.json({ error: 'Missing credentials' }, { status: 400 });
+    return NextResponse.json({ error: "Missing credentials" }, { status: 400 });
   }
 
   // Fetch operator by handle (disabled operators cannot log in)
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
   // timing attacks that reveal whether the account exists)
   if (operator?.locked_until && new Date(operator.locked_until) > new Date()) {
     return NextResponse.json(
-      { error: 'Account temporarily locked. Try again later.' },
+      { error: "Account temporarily locked. Try again later." },
       { status: 423 }
     );
   }
@@ -53,10 +53,11 @@ export async function POST(request: NextRequest) {
 
   if (!valid) {
     if (operator) {
-      const attempts    = (operator.failed_attempts ?? 0) + 1;
-      const lockedUntil = attempts >= 3
-        ? new Date(Date.now() + 30 * 60 * 1000) // 30 min lockout
-        : null;
+      const attempts = (operator.failed_attempts ?? 0) + 1;
+      const lockedUntil =
+        attempts >= 3
+          ? new Date(Date.now() + 30 * 60 * 1000) // 30 min lockout
+          : null;
 
       await query(
         `UPDATE operators
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 
   // Reset brute-force state on successful login
@@ -82,15 +83,15 @@ export async function POST(request: NextRequest) {
 
   // Create persisted session
   const token = await createSession(operator.id, {
-    userAgent: request.headers.get('user-agent') ?? undefined,
-    ip:        request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? undefined,
+    userAgent: request.headers.get("user-agent") ?? undefined,
+    ip: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? undefined,
   });
 
   const response = NextResponse.json({
     operator: {
-      handle:       operator.handle,
+      handle: operator.handle,
       display_name: operator.display_name,
-      role:         operator.role,
+      role: operator.role,
     },
     // Signal whether a password change is required (first login)
     requires_password_change: operator.password_changed === false,
@@ -98,10 +99,10 @@ export async function POST(request: NextRequest) {
 
   response.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    secure:   process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge:   SESSION_MAX_AGE,
-    path:     '/',
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: SESSION_MAX_AGE,
+    path: "/",
   });
 
   return response;

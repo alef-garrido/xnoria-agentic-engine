@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { BRANDING } from "@/config/branding";
 import { useTranslations } from "next-intl";
+import { apiFetch } from "@/lib/client-api";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -93,7 +94,11 @@ export function Sidebar() {
   }, [isOpen, isMobile]);
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
+    try {
+      await apiFetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // Proceed to login regardless — the session may already be expired
+    }
     router.push("/login");
     router.refresh();
   };

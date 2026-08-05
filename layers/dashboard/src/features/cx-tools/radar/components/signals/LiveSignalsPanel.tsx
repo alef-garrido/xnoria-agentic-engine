@@ -7,6 +7,7 @@ import { Activity, Users, Radio, AlertTriangle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { getLocale } from "@/i18n/locale";
 import { clientLogger } from "@/lib/client-logger";
+import { apiFetch } from "@/lib/client-api";
 import { usePolling } from "@/hooks/usePolling";
 
 interface RadarContact {
@@ -62,11 +63,9 @@ export default function LiveSignalsPanel() {
     loading,
   } = usePolling(
     async () => {
-      const res = await fetch("/api/radar/contacts");
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const data = await apiFetch<{ contacts?: RadarContact[] }>("/api/radar/contacts");
       return {
-        contacts: (data.contacts ?? []) as RadarContact[],
+        contacts: data.contacts ?? [],
         fetchedAt: new Date(),
       };
     },
@@ -79,9 +78,9 @@ export default function LiveSignalsPanel() {
 
   const fetchSignals = async (contactId: string) => {
     try {
-      const res = await fetch(`/api/radar/signals?contactId=${encodeURIComponent(contactId)}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const data = await apiFetch<{ signals?: RadarSignalEvent[] }>(
+        `/api/radar/signals?contactId=${encodeURIComponent(contactId)}`
+      );
       setSignals(data.signals ?? []);
     } catch (err) {
       clientLogger.error("Failed to fetch radar signals", { err, contactId });

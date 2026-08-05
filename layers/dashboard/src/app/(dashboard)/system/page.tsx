@@ -3,6 +3,7 @@
 import { Server, Activity, Cpu, MemoryStick, HardDrive } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePolling } from "@/hooks/usePolling";
+import { apiFetch } from "@/lib/client-api";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -59,11 +60,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 export default function SystemMonitorPage() {
   const t = useTranslations("system");
   const { data, error } = usePolling(
-    async () => {
-      const res = await fetch("/api/system");
-      if (!res.ok) throw new Error("Failed to fetch system data");
-      return (await res.json()) as SystemData;
-    },
+    async () => apiFetch<SystemData>("/api/system"),
     { intervalMs: 10_000 }
   );
 

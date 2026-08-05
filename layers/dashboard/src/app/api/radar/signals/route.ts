@@ -1,15 +1,15 @@
-import { NextResponse } from 'next/server';
-import { query } from '@/lib/db';
-import { logger } from '@/lib/logger';
+import { NextResponse } from "next/server";
+import { query } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const contactId = searchParams.get('contactId');
-    const limit = parseInt(searchParams.get('limit') || '50', 10);
+    const contactId = searchParams.get("contactId");
+    const limit = parseInt(searchParams.get("limit") || "50", 10);
 
     if (!contactId) {
-      return NextResponse.json({ error: 'contactId is required' }, { status: 400 });
+      return NextResponse.json({ error: "contactId is required" }, { status: 400 });
     }
 
     const result = await query(
@@ -35,7 +35,7 @@ export async function GET(request: Request) {
       })),
     });
   } catch (error) {
-    logger.error({ error }, 'Failed to fetch radar signals from database');
-    return NextResponse.json({ error: 'Failed to fetch radar signals' }, { status: 500 });
+    logger.error({ error }, "Failed to fetch radar signals from database");
+    return NextResponse.json({ error: "Failed to fetch radar signals" }, { status: 500 });
   }
 }

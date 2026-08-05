@@ -15,10 +15,10 @@
 //      VALUES ('handle', 'Display Name', 'operator', '<hash>');"
 // ==============================================================================
 
-import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcrypt';
-import { query } from '@/lib/db';
-import { requireAdmin } from '@/lib/auth';
+import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcrypt";
+import { query } from "@/lib/db";
+import { requireAdmin } from "@/lib/auth";
 
 const BCRYPT_COST = 12;
 
@@ -29,7 +29,7 @@ const BCRYPT_COST = 12;
 // --------------------------------------------------------------------------
 export async function GET() {
   const auth = await requireAdmin();
-  if ('error' in auth) {
+  if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
@@ -56,7 +56,7 @@ export async function GET() {
 // --------------------------------------------------------------------------
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin();
-  if ('error' in auth) {
+  if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
@@ -66,38 +66,35 @@ export async function POST(request: NextRequest) {
   let password: string | undefined;
 
   try {
-    const body  = await request.json();
-    handle       = body.handle;
+    const body = await request.json();
+    handle = body.handle;
     display_name = body.display_name;
-    role         = body.role;
-    password     = body.password;
+    role = body.role;
+    password = body.password;
   } catch {
-    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
   // Validate required fields
   if (!handle || !display_name || !role || !password) {
     return NextResponse.json(
-      { error: 'Missing required fields: handle, display_name, role, password' },
+      { error: "Missing required fields: handle, display_name, role, password" },
       { status: 400 }
     );
   }
 
   // Validate role
-  const VALID_ROLES = ['admin', 'operator', 'viewer'];
+  const VALID_ROLES = ["admin", "operator", "viewer"];
   if (!VALID_ROLES.includes(role)) {
     return NextResponse.json(
-      { error: `Invalid role. Must be one of: ${VALID_ROLES.join(', ')}` },
+      { error: `Invalid role. Must be one of: ${VALID_ROLES.join(", ")}` },
       { status: 400 }
     );
   }
 
   // Validate password length
   if (password.length < 8) {
-    return NextResponse.json(
-      { error: 'Password must be at least 8 characters' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
   }
 
   const passwordHash = await bcrypt.hash(password, BCRYPT_COST);
@@ -110,17 +107,10 @@ export async function POST(request: NextRequest) {
       [handle, display_name, role, passwordHash]
     );
 
-    return NextResponse.json(
-      { operator: result.rows[0] },
-      { status: 201 }
-    );
+    return NextResponse.json({ operator: result.rows[0] }, { status: 201 });
   } catch (err: unknown) {
     // Unique constraint violation on handle
-    if (
-      err instanceof Error &&
-      err.message.includes('unique') &&
-      err.message.includes('handle')
-    ) {
+    if (err instanceof Error && err.message.includes("unique") && err.message.includes("handle")) {
       return NextResponse.json(
         { error: `Operator handle '${handle}' is already taken` },
         { status: 409 }

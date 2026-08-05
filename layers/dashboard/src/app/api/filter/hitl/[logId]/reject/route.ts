@@ -1,25 +1,12 @@
-import { NextResponse } from 'next/server';
-import { logger } from '@/lib/logger';
-
-const FILTER_URL = process.env.FILTER_URL ?? 'http://filter:3000';
+import { filterFetch } from "@/lib/service-client";
 
 // POST /api/filter/hitl/[logId]/reject → proxy to POST /filter/hitl/:logId/reject
-export async function POST(
-  _request: Request,
-  { params }: { params: Promise<{ logId: string }> }
-) {
+export async function POST(_request: Request, { params }: { params: Promise<{ logId: string }> }) {
   const { logId } = await params;
-
-  try {
-    const res = await fetch(`${FILTER_URL}/filter/hitl/${logId}/reject`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-    const data = await res.json();
-    return NextResponse.json(data, { status: res.status });
-  } catch (error) {
-    logger.error({ error, logId }, 'Failed to proxy HITL reject request');
-    return NextResponse.json({ error: 'Failed to reach filter service' }, { status: 502 });
-  }
+  return filterFetch(`/filter/hitl/${logId}/reject`, {
+    method: "POST",
+    passThroughErrors: false,
+    logMessage: "Failed to proxy HITL reject request",
+    logContext: { logId },
+  });
 }

@@ -46,8 +46,14 @@ export default function DomainSlice({
     <motion.g
       className="cursor-pointer outline-none"
       onClick={() => selectDomain(domain)}
-      onMouseEnter={() => { setHoveredLabel(domain.name); setHoveredDomainId(prefix); }}
-      onMouseLeave={() => { setHoveredLabel(null); setHoveredDomainId(null); }}
+      onMouseEnter={() => {
+        setHoveredLabel(domain.name);
+        setHoveredDomainId(prefix);
+      }}
+      onMouseLeave={() => {
+        setHoveredLabel(null);
+        setHoveredDomainId(null);
+      }}
       role="button"
       aria-label={t("domainAria", { name: domain.name })}
       initial={false}
@@ -62,10 +68,14 @@ export default function DomainSlice({
         strokeWidth={2}
         strokeOpacity={isSelected ? 1 : 0.6}
         initial={false}
-        whileHover={!isFaded ? {
-          filter: "brightness(1.25) saturate(1.2)",
-          scale: 1.02
-        } : undefined}
+        whileHover={
+          !isFaded
+            ? {
+                filter: "brightness(1.25) saturate(1.2)",
+                scale: 1.02,
+              }
+            : undefined
+        }
         animate={{ filter: "brightness(1) saturate(1)", scale: 1 }}
         transition={{ duration: 0.25, ease: "easeOut" }}
       />
@@ -81,7 +91,7 @@ export default function DomainSlice({
           fontFamily="'SF Mono', 'Fira Code', 'Cascadia Code', monospace"
           letterSpacing="0.05em"
           transform={`rotate(${flipLabel ? rotDeg + 180 : rotDeg}, ${labelX}, ${labelY})`}
-          style={{ pointerEvents: "none", userSelect: "none" }}
+          className="pointer-events-none select-none"
         >
           {prefix}
         </text>

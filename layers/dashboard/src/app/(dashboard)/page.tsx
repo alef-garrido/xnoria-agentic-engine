@@ -79,11 +79,7 @@ export default function DashboardPage() {
           {/* Activity Count */}
           <Link
             href="/activity"
-            className="rounded-xl p-5 flex items-center justify-between group"
-            style={{
-              backgroundColor: "var(--card)",
-              border: "1px solid var(--border)",
-            }}
+            className="rounded-xl p-5 flex items-center justify-between group bg-[var(--card)] border border-[var(--border)]"
           >
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
@@ -100,11 +96,7 @@ export default function DashboardPage() {
           {/* Session Count */}
           <Link
             href="/sessions"
-            className="rounded-xl p-5 flex items-center justify-between group"
-            style={{
-              backgroundColor: "var(--card)",
-              border: "1px solid var(--border)",
-            }}
+            className="rounded-xl p-5 flex items-center justify-between group bg-[var(--card)] border border-[var(--border)]"
           >
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
@@ -121,11 +113,7 @@ export default function DashboardPage() {
           {/* Services Status */}
           <Link
             href="/system"
-            className="rounded-xl p-5 flex items-center justify-between group"
-            style={{
-              backgroundColor: "var(--card)",
-              border: "1px solid var(--border)",
-            }}
+            className="rounded-xl p-5 flex items-center justify-between group bg-[var(--card)] border border-[var(--border)]"
           >
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">

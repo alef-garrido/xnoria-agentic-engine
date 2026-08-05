@@ -4,8 +4,11 @@ import { cn } from "@/lib/utils";
 export function Card({ className, style, ...rest }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("rounded-xl overflow-hidden", className)}
-      style={{ backgroundColor: "var(--card)", border: "1px solid var(--border)", ...style }}
+      className={cn(
+        "rounded-xl overflow-hidden bg-[var(--card)] border border-[var(--border)]",
+        className
+      )}
+      style={style}
       {...rest}
     />
   );

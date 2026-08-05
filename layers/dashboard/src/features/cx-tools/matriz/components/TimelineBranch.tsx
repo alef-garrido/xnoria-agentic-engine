@@ -19,7 +19,12 @@ interface TimelineBranchProps {
 }
 
 export const TimelineBranch: React.FC<TimelineBranchProps> = ({
-  node, index, x, centerY, activeLayers, isSVGPass,
+  node,
+  index,
+  x,
+  centerY,
+  activeLayers,
+  isSVGPass,
 }) => {
   const isTop = node.position.y === 0;
 
@@ -84,14 +89,10 @@ export const TimelineBranch: React.FC<TimelineBranchProps> = ({
         left: x - 160, // Centers a 320px width element accurately
         width: 320,
         top: isTop ? centerY - gapY - 12 : centerY + gapY + 12, // 12px breathing room from the line
-        transform: isTop ? 'translateY(-100%)' : 'none',
+        transform: isTop ? "translateY(-100%)" : "none",
       }}
     >
-      <TouchpointCard
-        tp={node}
-        activeLayers={activeLayers}
-        stageColor={node.stageColor}
-      />
+      <TouchpointCard tp={node} activeLayers={activeLayers} stageColor={node.stageColor} />
     </div>
   );
 };

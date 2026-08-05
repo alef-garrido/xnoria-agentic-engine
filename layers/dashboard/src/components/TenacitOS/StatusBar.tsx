@@ -16,7 +16,7 @@ interface SystemStats {
 }
 
 interface StatusMetricProps {
-  icon: ComponentType<{ style?: CSSProperties }>;
+  icon: ComponentType<{ style?: CSSProperties; className?: string }>;
   label: string;
   value: string;
   barPercent?: number;
@@ -25,45 +25,21 @@ interface StatusMetricProps {
 
 function StatusMetric({ icon: Icon, label, value, barPercent, color }: StatusMetricProps) {
   return (
-    <div className="flex items-center gap-1.5" style={{ height: "24px" }}>
-      <Icon style={{ width: "14px", height: "14px", color: "var(--text-muted)" }} />
-      <span
-        style={{
-          fontFamily: "var(--font-body)",
-          fontSize: "11px",
-          fontWeight: 600,
-          letterSpacing: "1px",
-          color: "var(--text-muted)",
-        }}
-      >
+    <div className="flex items-center gap-1.5 h-6">
+      <Icon className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+      <span className="font-[var(--font-body)] text-[11px] font-semibold tracking-[1px] text-[var(--text-muted)]">
         {label}
       </span>
-      <span
-        style={{
-          fontFamily: "var(--font-body)",
-          fontSize: "11px",
-          fontWeight: 600,
-          color: "var(--text-secondary)",
-        }}
-      >
+      <span className="font-[var(--font-body)] text-[11px] font-semibold text-[var(--text-secondary)]">
         {value}
       </span>
       {barPercent !== undefined && (
-        <div
-          style={{
-            width: "48px",
-            height: "4px",
-            backgroundColor: "var(--surface-elevated)",
-            borderRadius: "2px",
-            overflow: "hidden",
-          }}
-        >
+        <div className="w-[48px] h-1 rounded-[2px] overflow-hidden bg-[var(--surface-elevated)]">
           <div
+            className="h-full rounded-[2px]"
             style={{
               width: `${Math.min(100, barPercent)}%`,
-              height: "100%",
               backgroundColor: color,
-              borderRadius: "2px",
             }}
           />
         </div>
@@ -121,23 +97,7 @@ export function StatusBar() {
     diskPercent < 60 ? "var(--positive)" : diskPercent < 85 ? "var(--warning)" : "var(--negative)";
 
   return (
-    <div
-      className="status-bar"
-      style={{
-        position: "fixed",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: "32px",
-        backgroundColor: "var(--surface)",
-        borderTop: "1px solid var(--border)",
-        display: "flex",
-        alignItems: "center",
-        padding: "0 16px 0 calc(var(--layout-sidebar-w) + 16px)",
-        gap: "16px",
-        zIndex: 40,
-      }}
-    >
+    <div className="fixed bottom-0 left-0 right-0 h-[32px] bg-[var(--surface)] border-t border-[var(--border)] flex items-center pl-[calc(var(--layout-sidebar-w)_+_16px)] pr-4 gap-4 z-40">
       {/* CPU */}
       <StatusMetric
         icon={Cpu}
@@ -166,36 +126,22 @@ export function StatusBar() {
       />
 
       {/* Separator */}
-      <div style={{ width: "1px", height: "16px", backgroundColor: "var(--border)" }} />
+      <div className="w-px h-4 bg-[var(--border)]" />
 
       {/* Services */}
       <div className="flex items-center gap-1">
-        <span
-          style={{
-            fontFamily: "var(--font-body)",
-            fontSize: "10px",
-            fontWeight: 500,
-            color: "var(--text-muted)",
-          }}
-        >
+        <span className="font-[var(--font-body)] text-[10px] font-medium text-[var(--text-muted)]">
           {t("services")}: {current.activeServices}/{current.totalServices}
         </span>
       </div>
 
       {/* Separator */}
-      <div style={{ width: "1px", height: "16px", backgroundColor: "var(--border)" }} />
+      <div className="w-px h-4 bg-[var(--border)]" />
 
       {/* Uptime */}
       <div className="flex items-center gap-1">
-        <Clock style={{ width: "12px", height: "12px", color: "var(--text-muted)" }} />
-        <span
-          style={{
-            fontFamily: "var(--font-body)",
-            fontSize: "10px",
-            fontWeight: 500,
-            color: "var(--text-muted)",
-          }}
-        >
+        <Clock className="w-3 h-3 text-[var(--text-muted)]" />
+        <span className="font-[var(--font-body)] text-[10px] font-medium text-[var(--text-muted)]">
           {t("uptime")}: {current.uptime}
         </span>
       </div>

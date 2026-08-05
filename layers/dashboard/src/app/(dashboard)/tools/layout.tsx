@@ -3,11 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 
-export default function ToolsLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function ToolsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const t = useTranslations("cxtools");
   const tool = pathname.split("/")[2];
@@ -15,18 +11,12 @@ export default function ToolsLayout({
 
   return (
     <div className="flex flex-col gap-6">
-      <div
-        className="flex items-center gap-2 pb-4 text-sm"
-        style={{
-          borderBottom: "1px solid var(--border)",
-          color: "var(--text-secondary)",
-        }}
-      >
-        <span style={{ color: "var(--text-muted)" }}>{t("toolsSection")}</span>
+      <div className="flex items-center gap-2 pb-4 text-sm border-b border-[var(--border)] text-[var(--text-secondary)]">
+        <span className="text-[var(--text-muted)]">{t("toolsSection")}</span>
         {toolLabel && (
           <>
-            <span style={{ color: "var(--text-muted)" }}>›</span>
-            <span style={{ color: "var(--text-primary)" }}>{toolLabel}</span>
+            <span className="text-[var(--text-muted)]">›</span>
+            <span className="text-[var(--text-primary)]">{toolLabel}</span>
           </>
         )}
       </div>

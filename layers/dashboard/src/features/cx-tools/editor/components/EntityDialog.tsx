@@ -1,7 +1,7 @@
 "use client";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/features/cx-tools/editor/components/ui/button";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 

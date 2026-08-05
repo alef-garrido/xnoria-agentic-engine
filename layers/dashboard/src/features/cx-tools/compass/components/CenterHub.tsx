@@ -36,8 +36,7 @@ export default function CenterHub() {
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
-                className="text-xl font-semibold"
-                style={{ color: "#D1D1D6", fontFamily: "var(--font-heading)" }}
+                className="text-xl font-semibold text-[#D1D1D6] font-[var(--font-heading)]"
               >
                 {hoveredLabel}
               </motion.span>
@@ -49,14 +48,11 @@ export default function CenterHub() {
                 exit={{ opacity: 0 }}
                 className="flex flex-col items-center gap-1"
               >
-                <span
-                  className="text-lg font-bold uppercase tracking-widest"
-                  style={{ color: "#D1D1D6", fontFamily: "var(--font-heading)" }}
-                >
+                <span className="text-lg font-bold uppercase tracking-widest text-[#D1D1D6] font-[var(--font-heading)]">
                   {center.name}
                 </span>
                 {viewState === "home" && (
-                  <span className="text-sm leading-tight px-2" style={{ color: "#9898A0" }}>
+                  <span className="text-sm leading-tight px-2 text-[#9898A0]">
                     {center.description}
                   </span>
                 )}

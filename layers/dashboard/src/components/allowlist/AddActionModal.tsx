@@ -5,6 +5,9 @@ import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { STAGES } from "@/lib/constants";
 import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
+import { Button } from "@/components/ui/Button";
+import { Input, inputClass } from "@/components/ui/Input";
+import { cn } from "@/lib/utils";
 
 export interface NewActionInput {
   action_id: string;
@@ -48,30 +51,12 @@ export function AddActionModal({ onClose, onCreate }: AddActionModalProps) {
 
   return (
     <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 50,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "rgba(0, 0, 0, 0.6)",
-      }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div
-        className="rounded-xl"
-        style={{
-          width: "100%",
-          maxWidth: "480px",
-          backgroundColor: "var(--surface)",
-          border: "1px solid var(--border)",
-          boxShadow: "var(--shadow-md)",
-          margin: "16px",
-        }}
-      >
+      <div className="rounded-xl w-full max-w-[480px] bg-[var(--surface)] border border-[var(--border)] shadow-[var(--shadow-md)] m-4">
         {/* Modal header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
           <h3 className="text-base font-semibold font-[var(--font-heading)] text-[var(--text-primary)]">
@@ -92,9 +77,9 @@ export function AddActionModal({ onClose, onCreate }: AddActionModalProps) {
             <label className="block text-xs font-medium mb-1.5 text-[var(--text-secondary)]">
               {t("actionId")}
             </label>
-            <input
+            <Input
               type="text"
-              className="input w-full text-[13px]"
+              className="w-full"
               placeholder={t("actionIdPlaceholder")}
               value={actionId}
               onChange={(e) => setActionId(e.target.value)}
@@ -109,7 +94,7 @@ export function AddActionModal({ onClose, onCreate }: AddActionModalProps) {
               {t("stage")}
             </label>
             <select
-              className="input w-full text-[13px] cursor-pointer"
+              className={cn(inputClass, "w-full cursor-pointer")}
               value={stage}
               onChange={(e) => setStage(e.target.value)}
             >
@@ -126,9 +111,9 @@ export function AddActionModal({ onClose, onCreate }: AddActionModalProps) {
             <label className="block text-xs font-medium mb-1.5 text-[var(--text-secondary)]">
               {t("workflowId")}
             </label>
-            <input
+            <Input
               type="text"
-              className="input w-full text-[13px]"
+              className="w-full"
               placeholder={t("workflowPlaceholder")}
               value={workflowId}
               onChange={(e) => setWorkflowId(e.target.value)}
@@ -173,7 +158,7 @@ export function AddActionModal({ onClose, onCreate }: AddActionModalProps) {
               {t("description")}
             </label>
             <textarea
-              className="input w-full text-[13px] resize-y"
+              className={cn(inputClass, "w-full resize-y")}
               rows={2}
               placeholder={t("descriptionPlaceholder")}
               value={description}
@@ -183,16 +168,16 @@ export function AddActionModal({ onClose, onCreate }: AddActionModalProps) {
 
           {/* Actions */}
           <div className="flex items-center justify-end gap-3 border-t border-[var(--border)] pt-4">
-            <button type="button" onClick={onClose} className="btn-outline px-4 py-2 text-[13px]">
+            <Button type="button" onClick={onClose} variant="outline" className="text-[13px]">
               {t("cancel")}
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={submitting || !actionId || !workflowId}
-              className="btn-primary px-5 py-2 text-[13px] disabled:opacity-50"
+              className="text-[13px] disabled:opacity-50"
             >
               {submitting ? t("creating") : t("createAction")}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

@@ -3,6 +3,8 @@
 import { Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { ToggleSwitch } from "@/components/ui/ToggleSwitch";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 
 export interface FilterAction {
   id: string;
@@ -58,7 +60,7 @@ export function ActionRow({
 
       {/* Stage */}
       <td className="px-4 py-3">
-        <span className="badge bg-[var(--info-soft)] text-[var(--info)]">{action.stage}</span>
+        <Badge className="bg-[var(--info-soft)] text-[var(--info)]">{action.stage}</Badge>
       </td>
 
       {/* n8n Workflow */}
@@ -102,9 +104,9 @@ export function ActionRow({
       <td className="px-4 py-3">
         {deleting ? (
           <div className="flex items-center gap-2">
-            <button onClick={onConfirmDelete} className="btn-danger px-2.5 py-1 text-[11px]">
+            <Button onClick={onConfirmDelete} variant="danger" className="text-[11px]">
               {t("confirm")}
-            </button>
+            </Button>
             <button
               onClick={onCancelDelete}
               className="text-[var(--text-muted)] text-[11px] cursor-pointer bg-transparent border-none"

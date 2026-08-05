@@ -38,10 +38,7 @@ export const MatrizDashboard: React.FC<MatrizDashboardProps> = ({ data }) => {
   };
 
   return (
-    <div
-      className="flex flex-col bg-[var(--bg)] text-white overflow-hidden rounded-2xl border border-white/10"
-      style={{ height: "calc(100vh - var(--layout-main-inset-y))" }}
-    >
+    <div className="flex flex-col bg-[var(--bg)] text-white overflow-hidden rounded-2xl border border-white/10 h-[calc(100vh_-_var(--layout-main-inset-y))]">
       {/* Unified Header */}
       <div className="px-6 py-4 shrink-0 flex items-center justify-between border-b border-white/10 bg-black/40 backdrop-blur-md z-50">
         <div className="flex items-center gap-6">
@@ -65,19 +62,12 @@ export const MatrizDashboard: React.FC<MatrizDashboardProps> = ({ data }) => {
         </div>
 
         <div className="flex items-center gap-4">
-          <LayerControls
-            activeLayers={activeLayers}
-            toggleLayer={toggleLayer}
-            labels={labels}
-          />
+          <LayerControls activeLayers={activeLayers} toggleLayer={toggleLayer} labels={labels} />
         </div>
       </div>
 
       {/* Main Grid -> Now Timeline */}
-      <TimelineJourney
-        data={data}
-        activeLayers={activeLayers}
-      />
+      <TimelineJourney data={data} activeLayers={activeLayers} />
 
       {/* Footer Info */}
       <div className="p-6 text-[10px] text-white/20 border-t border-white/5 flex justify-between items-center">

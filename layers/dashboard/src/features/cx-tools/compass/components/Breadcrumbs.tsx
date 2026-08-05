@@ -5,7 +5,15 @@ import { ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 export default function Breadcrumbs() {
-  const { viewState, selectedDomain, selectedCause, selectedSignal, resetToHome, selectDomain, selectCause } = useWheel();
+  const {
+    viewState,
+    selectedDomain,
+    selectedCause,
+    selectedSignal,
+    resetToHome,
+    selectDomain,
+    selectCause,
+  } = useWheel();
   const { uiStrings } = useCompassData();
   const t = useTranslations("cxtools");
 
@@ -13,14 +21,13 @@ export default function Breadcrumbs() {
     <nav className="flex items-center gap-1 text-xs" aria-label={t("breadcrumb")}>
       <button
         onClick={resetToHome}
-        className="hover:underline transition-colors"
-        style={{ color: "var(--text-primary)" }}
+        className="hover:underline transition-colors text-[var(--text-primary)]"
       >
         {uiStrings.home}
       </button>
       {selectedDomain && (
         <>
-          <ChevronRight className="w-3 h-3" style={{ color: "var(--text-primary)" }} />
+          <ChevronRight className="w-3 h-3 text-[var(--text-primary)]" />
           <button
             onClick={() => selectDomain(selectedDomain)}
             className="hover:underline transition-colors"
@@ -32,28 +39,23 @@ export default function Breadcrumbs() {
       )}
       {selectedCause && (viewState === "cause" || viewState === "signal") && (
         <>
-          <ChevronRight className="w-3 h-3" style={{ color: "var(--text-primary)" }} />
+          <ChevronRight className="w-3 h-3 text-[var(--text-primary)]" />
           {viewState === "signal" ? (
             <button
               onClick={() => selectCause(selectedCause)}
-              className="hover:underline transition-colors"
-              style={{ color: "var(--text-primary)" }}
+              className="hover:underline transition-colors text-[var(--text-primary)]"
             >
               {selectedCause.name}
             </button>
           ) : (
-            <span style={{ color: "var(--text-primary)" }}>
-              {selectedCause.name}
-            </span>
+            <span className="text-[var(--text-primary)]">{selectedCause.name}</span>
           )}
         </>
       )}
       {selectedSignal && viewState === "signal" && (
         <>
-          <ChevronRight className="w-3 h-3" style={{ color: "var(--text-primary)" }} />
-          <span style={{ color: "var(--text-primary)" }}>
-            {selectedSignal.name}
-          </span>
+          <ChevronRight className="w-3 h-3 text-[var(--text-primary)]" />
+          <span className="text-[var(--text-primary)]">{selectedSignal.name}</span>
         </>
       )}
     </nav>

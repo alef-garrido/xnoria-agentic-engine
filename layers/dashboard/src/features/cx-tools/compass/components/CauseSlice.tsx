@@ -59,7 +59,7 @@ export default function CauseSlice({
         strokeWidth={0}
         whileHover={{
           filter: "brightness(1.25) saturate(1.15)",
-          scale: 1.03
+          scale: 1.03,
         }}
         animate={{ filter: "brightness(1) saturate(1)", scale: 1 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
@@ -75,7 +75,7 @@ export default function CauseSlice({
         fontFamily="'SF Mono', 'Fira Code', 'Cascadia Code', monospace"
         letterSpacing="0.03em"
         transform={`rotate(${flipLabel ? rotDeg + 180 : rotDeg}, ${labelX}, ${labelY})`}
-        style={{ pointerEvents: "none", userSelect: "none" }}
+        className="pointer-events-none select-none"
       >
         {cause.code.split("-")[1] || cause.code}
       </text>

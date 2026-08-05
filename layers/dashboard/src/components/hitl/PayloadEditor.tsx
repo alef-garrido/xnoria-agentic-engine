@@ -1,6 +1,7 @@
 "use client";
 
 import { Pencil, RotateCcw } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
 import { useTranslations } from "next-intl";
 
 interface PayloadEditorProps {
@@ -25,9 +26,7 @@ export function PayloadEditor({ value, original, edited, onEditedChange }: Paylo
           {t("outreachMessage")}
         </span>
         {edited && (
-          <span className="badge bg-[var(--info-soft)] text-[var(--info)] text-[10px]">
-            {t("edited")}
-          </span>
+          <Badge className="bg-[var(--info-soft)] text-[var(--info)]">{t("edited")}</Badge>
         )}
       </div>
       <textarea

@@ -28,39 +28,14 @@ export function MetricCard({
   };
 
   return (
-    <div
-      style={{
-        backgroundColor: "var(--surface)",
-        borderRadius: "12px",
-        padding: "16px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "8px",
-      }}
-    >
+    <div className="flex flex-col gap-2 bg-[var(--surface)] rounded-[12px] p-4">
       {/* Top Row: Icon + Change */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <Icon
-          style={{
-            width: "20px",
-            height: "20px",
-            color: "var(--text-muted)",
-          }}
-        />
+      <div className="flex justify-between items-center">
+        <Icon className="w-5 h-5 text-[var(--text-muted)]" />
         {change && (
           <span
-            style={{
-              fontFamily: "var(--font-body)",
-              fontSize: "11px",
-              fontWeight: 600,
-              color: changeColorMap[changeColor],
-            }}
+            className="font-[var(--font-body)] text-[11px] font-semibold"
+            style={{ color: changeColorMap[changeColor] }}
           >
             {change}
           </span>
@@ -68,27 +43,12 @@ export function MetricCard({
       </div>
 
       {/* Metric Value */}
-      <div
-        style={{
-          fontFamily: "var(--font-heading)",
-          fontSize: "28px",
-          fontWeight: 700,
-          letterSpacing: "-1.5px",
-          color: "var(--text-primary)",
-        }}
-      >
+      <div className="font-[var(--font-heading)] text-[28px] font-bold -tracking-[1.5px] text-[var(--text-primary)]">
         {value}
       </div>
 
       {/* Metric Label */}
-      <div
-        style={{
-          fontFamily: "var(--font-body)",
-          fontSize: "12px",
-          fontWeight: 500,
-          color: "var(--text-secondary)",
-        }}
-      >
+      <div className="font-[var(--font-body)] text-[12px] font-medium text-[var(--text-secondary)]">
         {label}
       </div>
     </div>

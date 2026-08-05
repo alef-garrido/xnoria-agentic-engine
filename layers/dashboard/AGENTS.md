@@ -47,10 +47,10 @@ src/
 │       ├── compass/      # Compass wheel (components, context, theme, utils)
 │       ├── radar/        # Radar signal explorer (cx-radar + signals components)
 │       ├── matriz/       # Impact/effort matrix
-│       └── editor/       # Wheel editor
+│       └── editor/       # Wheel editor (has its own scoped ui/ button+input primitives)
 ├── components/           # UI components
 │   ├── TenacitOS/        # Shared design system components (TopBar, StatusBar)
-│   ├── ui/               # Primitives: Card, PageHeader, Skeleton, ToggleSwitch, Button, Dialog...
+│   ├── ui/               # Primitives: Card, PageHeader, Skeleton, ToggleSwitch, Badge, Button, Input... (legacy .btn-*/.input/.badge classes removed — use these)
 │   ├── hitl/             # HITL queue subcomponents (PendingActionCard, PayloadEditor, ActionButtons)
 │   ├── allowlist/        # Allowlist subcomponents (ActionRow, AddActionModal)
 │   ├── sessions/         # Sessions subcomponents (SessionRow)
@@ -228,7 +228,9 @@ docker exec exnoria_postgres psql -U xnoria -d exnoria -c \
 
 ## Component Conventions
 - Server components by default, use `'use client'` only when needed
-- Use UI primitives from `src/components/ui/` (Card, PageHeader, Skeleton) instead of repeating the card/header/skeleton markup
+- Use UI primitives from `src/components/ui/` (Card, PageHeader, Skeleton, Badge, Button, Input) instead of repeating the card/header/badge/button/input markup
+  - `ui/Input` is for `<input>`; for `<select>`/`<textarea>` use the exported `inputClass` from `ui/Input` (shared styling)
+  - `ui/Button` variants: `primary` | `outline` | `danger` (matches the retired `.btn-*` design); pass size overrides via `className` (`text-[12px]`, etc.)
 - Data fetching and polling: use `usePolling` from `src/hooks/usePolling.ts` — never hand-roll `useEffect + setInterval + mirror-ref`
   - Pass a stable fetcher (wrap in `useCallback` when it depends on state, e.g. the `days` selector)
   - Default behavior keeps stale data on fetch errors; pass `keepStaleOnError: false` to override

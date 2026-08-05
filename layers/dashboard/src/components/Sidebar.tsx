@@ -111,24 +111,9 @@ export function Sidebar() {
       {/* Mobile hamburger button */}
       <button
         onClick={toggleSidebar}
-        className="mobile-menu-button"
         aria-label={t("toggleMenu")}
-        style={{
-          position: "fixed",
-          top: "1rem",
-          left: "1rem",
-          zIndex: 60,
-          padding: "0.5rem",
-          borderRadius: "0.5rem",
-          backgroundColor: "var(--card)",
-          border: "1px solid var(--border)",
-          color: "var(--text-primary)",
-          display: isMobile ? "flex" : "none",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          transition: "all 0.2s ease",
-        }}
+        className="fixed top-4 left-4 z-[60] p-2 rounded-lg bg-[var(--card)] border border-[var(--border)] text-[var(--text-primary)] items-center justify-center cursor-pointer transition-colors"
+        style={{ display: isMobile ? "flex" : "none" }}
       >
         <Menu className="w-6 h-6" />
       </button>
@@ -137,11 +122,8 @@ export function Sidebar() {
       {isMobile && (
         <div
           onClick={closeSidebar}
+          className="fixed inset-0 z-40 bg-black/50"
           style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            zIndex: 40,
             opacity: isOpen ? 1 : 0,
             pointerEvents: isOpen ? "auto" : "none",
             transition: "opacity 0.3s ease",
@@ -151,19 +133,8 @@ export function Sidebar() {
 
       {/* Sidebar */}
       <aside
-        className="sidebar"
+        className="fixed left-0 top-0 w-[var(--layout-sidebar-w)] min-h-screen flex flex-col p-4 bg-[var(--card)] border-r border-[var(--border)] z-50"
         style={{
-          position: "fixed",
-          left: 0,
-          top: 0,
-          width: "var(--layout-sidebar-w)",
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          padding: "1rem",
-          backgroundColor: "var(--card)",
-          borderRight: "1px solid var(--border)",
-          zIndex: 50,
           transform: isMobile ? (isOpen ? "translateX(0)" : "translateX(-100%)") : "translateX(0)",
           transition: "transform 0.3s ease",
         }}
@@ -181,15 +152,8 @@ export function Sidebar() {
 
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-2 py-3 mb-4">
-          <Terminal className="w-6 h-6" style={{ color: "var(--accent)" }} />
-          <h1
-            className="text-base font-bold tracking-tight"
-            style={{
-              fontFamily: "var(--font-heading)",
-              color: "var(--text-primary)",
-              letterSpacing: "-0.5px",
-            }}
-          >
+          <Terminal className="w-6 h-6 text-[var(--accent)]" />
+          <h1 className="text-base font-bold font-[var(--font-heading)] text-[var(--text-primary)] -tracking-[0.5px]">
             {BRANDING.appTitle}
           </h1>
         </div>
@@ -200,10 +164,7 @@ export function Sidebar() {
             {navSections.map((section) => (
               <li key={section.label ?? "primary"}>
                 {section.label && (
-                  <div
-                    className="px-4 py-2 text-xs uppercase tracking-wider"
-                    style={{ color: "var(--text-muted)" }}
-                  >
+                  <div className="px-4 py-2 text-xs uppercase tracking-wider text-[var(--text-muted)]">
                     {section.label}
                   </div>
                 )}
@@ -218,19 +179,11 @@ export function Sidebar() {
                       <li key={item.href}>
                         <Link
                           href={item.href}
-                          className={`nav-item w-full ${isActive ? "active" : ""}`}
-                          style={
-                            !isActive
-                              ? {
-                                  color: "var(--text-secondary)",
-                                }
-                              : {
-                                  backgroundColor: "var(--accent)",
-                                  color: "var(--text-primary)",
-                                  fontFamily: "var(--font-heading)",
-                                  fontWeight: 600,
-                                }
-                          }
+                          className={`flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] ${
+                            isActive
+                              ? "bg-[var(--accent)] font-[var(--font-heading)] font-semibold text-[var(--text-primary)] hover:bg-[var(--accent)] hover:text-[var(--text-primary)]"
+                              : ""
+                          }`}
                         >
                           <Icon
                             className="w-5 h-5"
@@ -248,10 +201,8 @@ export function Sidebar() {
         </nav>
 
         {/* Footer */}
-        <div className="pt-4 mt-4" style={{ borderTop: "1px solid var(--border)" }}>
-          <div className="px-4 py-2 text-xs" style={{ color: "var(--text-muted)" }}>
-            {BRANDING.appTitle}
-          </div>
+        <div className="pt-4 mt-4 border-t border-[var(--border)]">
+          <div className="px-4 py-2 text-xs text-[var(--text-muted)]">{BRANDING.appTitle}</div>
 
           <button
             onClick={handleLogout}

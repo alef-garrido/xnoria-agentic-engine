@@ -8,68 +8,22 @@ export function TopBar() {
   return (
     <>
       <div
-        className="top-bar"
-        style={{
-          position: "fixed",
-          top: 0,
-          left: "256px", // Width of sidebar (16rem = 256px)
-          right: 0,
-          height: "48px",
-          backgroundColor: "var(--surface)",
-          borderBottom: "1px solid var(--border)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "0 20px",
-          zIndex: 45,
-        }}
+        className="fixed top-0 right-0 z-[45] flex items-center justify-between h-[var(--layout-topbar-h)] px-5 bg-[var(--surface)] border-b border-[var(--border)]"
+        style={{ left: "var(--layout-sidebar-w)" }}
       >
         <div className="flex items-center gap-3">
-          <span style={{ fontSize: "20px" }}>🧠</span>
-          <h1
-            style={{
-              fontFamily: "var(--font-heading)",
-              fontSize: "16px",
-              fontWeight: 700,
-              color: "var(--text-primary)",
-              letterSpacing: "-0.5px",
-            }}
-          >
+          <span className="text-[20px]">🧠</span>
+          <h1 className="font-[var(--font-heading)] text-[16px] font-bold text-[var(--text-primary)] -tracking-[0.5px]">
             {BRANDING.agentName}
           </h1>
           {BRANDING.subtitle && (
-            <span
-              style={{
-                fontFamily: "var(--font-body)",
-                fontSize: "10px",
-                fontWeight: 500,
-                color: "var(--text-muted)",
-                padding: "2px 6px",
-                backgroundColor: "var(--surface-elevated)",
-                borderRadius: "4px",
-                border: "1px solid var(--border)",
-              }}
-            >
+            <span className="font-[var(--font-body)] text-[10px] font-medium text-[var(--text-muted)] px-1.5 py-0.5 bg-[var(--surface-elevated)] rounded border border-[var(--border)]">
               {BRANDING.subtitle}
             </span>
           )}
           {/* Version Badge */}
-          <div
-            style={{
-              backgroundColor: "var(--accent-soft)",
-              borderRadius: "4px",
-              padding: "2px 8px",
-            }}
-          >
-            <span
-              style={{
-                fontFamily: "var(--font-body)",
-                fontSize: "9px",
-                fontWeight: 700,
-                color: "var(--accent)",
-                letterSpacing: "1px",
-              }}
-            >
+          <div className="bg-[var(--accent-soft)] rounded px-2 py-0.5">
+            <span className="font-[var(--font-body)] text-[9px] font-bold text-[var(--accent)] tracking-wide">
               v1.0
             </span>
           </div>
@@ -80,36 +34,12 @@ export function TopBar() {
           {/* User Area */}
           <div className="flex items-center gap-2">
             {/* Avatar */}
-            <div
-              style={{
-                width: "28px",
-                height: "28px",
-                borderRadius: "14px",
-                backgroundColor: "var(--accent)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: "var(--font-heading)",
-                  fontSize: "12px",
-                  fontWeight: 700,
-                  color: "var(--text-primary)",
-                }}
-              >
+            <div className="flex items-center justify-center w-7 h-7 rounded-full bg-[var(--accent)]">
+              <span className="font-[var(--font-heading)] text-[12px] font-bold text-[var(--text-primary)]">
                 X
               </span>
             </div>
-            <span
-              style={{
-                fontFamily: "var(--font-body)",
-                fontSize: "12px",
-                fontWeight: 500,
-                color: "var(--text-secondary)",
-              }}
-            >
+            <span className="font-[var(--font-body)] text-[12px] font-medium text-[var(--text-secondary)]">
               {t("admin")}
             </span>
           </div>

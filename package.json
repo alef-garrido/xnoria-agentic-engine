@@ -2,12 +2,19 @@
   "name": "xnoria-agentic-engine",
   "version": "1.3.0",
   "scripts": {
-    "ingest:leads": "ts-node layers/cognitive/src/scripts/batch-ingest.ts"
+    "ingest:leads": "ts-node layers/cognitive/src/scripts/batch-ingest.ts",
+    "prepare": "husky"
   },
   "dependencies": {
     "csv-parse": "^7.0.0"
   },
   "devDependencies": {
-    "@types/csv-parse": "^1.1.12"
+    "@types/csv-parse": "^1.1.12",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs,cjs,json,css,md}": "layers/dashboard/node_modules/.bin/prettier --write",
+    "layers/dashboard/src/**/*.{ts,tsx}": "scripts/lint-dashboard.sh"
   }
 }

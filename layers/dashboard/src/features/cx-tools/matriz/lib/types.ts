@@ -10,7 +10,15 @@ export interface WorkflowLayer extends Layer {
 }
 
 export interface AgentLayer extends Layer {
-  decision_type?: "diagnostic" | "prioritization" | "risk_detection" | "pattern_detection" | "real_time_assist" | "optimization" | "risk_prioritization" | "opportunity_detection";
+  decision_type?:
+    | "diagnostic"
+    | "prioritization"
+    | "risk_detection"
+    | "pattern_detection"
+    | "real_time_assist"
+    | "optimization"
+    | "risk_prioritization"
+    | "opportunity_detection";
 }
 
 export interface HumanLayer extends Layer {

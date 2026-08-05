@@ -1,6 +1,6 @@
-import axios from 'axios';
+import axios from "axios";
 
-const N8N_BASE_URL = process.env.N8N_BASE_URL ?? 'http://n8n:5678';
+const N8N_BASE_URL = process.env.N8N_BASE_URL ?? "http://n8n:5678";
 
 export async function dispatchToN8n(
   workflowId: string,
@@ -10,8 +10,8 @@ export async function dispatchToN8n(
 
   try {
     const response = await axios.post(url, payload, {
-      headers: { 'Content-Type': 'application/json' },
-      timeout: 30_000
+      headers: { "Content-Type": "application/json" },
+      timeout: 30_000,
     });
     return response.data as Record<string, unknown>;
   } catch (err: unknown) {

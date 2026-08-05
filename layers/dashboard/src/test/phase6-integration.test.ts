@@ -13,7 +13,10 @@
  */
 
 import { describe, it, expect, beforeAll } from "vitest";
-import { getCachedSignals, buildFlatSignals } from "@/features/cx-tools/shared/domain/signalBuilder";
+import {
+  getCachedSignals,
+  buildFlatSignals,
+} from "@/features/cx-tools/shared/domain/signalBuilder";
 import { validateWheelStructure } from "@/features/cx-tools/shared/domain/schemaValidation";
 import {
   getInterventionOrThrow,

@@ -37,7 +37,13 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
   );
 }
 
-export function DialogContent({ className, children }: { className?: string; children: React.ReactNode }) {
+export function DialogContent({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div
       className={cn(
@@ -50,19 +56,43 @@ export function DialogContent({ className, children }: { className?: string; chi
   );
 }
 
-export function DialogHeader({ className, children }: { className?: string; children: React.ReactNode }) {
+export function DialogHeader({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
   return <div className={cn("mb-4", className)}>{children}</div>;
 }
 
-export function DialogTitle({ className, children }: { className?: string; children: React.ReactNode }) {
+export function DialogTitle({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
   return <h2 className={cn("text-lg font-bold", className)}>{children}</h2>;
 }
 
-export function DialogDescription({ className, children }: { className?: string; children: React.ReactNode }) {
+export function DialogDescription({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
   return <p className={cn("mt-1 text-sm text-[var(--text-muted)]", className)}>{children}</p>;
 }
 
-export function DialogFooter({ className, children }: { className?: string; children: React.ReactNode }) {
+export function DialogFooter({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
   return <div className={cn("mt-4 flex justify-end gap-2", className)}>{children}</div>;
 }
 

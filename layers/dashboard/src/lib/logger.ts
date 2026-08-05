@@ -1,7 +1,7 @@
-import pino from 'pino';
+import pino from "pino";
 
 // Configuración de logger basada en entorno
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV === "production";
 
 /**
  * Logger estructurado para el dashboard (SERVER ONLY)
@@ -9,20 +9,22 @@ const isProduction = process.env.NODE_ENV === 'production';
  * Formatea bonito en desarrollo
  */
 export const logger = pino({
-  level: process.env.LOG_LEVEL || (isProduction ? 'info' : 'debug'),
-  transport: isProduction ? undefined : {
-    target: 'pino-pretty',
-    options: {
-      colorize: true,
-      translateTime: 'SYS:standard',
-      ignore: 'pid,hostname'
-    }
-  },
+  level: process.env.LOG_LEVEL || (isProduction ? "info" : "debug"),
+  transport: isProduction
+    ? undefined
+    : {
+        target: "pino-pretty",
+        options: {
+          colorize: true,
+          translateTime: "SYS:standard",
+          ignore: "pid,hostname",
+        },
+      },
   serializers: {
     req: pino.stdSerializers.req,
     res: pino.stdSerializers.res,
-    err: pino.stdSerializers.err
-  }
+    err: pino.stdSerializers.err,
+  },
 });
 
 // Alias para niveles comunes

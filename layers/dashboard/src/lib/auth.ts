@@ -12,12 +12,12 @@
 //   Scoped to Phase 5 as a scaling concern.
 // ==============================================================================
 
-import bcrypt from 'bcrypt';
-import { randomBytes } from 'crypto';
-import { cookies } from 'next/headers';
-import { query } from './db';
+import bcrypt from "bcrypt";
+import { randomBytes } from "crypto";
+import { cookies } from "next/headers";
+import { query } from "./db";
 
-export const SESSION_COOKIE = 'xnoria_session';
+export const SESSION_COOKIE = "xnoria_session";
 const SESSION_TTL_HOURS = 8;
 const BCRYPT_COST = 12;
 
@@ -25,7 +25,7 @@ export interface AuthOperator {
   id: string;
   handle: string;
   display_name: string;
-  role: 'admin' | 'operator' | 'viewer';
+  role: "admin" | "operator" | "viewer";
 }
 
 // --------------------------------------------------------------------------
@@ -37,7 +37,7 @@ export async function createSession(
   operatorId: string,
   meta: { userAgent?: string; ip?: string }
 ): Promise<string> {
-  const token = randomBytes(32).toString('hex');
+  const token = randomBytes(32).toString("hex");
   const tokenHash = await bcrypt.hash(token, BCRYPT_COST);
 
   await query(
@@ -83,10 +83,10 @@ export async function validateSession(): Promise<AuthOperator | null> {
       );
 
       return {
-        id:           session.id,
-        handle:       session.handle,
+        id: session.id,
+        handle: session.handle,
         display_name: session.display_name,
-        role:         session.role,
+        role: session.role,
       };
     }
   }
@@ -110,7 +110,7 @@ export async function invalidateSession(): Promise<void> {
   for (const session of sessions.rows) {
     const match = await bcrypt.compare(token, session.token_hash);
     if (match) {
-      await query('DELETE FROM operator_sessions WHERE id = $1', [session.id]);
+      await query("DELETE FROM operator_sessions WHERE id = $1", [session.id]);
       break;
     }
   }
@@ -126,7 +126,7 @@ export async function invalidateSession(): Promise<void> {
 // --------------------------------------------------------------------------
 export async function requireAuth(): Promise<AuthOperator | { error: string; status: number }> {
   const operator = await validateSession();
-  if (!operator) return { error: 'Unauthorized', status: 401 };
+  if (!operator) return { error: "Unauthorized", status: 401 };
   return operator;
 }
 
@@ -136,7 +136,7 @@ export async function requireAuth(): Promise<AuthOperator | { error: string; sta
 // --------------------------------------------------------------------------
 export async function requireAdmin(): Promise<AuthOperator | { error: string; status: number }> {
   const result = await requireAuth();
-  if ('error' in result) return result;
-  if (result.role !== 'admin') return { error: 'Forbidden', status: 403 };
+  if ("error" in result) return result;
+  if (result.role !== "admin") return { error: "Forbidden", status: 403 };
   return result;
 }

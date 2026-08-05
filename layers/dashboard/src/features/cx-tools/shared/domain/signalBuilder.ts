@@ -1,11 +1,11 @@
 /**
  * signalBuilder.ts - Type-Safe Signal Builder (Phase 3)
- * 
+ *
  * RFC: CX Diagnostic Compass Architecture Refactoring
- * 
+ *
  * This file transforms the validated data structure into FlatSignal format.
  * All intervention references are validated at build time and runtime.
- * 
+ *
  * Benefits:
  * - Compile-time validation of all intervention IDs
  * - Type-safe translation key resolution
@@ -15,7 +15,10 @@
  */
 
 import { WHEEL_STRUCTURE } from "@/features/cx-tools/shared/data/wheelStructure";
-import { validateInterventionId, getInterventionOrThrow } from "@/features/cx-tools/shared/domain/interventionRegistry";
+import {
+  validateInterventionId,
+  getInterventionOrThrow,
+} from "@/features/cx-tools/shared/domain/interventionRegistry";
 import { translate, type Language } from "@/features/cx-tools/shared/i18n/translations";
 import type { FlatSignal, DomainCode } from "@/features/cx-tools/shared/types/signal";
 
@@ -23,7 +26,7 @@ import type { FlatSignal, DomainCode } from "@/features/cx-tools/shared/types/si
  * Build all flat signals from the wheel structure
  * Resolves all translations and intervention references
  * Throws if any intervention references are invalid
- * 
+ *
  * @param language - "en" for English, "es" for Spanish
  * @returns Array of FlatSignal objects ready for components
  * @throws Error if any intervention ID is invalid
@@ -42,25 +45,24 @@ export function buildFlatSignals(language: Language): FlatSignal[] {
 
       for (const signal of cause.signals) {
         // Resolve all interventions with type-safe access
-        const resolvedInterventions = signal.intervention_ids
-          .map((intId) => {
-            // Validate intervention exists
-            if (!validateInterventionId(intId)) {
-              throw new Error(
-                `Invalid intervention reference "${intId}" in signal "${signal.id}". ` +
+        const resolvedInterventions = signal.intervention_ids.map((intId) => {
+          // Validate intervention exists
+          if (!validateInterventionId(intId)) {
+            throw new Error(
+              `Invalid intervention reference "${intId}" in signal "${signal.id}". ` +
                 `Intervention does not exist in the intervention registry. ` +
                 `Check interventionRegistry.ts for available interventions.`
-              );
-            }
+            );
+          }
 
-            // Get the intervention (guaranteed to exist after validation)
-            const intervention = getInterventionOrThrow(intId);
+          // Get the intervention (guaranteed to exist after validation)
+          const intervention = getInterventionOrThrow(intId);
 
-            return {
-              id: intervention.id,
-              name: intervention.translations[language] || intervention.translations.en,
-            };
-          });
+          return {
+            id: intervention.id,
+            name: intervention.translations[language] || intervention.translations.en,
+          };
+        });
 
         // Build the flat signal with full type safety
         signals.push({
@@ -95,7 +97,7 @@ const signalCache = new Map<Language, FlatSignal[]>();
 /**
  * Get cached signals or build them if not cached
  * Use this in React components with language context
- * 
+ *
  * @param language - Current language setting
  * @returns Array of FlatSignal objects (cached)
  */
@@ -117,15 +119,12 @@ export function clearSignalCache(): void {
 /**
  * Get signal by ID
  * Useful for lookups in detail views
- * 
+ *
  * @param signalId - e.g. "ACQ_VIS_01"
  * @param language - Current language setting
  * @returns FlatSignal or undefined if not found
  */
-export function getSignalById(
-  signalId: string,
-  language: Language
-): FlatSignal | undefined {
+export function getSignalById(signalId: string, language: Language): FlatSignal | undefined {
   const signals = getCachedSignals(language);
   return signals.find((s) => s.id === signalId);
 }
@@ -133,15 +132,12 @@ export function getSignalById(
 /**
  * Get all signals for a specific domain
  * Useful for domain-specific views
- * 
+ *
  * @param domainCode - e.g. "ACQ"
  * @param language - Current language setting
  * @returns Array of FlatSignal objects for the domain
  */
-export function getSignalsByDomain(
-  domainCode: DomainCode,
-  language: Language
-): FlatSignal[] {
+export function getSignalsByDomain(domainCode: DomainCode, language: Language): FlatSignal[] {
   const signals = getCachedSignals(language);
   return signals.filter((s) => s.domain === domainCode);
 }
@@ -149,7 +145,7 @@ export function getSignalsByDomain(
 /**
  * Get all signals for a specific cause
  * Useful for cause-specific analysis
- * 
+ *
  * @param domainCode - e.g. "ACQ"
  * @param causeCode - e.g. "CLR"
  * @param language - Current language setting
@@ -161,23 +157,18 @@ export function getSignalsByCause(
   language: Language
 ): FlatSignal[] {
   const signals = getCachedSignals(language);
-  return signals.filter(
-    (s) => s.domain === domainCode && s.causeCode === causeCode
-  );
+  return signals.filter((s) => s.domain === domainCode && s.causeCode === causeCode);
 }
 
 /**
  * Get all signals with severity above threshold
  * Useful for highlighting critical issues
- * 
+ *
  * @param minSeverity - Minimum severity (0-1)
  * @param language - Current language setting
  * @returns Array of FlatSignal objects above threshold
  */
-export function getSignalsBySeverity(
-  minSeverity: number,
-  language: Language
-): FlatSignal[] {
+export function getSignalsBySeverity(minSeverity: number, language: Language): FlatSignal[] {
   const signals = getCachedSignals(language);
   return signals.filter((s) => s.severity >= minSeverity);
 }
@@ -185,25 +176,20 @@ export function getSignalsBySeverity(
 /**
  * Get all signals for a specific intervention
  * Useful for intervention detail views
- * 
+ *
  * @param interventionId - e.g. "INT_ACQ_VIS_01_A"
  * @param language - Current language setting
  * @returns Array of FlatSignal objects that include this intervention
  */
-export function getSignalsByIntervention(
-  interventionId: string,
-  language: Language
-): FlatSignal[] {
+export function getSignalsByIntervention(interventionId: string, language: Language): FlatSignal[] {
   const signals = getCachedSignals(language);
-  return signals.filter((s) =>
-    s.interventions.some((int) => int.id === interventionId)
-  );
+  return signals.filter((s) => s.interventions.some((int) => int.id === interventionId));
 }
 
 /**
  * Get statistics about signals
  * Useful for dashboards and analytics
- * 
+ *
  * @param language - Current language setting
  * @returns Object with signal statistics
  */
@@ -275,7 +261,7 @@ export function getSignalStats(language: Language): {
 /**
  * Validate all signals can be built without errors
  * Run at app startup to catch data issues early
- * 
+ *
  * @returns Object with validation result and any errors
  */
 export function validateSignalBuilder(): {
@@ -293,9 +279,7 @@ export function validateSignalBuilder(): {
 
     // Verify counts match
     if (enSignals.length !== esSignals.length) {
-      errors.push(
-        `Signal count mismatch: EN=${enSignals.length}, ES=${esSignals.length}`
-      );
+      errors.push(`Signal count mismatch: EN=${enSignals.length}, ES=${esSignals.length}`);
     }
 
     // Verify all signals have interventions
@@ -307,9 +291,7 @@ export function validateSignalBuilder(): {
       // Verify intervention names are present
       for (const intervention of signal.interventions) {
         if (!intervention.name || intervention.name.length === 0) {
-          errors.push(
-            `Signal ${signal.id}: intervention ${intervention.id} has no name`
-          );
+          errors.push(`Signal ${signal.id}: intervention ${intervention.id} has no name`);
         }
       }
     }

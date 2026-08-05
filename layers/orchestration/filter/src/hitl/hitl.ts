@@ -2,9 +2,9 @@
 // Exnoria · Filter · HITL queue logic
 // Handles pending action queries, approvals, and rejections
 // ==============================================================================
-import { Pool } from 'pg';
-import { HITLPendingAction } from '../shared/types';
-import { dispatchToN8n } from '../execution/dispatch';
+import { Pool } from "pg";
+import { HITLPendingAction } from "../shared/types";
+import { dispatchToN8n } from "../execution/dispatch";
 
 // --------------------------------------------------------------------------
 // List all pending HITL actions awaiting human approval
@@ -29,15 +29,15 @@ export async function getPendingActions(db: Pool): Promise<HITLPendingAction[]> 
      ORDER BY fl.created_at DESC`
   );
 
-  return result.rows.map(row => ({
-    log_id:        row.id,
-    action_id:     row.action_id,
-    stage:         row.stage,
-    session_id:    row.session_id,
-    payload_in:    row.payload_in,
-    meta:          row.meta,
-    created_at:    row.created_at,
-    manual_action: row.manual_action
+  return result.rows.map((row) => ({
+    log_id: row.id,
+    action_id: row.action_id,
+    stage: row.stage,
+    session_id: row.session_id,
+    payload_in: row.payload_in,
+    meta: row.meta,
+    created_at: row.created_at,
+    manual_action: row.manual_action,
   }));
 }
 
@@ -48,11 +48,16 @@ export async function getPendingActions(db: Pool): Promise<HITLPendingAction[]> 
 export async function approveAction(
   db: Pool,
   logId: string,
-  reviewedBy: string = 'admin',
+  reviewedBy: string = "admin",
   operatorId?: string,
   payloadOverride?: Record<string, unknown>
-): Promise<{ success: boolean; log_id: string; status: string; dispatched_at?: string; error?: string }> {
-
+): Promise<{
+  success: boolean;
+  log_id: string;
+  status: string;
+  dispatched_at?: string;
+  error?: string;
+}> {
   // 1. Read the pending log entry
   const logResult = await db.query<{
     id: string;
@@ -69,23 +74,23 @@ export async function approveAction(
   );
 
   if (logResult.rows.length === 0) {
-    return { success: false, log_id: logId, status: 'not_found', error: 'Log entry not found' };
+    return { success: false, log_id: logId, status: "not_found", error: "Log entry not found" };
   }
 
   const entry = logResult.rows[0];
 
   // Idempotent: already approved/executed
-  if (entry.status === 'executed') {
-    return { success: true, log_id: logId, status: 'executed' };
+  if (entry.status === "executed") {
+    return { success: true, log_id: logId, status: "executed" };
   }
 
   // Can only approve pending_hitl entries
-  if (entry.status !== 'pending_hitl') {
+  if (entry.status !== "pending_hitl") {
     return {
       success: false,
       log_id: logId,
       status: entry.status,
-      error: `Cannot approve entry with status '${entry.status}'`
+      error: `Cannot approve entry with status '${entry.status}'`,
     };
   }
 
@@ -99,8 +104,8 @@ export async function approveAction(
     return {
       success: false,
       log_id: logId,
-      status: 'error',
-      error: `Action '${entry.action_id}' no longer exists in allowlist`
+      status: "error",
+      error: `Action '${entry.action_id}' no longer exists in allowlist`,
     };
   }
 
@@ -122,20 +127,17 @@ export async function approveAction(
         payloadOverride ? JSON.stringify(payloadOverride) : null,
         reviewedBy,
         operatorId ?? null,
-        logId
+        logId,
       ]
     );
 
-    return { success: true, log_id: logId, status: 'executed', dispatched_at: now };
+    return { success: true, log_id: logId, status: "executed", dispatched_at: now };
   }
 
   // 3b. Dispatch to n8n — use operator-edited payload if provided
   try {
     const dispatchPayload = payloadOverride ?? entry.payload_in;
-    const workflowResult = await dispatchToN8n(
-      action.n8n_workflow_id,
-      dispatchPayload
-    );
+    const workflowResult = await dispatchToN8n(action.n8n_workflow_id, dispatchPayload);
 
     // 4. Update log: pending_hitl → executed
     await db.query(
@@ -152,14 +154,13 @@ export async function approveAction(
         payloadOverride ? JSON.stringify(payloadOverride) : null,
         reviewedBy,
         operatorId ?? null,
-        logId
+        logId,
       ]
     );
 
-    return { success: true, log_id: logId, status: 'executed', dispatched_at: now };
-
+    return { success: true, log_id: logId, status: "executed", dispatched_at: now };
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Unknown dispatch error';
+    const message = err instanceof Error ? err.message : "Unknown dispatch error";
 
     // Update log with error status
     await db.query(
@@ -174,7 +175,7 @@ export async function approveAction(
       [message, reviewedBy, operatorId ?? null, logId]
     );
 
-    return { success: false, log_id: logId, status: 'error', error: message };
+    return { success: false, log_id: logId, status: "error", error: message };
   }
 }
 
@@ -184,10 +185,15 @@ export async function approveAction(
 export async function rejectAction(
   db: Pool,
   logId: string,
-  reviewedBy: string = 'admin',
+  reviewedBy: string = "admin",
   operatorId?: string
-): Promise<{ success: boolean; log_id: string; status: string; rejected_at?: string; error?: string }> {
-
+): Promise<{
+  success: boolean;
+  log_id: string;
+  status: string;
+  rejected_at?: string;
+  error?: string;
+}> {
   // 1. Read the pending log entry
   const logResult = await db.query<{ id: string; status: string }>(
     `SELECT id, status FROM filter_log WHERE id = $1`,
@@ -195,23 +201,23 @@ export async function rejectAction(
   );
 
   if (logResult.rows.length === 0) {
-    return { success: false, log_id: logId, status: 'not_found', error: 'Log entry not found' };
+    return { success: false, log_id: logId, status: "not_found", error: "Log entry not found" };
   }
 
   const entry = logResult.rows[0];
 
   // Idempotent: already rejected
-  if (entry.status === 'rejected') {
-    return { success: true, log_id: logId, status: 'rejected' };
+  if (entry.status === "rejected") {
+    return { success: true, log_id: logId, status: "rejected" };
   }
 
   // Can only reject pending_hitl entries
-  if (entry.status !== 'pending_hitl') {
+  if (entry.status !== "pending_hitl") {
     return {
       success: false,
       log_id: logId,
       status: entry.status,
-      error: `Cannot reject entry with status '${entry.status}'`
+      error: `Cannot reject entry with status '${entry.status}'`,
     };
   }
 
@@ -229,5 +235,5 @@ export async function rejectAction(
     [reviewedBy, operatorId ?? null, logId]
   );
 
-  return { success: true, log_id: logId, status: 'rejected', rejected_at: now };
+  return { success: true, log_id: logId, status: "rejected", rejected_at: now };
 }

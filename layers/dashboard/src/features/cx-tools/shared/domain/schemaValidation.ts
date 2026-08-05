@@ -15,7 +15,11 @@
  */
 
 import { WHEEL_STRUCTURE } from "@/features/cx-tools/shared/data/wheelStructure";
-import { INTERVENTIONS, validateInterventionId, type InterventionId } from "@/features/cx-tools/shared/domain/interventionRegistry";
+import {
+  INTERVENTIONS,
+  validateInterventionId,
+  type InterventionId,
+} from "@/features/cx-tools/shared/domain/interventionRegistry";
 import { TRANSLATIONS } from "@/features/cx-tools/shared/i18n/translations";
 
 /**

@@ -312,9 +312,7 @@ describe("SignalBuilder", () => {
     const signals = buildFlatSignals("en");
 
     // Find a signal (some may have no interventions)
-    const signalWithoutInterventions = signals.find(
-      (s) => s.interventions.length === 0
-    );
+    const signalWithoutInterventions = signals.find((s) => s.interventions.length === 0);
     if (signalWithoutInterventions) {
       expect(signalWithoutInterventions.interventions).toEqual([]);
     }

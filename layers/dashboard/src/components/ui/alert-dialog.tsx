@@ -33,7 +33,13 @@ export function AlertDialog({ open, onOpenChange, children }: AlertDialogProps) 
   );
 }
 
-export function AlertDialogContent({ className, children }: { className?: string; children: React.ReactNode }) {
+export function AlertDialogContent({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div
       className={cn(
@@ -46,23 +52,55 @@ export function AlertDialogContent({ className, children }: { className?: string
   );
 }
 
-export function AlertDialogHeader({ className, children }: { className?: string; children: React.ReactNode }) {
+export function AlertDialogHeader({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
   return <div className={cn("mb-4", className)}>{children}</div>;
 }
 
-export function AlertDialogTitle({ className, children }: { className?: string; children: React.ReactNode }) {
+export function AlertDialogTitle({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
   return <h2 className={cn("text-lg font-bold", className)}>{children}</h2>;
 }
 
-export function AlertDialogDescription({ className, children }: { className?: string; children: React.ReactNode }) {
+export function AlertDialogDescription({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
   return <p className={cn("mt-1 text-sm text-[var(--text-muted)]", className)}>{children}</p>;
 }
 
-export function AlertDialogFooter({ className, children }: { className?: string; children: React.ReactNode }) {
+export function AlertDialogFooter({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
   return <div className={cn("mt-4 flex justify-end gap-2", className)}>{children}</div>;
 }
 
-export function AlertDialogCancel({ className, children, onClick }: { className?: string; children: React.ReactNode; onClick?: () => void }) {
+export function AlertDialogCancel({
+  className,
+  children,
+  onClick,
+}: {
+  className?: string;
+  children: React.ReactNode;
+  onClick?: () => void;
+}) {
   return (
     <button
       type="button"
@@ -77,7 +115,15 @@ export function AlertDialogCancel({ className, children, onClick }: { className?
   );
 }
 
-export function AlertDialogAction({ className, children, onClick }: { className?: string; children: React.ReactNode; onClick?: () => void }) {
+export function AlertDialogAction({
+  className,
+  children,
+  onClick,
+}: {
+  className?: string;
+  children: React.ReactNode;
+  onClick?: () => void;
+}) {
   return (
     <button
       type="button"

@@ -9,7 +9,7 @@ export const matrizDataEn: MatrizData = {
     { id: "SUP", label: "Support & Service", order: 5, color: "#FF9F1C" },
     { id: "COM", label: "Communication", order: 6, color: "#F72585" },
     { id: "RET", label: "Retention", order: 7, color: "#2EC4B6" },
-    { id: "EXP", label: "Expansion", order: 8, color: "#EF476F" }
+    { id: "EXP", label: "Expansion", order: 8, color: "#EF476F" },
   ],
   touchpoints: [
     {
@@ -23,8 +23,8 @@ export const matrizDataEn: MatrizData = {
       layers: {
         workflows: { text: "Lead capture and tracking", automation_level: "high" },
         agent: { text: "Detects low conversion and mismatch", decision_type: "diagnostic" },
-        human: { text: "Adjusts campaigns and messaging", required: true }
-      }
+        human: { text: "Adjusts campaigns and messaging", required: true },
+      },
     },
     {
       id: "tp_first_contact",
@@ -37,8 +37,8 @@ export const matrizDataEn: MatrizData = {
       layers: {
         workflows: { text: "Automated follow-ups", automation_level: "high" },
         agent: { text: "Prioritizes high-value leads", decision_type: "prioritization" },
-        human: { text: "Personalized outreach strategy", required: true }
-      }
+        human: { text: "Personalized outreach strategy", required: true },
+      },
     },
     {
       id: "tp_welcome",
@@ -51,8 +51,8 @@ export const matrizDataEn: MatrizData = {
       layers: {
         workflows: { text: "Onboarding sequences", automation_level: "medium" },
         agent: { text: "Detects early abandonment", decision_type: "risk_detection" },
-        human: { text: "Intervenes in critical accounts", required: true }
-      }
+        human: { text: "Intervenes in critical accounts", required: true },
+      },
     },
     {
       id: "tp_feature",
@@ -65,8 +65,8 @@ export const matrizDataEn: MatrizData = {
       layers: {
         workflows: { text: "Tracking and nudges", automation_level: "medium" },
         agent: { text: "Detects usage patterns", decision_type: "pattern_detection" },
-        human: { text: "Feature adoption consultations", required: true }
-      }
+        human: { text: "Feature adoption consultations", required: true },
+      },
     },
     {
       id: "tp_support",
@@ -78,9 +78,12 @@ export const matrizDataEn: MatrizData = {
       signals: ["High volume", "Repeated issues"],
       layers: {
         workflows: { text: "Classification and basic responses", automation_level: "high" },
-        agent: { text: "Suggests responses and detects urgency", decision_type: "real_time_assist" },
-        human: { text: "Resolves complex cases", required: true }
-      }
+        agent: {
+          text: "Suggests responses and detects urgency",
+          decision_type: "real_time_assist",
+        },
+        human: { text: "Resolves complex cases", required: true },
+      },
     },
     {
       id: "tp_campaigns",
@@ -93,8 +96,8 @@ export const matrizDataEn: MatrizData = {
       layers: {
         workflows: { text: "Campaign automation", automation_level: "high" },
         agent: { text: "Optimizes timing and content", decision_type: "optimization" },
-        human: { text: "Content and targeting validation", required: true }
-      }
+        human: { text: "Content and targeting validation", required: true },
+      },
     },
     {
       id: "tp_churn_risk",
@@ -107,8 +110,8 @@ export const matrizDataEn: MatrizData = {
       layers: {
         workflows: { text: "Alerts and sequences", automation_level: "medium" },
         agent: { text: "Prioritizes accounts at risk", decision_type: "risk_prioritization" },
-        human: { text: "Strategic intervention", required: true }
-      }
+        human: { text: "Strategic intervention", required: true },
+      },
     },
     {
       id: "tp_upsell",
@@ -121,8 +124,8 @@ export const matrizDataEn: MatrizData = {
       layers: {
         workflows: { text: "Automated campaigns", automation_level: "high" },
         agent: { text: "Detects opportunity and timing", decision_type: "opportunity_detection" },
-        human: { text: "Closing and negotiation", required: true }
-      }
-    }
-  ]
+        human: { text: "Closing and negotiation", required: true },
+      },
+    },
+  ],
 };

@@ -3,16 +3,16 @@
 // Writes cognitive_session and cognitive_history rows to Postgres.
 // Called by every specialist after a reasoning cycle completes.
 // ==============================================================================
-import { Pool } from 'pg';
-import { CXEvent } from '../shared/types';
-import { FilterResponse } from '../agent/dispatch';
-import { createLogger } from '../../../shared/logging';
+import { Pool } from "pg";
+import { CXEvent } from "../shared/types";
+import { FilterResponse } from "../agent/dispatch";
+import { createLogger } from "../../../shared/logging";
 
-const logger = createLogger('memory-session', 'cognitive');
+const logger = createLogger("memory-session", "cognitive");
 
 export interface ActionRecord {
   action_id: string;
-  status: FilterResponse['status'];
+  status: FilterResponse["status"];
   log_id?: string | null;
 }
 
@@ -38,9 +38,9 @@ export async function logSessionToDb(
       [
         session_id,
         event.contact_id,
-        event.channel ?? 'internal',
+        event.channel ?? "internal",
         event.stage ?? null,
-        event.input ?? '(no input)',
+        event.input ?? "(no input)",
         JSON.stringify(actionsTaken),
         model,
         event.signal_id ?? null,
@@ -55,7 +55,13 @@ export async function logSessionToDb(
         `INSERT INTO cognitive_history
            (contact_id, channel, role, content, stage, session_id)
          VALUES ($1, $2, 'user', $3, $4, $5)`,
-        [event.contact_id, event.channel ?? 'internal', event.input, event.stage ?? null, session_id]
+        [
+          event.contact_id,
+          event.channel ?? "internal",
+          event.input,
+          event.stage ?? null,
+          session_id,
+        ]
       );
     }
 
@@ -65,13 +71,13 @@ export async function logSessionToDb(
         `INSERT INTO cognitive_history
            (contact_id, channel, role, content, stage, session_id)
          VALUES ($1, $2, 'assistant', $3, $4, $5)`,
-        [event.contact_id, event.channel ?? 'internal', botReply, event.stage ?? null, session_id]
+        [event.contact_id, event.channel ?? "internal", botReply, event.stage ?? null, session_id]
       );
     }
 
-    logger.debug({ session_id }, 'Session logged to Postgres');
+    logger.debug({ session_id }, "Session logged to Postgres");
   } catch (err) {
     // Never block the reasoning flow on DB write errors
-    logger.error({ err, session_id }, 'Failed to log session to DB');
+    logger.error({ err, session_id }, "Failed to log session to DB");
   }
 }

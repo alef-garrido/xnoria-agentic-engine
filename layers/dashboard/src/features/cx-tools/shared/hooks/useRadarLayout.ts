@@ -3,15 +3,15 @@ import { mapSignalsToRadar } from "@/features/cx-tools/shared/engine/radarMappin
 import { RadarSignal, RadarConfig, DomainID } from "@/features/cx-tools/shared/types/radar";
 
 export function useRadarLayout({
-    signals,
-    domains,
-    config,
+  signals,
+  domains,
+  config,
 }: {
-    signals: RadarSignal[];
-    domains: { id: DomainID; color: string }[];
-    config: RadarConfig;
+  signals: RadarSignal[];
+  domains: { id: DomainID; color: string }[];
+  config: RadarConfig;
 }) {
-    return useMemo(() => {
-        return mapSignalsToRadar(signals, domains, config);
-    }, [signals, domains, config]);
+  return useMemo(() => {
+    return mapSignalsToRadar(signals, domains, config);
+  }, [signals, domains, config]);
 }

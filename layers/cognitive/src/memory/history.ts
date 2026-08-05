@@ -2,15 +2,12 @@
 // Exnoria · Cognitive · Memory — recent history
 // Reads and writes the last N conversation turns per contact
 // ==============================================================================
-import { Pool } from 'pg';
-import { HistoryTurn, Role, JourneyStage } from '../shared/types';
+import { Pool } from "pg";
+import { HistoryTurn, Role, JourneyStage } from "../shared/types";
 
 const HISTORY_LIMIT = 20;
 
-export async function readHistory(
-  db: Pool,
-  contact_id: string
-): Promise<HistoryTurn[]> {
+export async function readHistory(db: Pool, contact_id: string): Promise<HistoryTurn[]> {
   const result = await db.query<{
     role: Role;
     content: string;
@@ -24,11 +21,11 @@ export async function readHistory(
      LIMIT $2`,
     [contact_id, HISTORY_LIMIT]
   );
-  return result.rows.reverse().map(r => ({
-    role:       r.role,
-    content:    r.content,
-    stage:      r.stage ?? undefined,
-    created_at: r.created_at
+  return result.rows.reverse().map((r) => ({
+    role: r.role,
+    content: r.content,
+    stage: r.stage ?? undefined,
+    created_at: r.created_at,
   }));
 }
 

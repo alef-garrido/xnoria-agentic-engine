@@ -4,6 +4,7 @@
 **Role:** Execution layer — signals visualization, reporting, HITL interface
 
 ## Tech Stack
+
 - **Framework:** Next.js 16 + React 19
 - **Styling:** Tailwind CSS v4
 - **Charts:** Recharts
@@ -13,6 +14,7 @@
 - **Auth:** Session-based (`xnoria_session` cookie, bcrypt, Postgres-backed)
 
 ## Commands
+
 ```bash
 npm run dev     # next dev -H 0.0.0.0
 npm run build   # next build
@@ -21,6 +23,7 @@ npm run lint    # eslint
 ```
 
 ## Directory Structure
+
 ```
 src/
 ├── app/
@@ -77,6 +80,7 @@ data/                     # Example data files
 ```
 
 ## Path Aliases
+
 - `@/*` → `./src/*` (configured in tsconfig.json)
 
 ## Auth Pattern (C4)
@@ -86,11 +90,12 @@ Only the bcrypt hash of the token is stored in `operator_sessions`. Full bcrypt 
 happens in `lib/auth.ts` — NOT in `proxy.ts` (edge middleware can only do cookie presence check).
 
 ### Roles
-| Role | Access |
-|---|---|
-| `admin` | Full dashboard + operator management |
-| `operator` | Full dashboard, no `/api/admin/*` |
-| `viewer` | Phase 5 — defined in schema, full access until isolation is scoped |
+
+| Role       | Access                                                             |
+| ---------- | ------------------------------------------------------------------ |
+| `admin`    | Full dashboard + operator management                               |
+| `operator` | Full dashboard, no `/api/admin/*`                                  |
+| `viewer`   | Phase 5 — defined in schema, full access until isolation is scoped |
 
 ## Admin Password Bootstrap
 
@@ -119,6 +124,7 @@ DASHBOARD_ADMIN_PASSWORD=your-secure-password-here
 ```
 
 How it works:
+
 1. `.env` is sourced with `DASHBOARD_ADMIN_PASSWORD` set
 2. Migrations run (migration 014 verifies admin exists)
 3. Stack starts (full services including dashboard)
@@ -159,6 +165,7 @@ for all subsequent calls with message: "Admin already initialized. This endpoint
 only be used once during setup."
 
 Error responses:
+
 - `400 Bad Request` — password too short (minimum 8 characters) or invalid JSON
 - `403 Forbidden` — admin already initialized or not found (dependency failure)
 - `500 Internal Server Error` — database error
@@ -178,6 +185,7 @@ docker exec exnoria_postgres psql -U xnoria -d exnoria -c \
 ```
 
 ### Creating additional operators (via API, admin only)
+
 ```bash
 curl -X POST http://localhost:4000/api/admin/operators \
   -H "Content-Type: application/json" \
@@ -186,6 +194,7 @@ curl -X POST http://localhost:4000/api/admin/operators \
 ```
 
 ### Resetting a password (manual procedure)
+
 ```bash
 # 1. Generate new hash
 docker exec exnoria_dashboard node -e \
@@ -200,19 +209,21 @@ docker exec exnoria_postgres psql -U xnoria -d exnoria -c \
 
 ### Creating an operator via CLI (alternative to POST)
 
-
 ## Database Access
+
 - Direct Postgres connection via `src/lib/db.ts` (pg pool wrapper)
 - Used for reading filter logs, cognitive sessions, HITL queue
 - Never write directly to filter_action table — use filter API instead
 
 ## Adding a New Dashboard Page
+
 1. Create page at `src/app/(dashboard)/your-page/page.tsx`
 2. Create API proxy route if needed: `src/app/api/your-api/route.ts`
 3. Use UI primitives from `src/components/ui/` and `usePolling` for data fetching (see Component Conventions)
 4. Follow existing auth pattern (protect with proxy.ts middleware)
 
 ## Adding a New CX Tool
+
 1. Create tool feature at `src/features/cx-tools/<tool>/` (components + lib)
 2. Add route at `src/app/(dashboard)/tools/<tool>/page.tsx` (thin wrapper importing the feature page component)
 3. Add entry to `navSections` CX Tools group in `src/components/Sidebar.tsx`
@@ -221,12 +232,14 @@ docker exec exnoria_postgres psql -U xnoria -d exnoria -c \
 6. Old flat routes (`/compass`, `/radar`, `/matriz`, `/editor`) must remain as redirect stubs → `/tools/<tool>`
 
 ## Adding an API Route
+
 1. Create route at `src/app/api/your-endpoint/route.ts`
 2. Use Next.js App Router API conventions
 3. Proxy to filter service when needed (don't duplicate filter logic)
 4. Include auth check via proxy.ts pattern
 
 ## Component Conventions
+
 - Server components by default, use `'use client'` only when needed
 - Use UI primitives from `src/components/ui/` (Card, PageHeader, Skeleton, Badge, Button, Input) instead of repeating the card/header/badge/button/input markup
   - `ui/Input` is for `<input>`; for `<select>`/`<textarea>` use the exported `inputClass` from `ui/Input` (shared styling)
@@ -254,6 +267,7 @@ docker exec exnoria_postgres psql -U xnoria -d exnoria -c \
 - Tooling: `npm run typecheck` (tsc --noEmit), `npm run lint`, `npm run format` (Prettier), `npm run test` (Vitest)
 
 ## Verification Gate (every change)
+
 ```bash
 npm run build && npm run lint && npm run test && npm run typecheck
 ```
@@ -263,40 +277,45 @@ npm run build && npm run lint && npm run test && npm run typecheck
 All logging in the dashboard follows a structured approach using dedicated logger modules:
 
 ### Server-Side Logging (`src/lib/logger.ts`)
+
 - Uses `pino` for structured JSON logging in production
 - Pretty formatted logs in development with `pino-pretty`
 - Automatically handles log levels based on `NODE_ENV`
 - Includes serializers for request/response/error objects
 
 **Usage in API routes:**
+
 ```typescript
-import { logger } from '@/lib/logger';
+import { logger } from "@/lib/logger";
 
 try {
   // ... some operation
 } catch (error) {
-  logger.error({ error, additionalContext: 'value' }, 'Descriptive error message');
+  logger.error({ error, additionalContext: "value" }, "Descriptive error message");
 }
 ```
 
 ### Client-Side Logging (`src/lib/client-logger.ts`)
+
 - Safe console wrapper for React client components
 - Structured formatting with log levels
 - Automatically suppresses DEBUG logs in production
 - Same interface as server logger for consistency
 
 **Usage in client components:**
+
 ```typescript
-import { clientLogger } from '@/lib/client-logger';
+import { clientLogger } from "@/lib/client-logger";
 
 try {
   // ... some operation
 } catch (error) {
-  clientLogger.error('Descriptive error message', { error, additionalContext: 'value' });
+  clientLogger.error("Descriptive error message", { error, additionalContext: "value" });
 }
 ```
 
 ### Key Principles
+
 1. **No direct `console.*` calls** - always use appropriate logger
 2. **Structured data** - pass objects as first parameter for correlation
 3. **Descriptive messages** - clear, actionable log content
@@ -304,43 +323,50 @@ try {
 5. **Level appropriate** - use debug/info/warn/error correctly
 
 ## Domain Language
-| Term | Meaning |
-|---|---|
-| **Signal** | A structured business event (new lead, support ticket, churn indicator) |
-| **Action** | A single permitted operation, identified as `stage.resource.verb` |
-| **Stage** | Customer journey phase: ACQ, SAL, ONB, PRD, SUP, COM, RET, EXP |
-| **Session** | One reasoning cycle from the cognitive layer |
-| **HITL** | Human-in-the-loop — action requiring human approval |
-| **Audit log** | Immutable record of every action attempted |
+
+| Term          | Meaning                                                                 |
+| ------------- | ----------------------------------------------------------------------- |
+| **Signal**    | A structured business event (new lead, support ticket, churn indicator) |
+| **Action**    | A single permitted operation, identified as `stage.resource.verb`       |
+| **Stage**     | Customer journey phase: ACQ, SAL, ONB, PRD, SUP, COM, RET, EXP          |
+| **Session**   | One reasoning cycle from the cognitive layer                            |
+| **HITL**      | Human-in-the-loop — action requiring human approval                     |
+| **Audit log** | Immutable record of every action attempted                              |
 
 ## Critical Rules
+
 1. **The dashboard reads — it doesn't execute.** All action execution goes through the filter API.
 2. **Use proxy routes** to communicate with the filter service, don't call filter DB directly for writes.
 3. **Follow existing auth patterns** — all dashboard routes should be protected.
 4. **Use UI primitives and shared hooks** (`components/ui/`, `usePolling`, `useToast`) for consistency — see Component Conventions.
 
 ## Key Pages (Phase 3 A3 Complete)
+
 - **Dashboard home** — overview of signals, actions, system health
 - **HITL queue** (`/hitl`) — `HITLQueue` component, 10s polling, approve/reject buttons, empty state
 - **Allowlist manager** (`/allowlist`) — `AllowlistManager` component, table with toggle switches for `enabled`/`requires_hitl`, Add modal, delete confirm
 - **Journey health map** (`/health`) — CX health per stage with metrics dashboard
 
 ### Sidebar Navigation
+
 `Sidebar.tsx` includes nav items:
+
 - ⚡ **Approvals** (`/hitl`) — `ShieldCheck` icon
 - ☑ **Allowlist** (`/allowlist`) — `ListChecks` icon
 - 📊 **Health** (`/health`) — `Activity` icon (Phase 2)
 
 ## Environment Variables
-| Variable | Description |
-|---|---|
-| `DASHBOARD_PORT` | Dashboard port (default: 4000) |
-| `FILTER_URL` | Filter service URL (default: `http://filter:3000` in compose) |
-| `POSTGRES_*` | Database connection (inherited from docker-compose) |
-| `COM_CONTENT_SHEET_ID` | Google Sheets ID for content calendar (COM workflow) |
+
+| Variable               | Description                                                   |
+| ---------------------- | ------------------------------------------------------------- |
+| `DASHBOARD_PORT`       | Dashboard port (default: 4000)                                |
+| `FILTER_URL`           | Filter service URL (default: `http://filter:3000` in compose) |
+| `POSTGRES_*`           | Database connection (inherited from docker-compose)           |
+| `COM_CONTENT_SHEET_ID` | Google Sheets ID for content calendar (COM workflow)          |
 
 ## Auth Notes for Agents
-- `proxy.ts` only checks cookie *presence* — it cannot do bcrypt in edge runtime
+
+- `proxy.ts` only checks cookie _presence_ — it cannot do bcrypt in edge runtime
 - Full session validation: always call `validateSession()` from `lib/auth.ts` in API routes/pages
 - Use `requireAuth()` for operator check, `requireAdmin()` for admin-only routes
 - `reviewed_by_operator_id` (UUID FK) must be written alongside `reviewed_by` (string) on HITL actions

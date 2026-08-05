@@ -5,11 +5,11 @@
 // Isolates Engram-specific logic from the reasoning loop.
 // All functions are fire-and-forget — memory read/write failure must never block reasoning.
 // ==============================================================================
-import { executeMcpTool } from '../mcp/client';
-import { FilterResponse } from '../shared/types';
-import { createLogger } from '../../../shared/logging';
+import { executeMcpTool } from "../mcp/client";
+import { FilterResponse } from "../shared/types";
+import { createLogger } from "../../../shared/logging";
 
-const logger = createLogger('memory-engram', 'cognitive');
+const logger = createLogger("memory-engram", "cognitive");
 
 export interface EngramResult {
   title: string;
@@ -24,7 +24,7 @@ export interface EngramResult {
 export async function getContactHistory(
   contactId: string,
   stage: string,
-  query: string = 'general',
+  query: string = "general",
   maxEntries: number = 3,
   agentCluster?: string
 ): Promise<string> {
@@ -34,9 +34,9 @@ export async function getContactHistory(
     const searchQuery = agentCluster
       ? `${contactId} | ${stage} | agent:${agentCluster}`
       : `${contactId} | ${stage}`;
-    const result = await executeMcpTool('mem_search', {
+    const result = await executeMcpTool("mem_search", {
       query: searchQuery,
-      project: process.env.ENGRA_PROJECT || 'xnoria-agentic-engine'
+      project: process.env.ENGRA_PROJECT || "xnoria-agentic-engine",
     });
 
     if (!result.success) {
@@ -45,14 +45,14 @@ export async function getContactHistory(
 
     // Parse and limit entries to stay within token budget
     const entries = parseEngramResults(result.content, { maxEntries });
-    
+
     if (entries.length === 0) {
       return `No prior interventions recorded for contact ${contactId} in ${stage}.`;
     }
 
     const lines = [
       `Prior interventions for contact ${contactId} in ${stage} (last ${entries.length}):`,
-      ...entries.map(e => `- ${e.created_at.slice(0, 10)}: ${e.title}`),
+      ...entries.map((e) => `- ${e.created_at.slice(0, 10)}: ${e.title}`),
     ];
 
     // Add cooldown note if applicable
@@ -60,17 +60,14 @@ export async function getContactHistory(
       lines.push(`Note: nudge sent within last 48 hours — prefer assist action if severity >= 0.8`);
     }
 
-    return lines.join('\n');
+    return lines.join("\n");
   } catch (err) {
-    logger.warn({ err }, 'Contact history fetch failed — proceeding without context');
+    logger.warn({ err }, "Contact history fetch failed — proceeding without context");
     return `Memory unavailable — proceed without prior context.`;
   }
 }
 
-function parseEngramResults(
-  content: string,
-  options: { maxEntries: number }
-): EngramResult[] {
+function parseEngramResults(content: string, options: { maxEntries: number }): EngramResult[] {
   // Simple parsing for Engram results
   // Expected format: JSON array of { title, content, created_at } objects
   try {
@@ -78,28 +75,26 @@ function parseEngramResults(
     return results.slice(0, options.maxEntries);
   } catch {
     // Fallback: treat as text lines
-    return content.split('\n')
-      .filter(line => line.trim())
+    return content
+      .split("\n")
+      .filter((line) => line.trim())
       .slice(0, options.maxEntries)
-      .map(line => ({
+      .map((line) => ({
         title: line,
-        content: '',
-        created_at: new Date().toISOString()
+        content: "",
+        created_at: new Date().toISOString(),
       }));
   }
 }
 
-function hasRecentNudge(
-  history: EngramResult[],
-  contactId: string,
-  stage: string
-): boolean {
+function hasRecentNudge(history: EngramResult[], contactId: string, stage: string): boolean {
   const cutoff = Date.now() - 48 * 60 * 60 * 1000;
-  return history.some(entry =>
-    entry.title.includes(contactId) &&
-    entry.title.includes(stage) &&
-    entry.title.includes('nudge') &&
-    new Date(entry.created_at).getTime() > cutoff
+  return history.some(
+    (entry) =>
+      entry.title.includes(contactId) &&
+      entry.title.includes(stage) &&
+      entry.title.includes("nudge") &&
+      new Date(entry.created_at).getTime() > cutoff
   );
 }
 
@@ -120,17 +115,17 @@ export async function recordSessionOutcome(
 
   try {
     // Build memory title and content for Engram
-    const clusterTag = agentCluster ? ` | agent:${agentCluster}` : '';
+    const clusterTag = agentCluster ? ` | agent:${agentCluster}` : "";
     const title = `${event.contact_id} | ${event.stage} | ${event.signal_id} → ${actionId} [${filterResponse.status}]${clusterTag}`;
     const content = buildMemoryContent(event, actionId, filterResponse, agentCluster);
-    
-    await executeMcpTool('mem_save', {
+
+    await executeMcpTool("mem_save", {
       title: title,
       content: content,
-      project: process.env.ENGRA_PROJECT || 'xnoria-agentic-engine'
+      project: process.env.ENGRA_PROJECT || "xnoria-agentic-engine",
     });
   } catch (err) {
-    logger.warn({ err, action_id: actionId }, 'Session outcome recording failed');
+    logger.warn({ err, action_id: actionId }, "Session outcome recording failed");
   }
 }
 
@@ -139,23 +134,29 @@ export async function recordSessionOutcome(
 // ------------------------------------------------------------------------------
 
 export function buildMemoryContent(
-  event: { contact_id: string; stage: string; signal_id?: string; signal_severity?: number; cause_code?: string },
+  event: {
+    contact_id: string;
+    stage: string;
+    signal_id?: string;
+    signal_severity?: number;
+    cause_code?: string;
+  },
   actionId: string,
   filterResponse: FilterResponse,
   agentCluster?: string
 ): string {
-  const clusterNote = agentCluster ? ` | agent: ${agentCluster}` : '';
-  
+  const clusterNote = agentCluster ? ` | agent: ${agentCluster}` : "";
+
   return [
     `contact_id: ${event.contact_id}`,
     `stage: ${event.stage}`,
-    `signal_id: ${event.signal_id ?? 'unknown'}`,
+    `signal_id: ${event.signal_id ?? "unknown"}`,
     `signal_severity: ${event.signal_severity ?? 0}`,
-    `cause_code: ${event.cause_code ?? 'unknown'}`,
+    `cause_code: ${event.cause_code ?? "unknown"}`,
     `action_id: ${actionId}`,
     `status: ${filterResponse.status}`,
-    `filter_log_id: ${filterResponse.log_id ?? 'none'}`,
+    `filter_log_id: ${filterResponse.log_id ?? "none"}`,
     `timestamp: ${new Date().toISOString()}`,
-    `agent_cluster: ${agentCluster ?? 'none'}${clusterNote}`,
-  ].join('\n');
+    `agent_cluster: ${agentCluster ?? "none"}${clusterNote}`,
+  ].join("\n");
 }

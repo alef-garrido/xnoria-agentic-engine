@@ -1,6 +1,6 @@
-import { Pool } from 'pg';
-import { FilterAction, JourneyStage } from '../shared/types';
-import { t } from '../i18n/strings';
+import { Pool } from "pg";
+import { FilterAction, JourneyStage } from "../shared/types";
+import { t } from "../i18n/strings";
 
 // --------------------------------------------------------------------------
 // Lookup — used by POST /filter/execute on every request
@@ -9,8 +9,11 @@ export async function lookupAction(
   db: Pool,
   action_id: string,
   stage: JourneyStage
-): Promise<{ action: FilterAction | null; rejectionCode: string | null; rejectionReason: string | null }> {
-
+): Promise<{
+  action: FilterAction | null;
+  rejectionCode: string | null;
+  rejectionReason: string | null;
+}> {
   const result = await db.query<FilterAction>(
     `SELECT * FROM filter_action WHERE action_id = $1 LIMIT 1`,
     [action_id]
@@ -20,8 +23,8 @@ export async function lookupAction(
   if (result.rows.length === 0) {
     return {
       action: null,
-      rejectionCode: 'ACTION_NOT_IN_ALLOWLIST',
-      rejectionReason: t().rejectionReasons.notInAllowlist(action_id)
+      rejectionCode: "ACTION_NOT_IN_ALLOWLIST",
+      rejectionReason: t().rejectionReasons.notInAllowlist(action_id),
     };
   }
 
@@ -31,8 +34,8 @@ export async function lookupAction(
   if (action.stage !== stage) {
     return {
       action: null,
-      rejectionCode: 'STAGE_MISMATCH',
-      rejectionReason: t().rejectionReasons.stageMismatch(action_id, action.stage, stage)
+      rejectionCode: "STAGE_MISMATCH",
+      rejectionReason: t().rejectionReasons.stageMismatch(action_id, action.stage, stage),
     };
   }
 
@@ -40,8 +43,8 @@ export async function lookupAction(
   if (!action.enabled) {
     return {
       action: null,
-      rejectionCode: 'ACTION_DISABLED',
-      rejectionReason: t().rejectionReasons.disabled(action_id)
+      rejectionCode: "ACTION_DISABLED",
+      rejectionReason: t().rejectionReasons.disabled(action_id),
     };
   }
 
@@ -62,13 +65,13 @@ export async function listActions(db: Pool): Promise<FilterAction[]> {
 }
 
 export interface CreateActionInput {
-  action_id:       string;
-  stage:           string;
+  action_id: string;
+  stage: string;
   n8n_workflow_id: string;
-  requires_hitl?:  boolean;
-  manual_action?:  boolean;
-  enabled?:        boolean;
-  description?:    string;
+  requires_hitl?: boolean;
+  manual_action?: boolean;
+  enabled?: boolean;
+  description?: string;
   description_es?: string;
 }
 
@@ -85,22 +88,26 @@ export async function createAction(db: Pool, input: CreateActionInput): Promise<
       input.manual_action ?? false,
       input.enabled ?? true,
       input.description ?? null,
-      input.description_es ?? null
+      input.description_es ?? null,
     ]
   );
   return result.rows[0];
 }
 
 export interface UpdateActionInput {
-  requires_hitl?:  boolean;
-  manual_action?:  boolean;
-  enabled?:        boolean;
-  description?:    string;
+  requires_hitl?: boolean;
+  manual_action?: boolean;
+  enabled?: boolean;
+  description?: string;
   description_es?: string;
   n8n_workflow_id?: string;
 }
 
-export async function updateAction(db: Pool, id: string, input: UpdateActionInput): Promise<FilterAction | null> {
+export async function updateAction(
+  db: Pool,
+  id: string,
+  input: UpdateActionInput
+): Promise<FilterAction | null> {
   // Build dynamic SET clause from provided fields
   const setClauses: string[] = [];
   const values: unknown[] = [];
@@ -144,7 +151,7 @@ export async function updateAction(db: Pool, id: string, input: UpdateActionInpu
   values.push(id);
   const result = await db.query<FilterAction>(
     `UPDATE filter_action
-     SET ${setClauses.join(', ')}
+     SET ${setClauses.join(", ")}
      WHERE id = $${paramIndex}
      RETURNING id, action_id, stage, n8n_workflow_id, requires_hitl, manual_action, enabled, description, description_es, created_at, updated_at`,
     values
@@ -154,9 +161,6 @@ export async function updateAction(db: Pool, id: string, input: UpdateActionInpu
 }
 
 export async function deleteAction(db: Pool, id: string): Promise<boolean> {
-  const result = await db.query(
-    `DELETE FROM filter_action WHERE id = $1`,
-    [id]
-  );
+  const result = await db.query(`DELETE FROM filter_action WHERE id = $1`, [id]);
   return (result.rowCount ?? 0) > 0;
 }

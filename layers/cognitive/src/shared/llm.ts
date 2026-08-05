@@ -5,11 +5,11 @@
 // Factory function to create LLM clients based on model configuration.
 // Supports any OpenAI-compatible API (Groq, OpenRouter, local Ollama, etc.).
 // ==============================================================================
-import OpenAI from 'openai';
-import { AgentCluster } from '../tools/clusters';
-import { createLogger } from '../../../shared/logging';
+import OpenAI from "openai";
+import { AgentCluster } from "../tools/clusters";
+import { createLogger } from "../../../shared/logging";
 
-const logger = createLogger('llm-client', 'cognitive');
+const logger = createLogger("llm-client", "cognitive");
 
 /**
  * LLM Client wrapper (OpenAI-compatible)
@@ -33,7 +33,7 @@ export interface LLMClient {
 export function createLLMClient(
   modelEnvVar: string,
   baseUrlEnvVar?: string,
-  apiKeyEnvVar?: string,
+  apiKeyEnvVar?: string
 ): LLMClient {
   const model = process.env[modelEnvVar];
 
@@ -42,9 +42,7 @@ export function createLLMClient(
   }
 
   // Resolve base URL: per-specialist → global fallback
-  const baseURL =
-    (baseUrlEnvVar && process.env[baseUrlEnvVar]) ||
-    process.env.LLM_BASE_URL;
+  const baseURL = (baseUrlEnvVar && process.env[baseUrlEnvVar]) || process.env.LLM_BASE_URL;
 
   // Resolve API key: per-specialist → global fallback → Groq legacy var
   const apiKey =
@@ -54,11 +52,11 @@ export function createLLMClient(
 
   if (!apiKey) {
     throw new Error(
-      `[llm] API key not found. Set ${apiKeyEnvVar ?? 'LLM_API_KEY'} environment variable.`,
+      `[llm] API key not found. Set ${apiKeyEnvVar ?? "LLM_API_KEY"} environment variable.`
     );
   }
 
-  logger.debug({ model, baseURL }, 'LLM client created');
+  logger.debug({ model, baseURL }, "LLM client created");
 
   return {
     model,
@@ -75,16 +73,16 @@ export function getDefaultClusterConfig(cluster: AgentCluster): {
 } {
   const configs: Record<AgentCluster, { model: string; baseUrl?: string }> = {
     acqsal: {
-      model: 'llama-3.3-70b-versatile',
-      baseUrl: 'https://api.groq.com/openai/v1',
+      model: "llama-3.3-70b-versatile",
+      baseUrl: "https://api.groq.com/openai/v1",
     },
     lifecycle: {
-      model: 'anthropic/claude-sonnet-4-5',
-      baseUrl: 'https://openrouter.ai/api/v1',
+      model: "anthropic/claude-sonnet-4-5",
+      baseUrl: "https://openrouter.ai/api/v1",
     },
     escalation: {
-      model: 'anthropic/claude-sonnet-4-5',
-      baseUrl: 'https://openrouter.ai/api/v1',
+      model: "anthropic/claude-sonnet-4-5",
+      baseUrl: "https://openrouter.ai/api/v1",
     },
   };
 

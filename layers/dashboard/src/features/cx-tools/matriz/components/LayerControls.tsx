@@ -76,10 +76,12 @@ export const LayerControls: React.FC<LayerControlsProps> = ({
                   : cn("bg-transparent text-white/60 border-transparent hover:bg-white/5")
               )}
             >
-              <div className={cn(
-                "p-1.5 rounded-md transition-colors",
-                isActive ? "bg-white/20" : control.bg
-              )}>
+              <div
+                className={cn(
+                  "p-1.5 rounded-md transition-colors",
+                  isActive ? "bg-white/20" : control.bg
+                )}
+              >
                 <Icon className={cn("w-4 h-4", isActive ? "text-white" : control.color)} />
               </div>
               <span className="text-sm font-medium">{control.label}</span>

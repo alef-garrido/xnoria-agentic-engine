@@ -1,16 +1,16 @@
-import { Pool } from 'pg';
-import { FilterStatus, RejectionCode } from '../shared/types';
+import { Pool } from "pg";
+import { FilterStatus, RejectionCode } from "../shared/types";
 
 export interface LogEntry {
-  action_id:        string;
-  stage:            string;
-  session_id:       string;
-  status:           FilterStatus;
-  rejection_code?:  RejectionCode | string;
+  action_id: string;
+  stage: string;
+  session_id: string;
+  status: FilterStatus;
+  rejection_code?: RejectionCode | string;
   rejection_reason?: string;
-  payload_in:       Record<string, unknown>;
-  payload_out?:     Record<string, unknown>;
-  meta?:            Record<string, unknown>;
+  payload_in: Record<string, unknown>;
+  payload_out?: Record<string, unknown>;
+  meta?: Record<string, unknown>;
 }
 
 export async function writeLog(db: Pool, entry: LogEntry): Promise<string> {
@@ -25,11 +25,11 @@ export async function writeLog(db: Pool, entry: LogEntry): Promise<string> {
       entry.stage,
       entry.session_id,
       entry.status,
-      entry.rejection_code  ?? null,
+      entry.rejection_code ?? null,
       entry.rejection_reason ?? null,
       JSON.stringify(entry.payload_in),
-      JSON.stringify(entry.payload_out  ?? {}),
-      JSON.stringify(entry.meta         ?? {})
+      JSON.stringify(entry.payload_out ?? {}),
+      JSON.stringify(entry.meta ?? {}),
     ]
   );
   return result.rows[0].id;

@@ -8,9 +8,7 @@
  */
 
 export type DomainCode =
-  | "ACQ" | "SAL" | "ONB" | "PRD"
-  | "SUP" | "COM" | "RET" | "EXP"
-  | "ADQ" | "VTA" | "PRO" | "SOP";
+  "ACQ" | "SAL" | "ONB" | "PRD" | "SUP" | "COM" | "RET" | "EXP" | "ADQ" | "VTA" | "PRO" | "SOP";
 
 export interface FlatSignal {
   id: string; // e.g. ACQ_CLR_01

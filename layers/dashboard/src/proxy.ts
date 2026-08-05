@@ -12,20 +12,16 @@
 //   - /api/health         — health check (no auth needed)
 // ==============================================================================
 
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-const SESSION_COOKIE = 'xnoria_session';
+const SESSION_COOKIE = "xnoria_session";
 
 // Public pages (exact match)
-const PUBLIC_PAGES = new Set(['/login']);
+const PUBLIC_PAGES = new Set(["/login"]);
 
 // Public API prefixes
-const PUBLIC_API_PREFIXES = [
-  '/api/auth/login',
-  '/api/auth/logout',
-  '/api/health',
-];
+const PUBLIC_API_PREFIXES = ["/api/auth/login", "/api/auth/logout", "/api/health"];
 
 export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -36,7 +32,7 @@ export default function proxy(request: NextRequest) {
   }
 
   // Always allow public API routes
-  if (PUBLIC_API_PREFIXES.some(prefix => pathname.startsWith(prefix))) {
+  if (PUBLIC_API_PREFIXES.some((prefix) => pathname.startsWith(prefix))) {
     return NextResponse.next();
   }
 
@@ -45,16 +41,16 @@ export default function proxy(request: NextRequest) {
 
   if (!sessionCookie?.value) {
     // API routes: return 401 JSON (clients handle redirects themselves)
-    if (pathname.startsWith('/api/')) {
+    if (pathname.startsWith("/api/")) {
       return NextResponse.json(
-        { error: 'Unauthorized', message: 'Authentication required' },
+        { error: "Unauthorized", message: "Authentication required" },
         { status: 401 }
       );
     }
 
     // Page routes: redirect to /login, preserving the intended destination
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('from', pathname);
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("from", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
@@ -70,6 +66,6 @@ export const config = {
      * - favicon.ico
      * - Files with a file extension (e.g. .png, .js, .css)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)',
+    "/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)",
   ],
 };

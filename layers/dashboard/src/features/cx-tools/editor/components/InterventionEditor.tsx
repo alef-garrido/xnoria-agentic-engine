@@ -7,13 +7,30 @@ import { EntityDialog } from "./EntityDialog";
 import { Button } from "@/features/cx-tools/editor/components/ui/button";
 import { Input } from "@/features/cx-tools/editor/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
 
 export function InterventionEditor() {
   const t = useTranslations("cxtools");
-  const { interventions, domains, addIntervention, updateIntervention, deleteIntervention } = useEditor();
+  const { interventions, domains, addIntervention, updateIntervention, deleteIntervention } =
+    useEditor();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<EditorIntervention | null>(null);
   const [editTarget, setEditTarget] = useState<EditorIntervention | null>(null);
@@ -35,11 +52,13 @@ export function InterventionEditor() {
   // Count references from signals
   const countRefs = (intId: string): number => {
     let count = 0;
-    domains.forEach((d) => d.causes.forEach((c) =>
-      c.signals.forEach((s) => {
-        if (s.interventions?.includes(intId)) count++;
-      })
-    ));
+    domains.forEach((d) =>
+      d.causes.forEach((c) =>
+        c.signals.forEach((s) => {
+          if (s.interventions?.includes(intId)) count++;
+        })
+      )
+    );
     return count;
   };
 
@@ -82,8 +101,12 @@ export function InterventionEditor() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-[var(--text-primary)]">{t("interventionsTitle")}</h3>
-          <p className="text-sm text-[var(--text-muted)]">{t("registeredInterventions", { count: Object.keys(interventions).length })}</p>
+          <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+            {t("interventionsTitle")}
+          </h3>
+          <p className="text-sm text-[var(--text-muted)]">
+            {t("registeredInterventions", { count: Object.keys(interventions).length })}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
@@ -113,18 +136,39 @@ export function InterventionEditor() {
           </TableHeader>
           <TableBody>
             {interventionList.map((intervention) => (
-              <TableRow key={intervention.id} className="cursor-pointer hover:bg-[var(--surface-hover)]" onClick={() => openEdit(intervention)}>
-                <TableCell className="font-mono text-xs text-[var(--text-secondary)]">{intervention.id}</TableCell>
+              <TableRow
+                key={intervention.id}
+                className="cursor-pointer hover:bg-[var(--surface-hover)]"
+                onClick={() => openEdit(intervention)}
+              >
+                <TableCell className="font-mono text-xs text-[var(--text-secondary)]">
+                  {intervention.id}
+                </TableCell>
                 <TableCell className="text-sm">{intervention.name.en}</TableCell>
                 <TableCell className="text-center">
-                  <span className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-xs">{countRefs(intervention.id)}</span>
+                  <span className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-xs">
+                    {countRefs(intervention.id)}
+                  </span>
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-[var(--text-secondary)] hover:text-[var(--text-primary)]" onClick={() => openEdit(intervention)}>
+                  <div
+                    className="flex items-center justify-end gap-1"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                      onClick={() => openEdit(intervention)}
+                    >
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-red-400/60 hover:text-red-400" onClick={() => setDeleteTarget(intervention)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-red-400/60 hover:text-red-400"
+                      onClick={() => setDeleteTarget(intervention)}
+                    >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
@@ -140,17 +184,29 @@ export function InterventionEditor() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         title={editTarget ? t("editIntervention") : t("addInterventionTitle")}
-        description={editTarget ? t("editingEntity", { name: editTarget.id }) : t("createInterventionDesc")}
+        description={
+          editTarget ? t("editingEntity", { name: editTarget.id }) : t("createInterventionDesc")
+        }
         onSave={handleSave}
       >
         <div className="grid gap-3">
           <div>
             <Label className="mb-1 block">{t("fieldSignalId")}</Label>
-            <Input value={formId} onChange={(e) => setFormId(e.target.value.toUpperCase())} placeholder={t("placeholderIntId")} className="font-mono" disabled={!!editTarget} />
+            <Input
+              value={formId}
+              onChange={(e) => setFormId(e.target.value.toUpperCase())}
+              placeholder={t("placeholderIntId")}
+              className="font-mono"
+              disabled={!!editTarget}
+            />
           </div>
           <div>
             <Label className="mb-1 block">{t("fieldName")}</Label>
-            <Input value={formNameEn} onChange={(e) => setFormNameEn(e.target.value)} placeholder={t("placeholderIntName")} />
+            <Input
+              value={formNameEn}
+              onChange={(e) => setFormNameEn(e.target.value)}
+              placeholder={t("placeholderIntName")}
+            />
           </div>
         </div>
       </EntityDialog>

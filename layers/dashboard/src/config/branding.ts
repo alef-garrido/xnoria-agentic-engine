@@ -1,6 +1,6 @@
 /**
  * Branding Configuration
- * 
+ *
  * Customize this file to match your instance's branding.
  * This keeps personal/instance-specific data out of the main codebase.
  */

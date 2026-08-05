@@ -30,6 +30,7 @@ export function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const t = useTranslations("sidebar");
+  const tools = useTranslations("cxtools");
 
   const navSections = [
     {
@@ -38,10 +39,10 @@ export function Sidebar() {
     {
       label: t("cxTools"),
       items: [
-        { href: "/tools/compass", label: "Compass", icon: Compass },
-        { href: "/tools/radar", label: "Radar", icon: Radar },
-        { href: "/tools/matriz", label: "Matriz", icon: LayoutGrid },
-        { href: "/tools/editor", label: "Editor", icon: Pencil },
+        { href: "/tools/compass", label: tools("toolCompass"), icon: Compass },
+        { href: "/tools/radar", label: tools("toolRadar"), icon: Radar },
+        { href: "/tools/matriz", label: tools("toolMatriz"), icon: LayoutGrid },
+        { href: "/tools/editor", label: tools("toolEditor"), icon: Pencil },
       ],
     },
     {
@@ -66,7 +67,7 @@ export function Sidebar() {
         setIsOpen(false);
       }
     };
-    
+
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
@@ -150,7 +151,7 @@ export function Sidebar() {
           position: "fixed",
           left: 0,
           top: 0,
-          width: "16rem",
+          width: "var(--layout-sidebar-w)",
           minHeight: "100vh",
           display: "flex",
           flexDirection: "column",
@@ -167,27 +168,7 @@ export function Sidebar() {
           <button
             onClick={closeSidebar}
             aria-label={t("closeMenu")}
-            style={{
-              position: "absolute",
-              top: "1rem",
-              right: "1rem",
-              padding: "0.25rem",
-              borderRadius: "0.375rem",
-              backgroundColor: "transparent",
-              border: "none",
-              color: "var(--text-muted)",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "color 0.2s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = "var(--text-primary)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = "var(--text-muted)";
-            }}
+            className="absolute top-4 right-4 p-1 rounded-md bg-transparent border-none text-[var(--text-muted)] cursor-pointer flex items-center justify-center transition-colors hover:text-[var(--text-primary)]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -195,10 +176,7 @@ export function Sidebar() {
 
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-2 py-3 mb-4">
-          <Terminal
-            className="w-6 h-6"
-            style={{ color: "var(--accent)" }}
-          />
+          <Terminal className="w-6 h-6" style={{ color: "var(--accent)" }} />
           <h1
             className="text-base font-bold tracking-tight"
             style={{
@@ -265,29 +243,14 @@ export function Sidebar() {
         </nav>
 
         {/* Footer */}
-        <div
-          className="pt-4 mt-4"
-          style={{ borderTop: "1px solid var(--border)" }}
-        >
-          <div
-            className="px-4 py-2 text-xs"
-            style={{ color: "var(--text-muted)" }}
-          >
+        <div className="pt-4 mt-4" style={{ borderTop: "1px solid var(--border)" }}>
+          <div className="px-4 py-2 text-xs" style={{ color: "var(--text-muted)" }}>
             {BRANDING.appTitle}
           </div>
 
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-2 w-full rounded-lg transition-colors"
-            style={{ color: "var(--text-muted)" }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = "var(--error)";
-              e.currentTarget.style.backgroundColor = "var(--card-elevated)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = "var(--text-muted)";
-              e.currentTarget.style.backgroundColor = "transparent";
-            }}
+            className="flex items-center gap-3 px-4 py-2 w-full rounded-lg transition-colors text-[var(--text-muted)] hover:text-[var(--negative)] hover:bg-[var(--card-elevated)] cursor-pointer"
           >
             <LogOut className="w-4 h-4" />
             <span className="text-sm">{t("logout")}</span>

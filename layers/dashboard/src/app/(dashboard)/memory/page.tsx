@@ -29,7 +29,7 @@ export default function MemoryPage() {
 
     try {
       const res = await fetch(`/api/memory?contact_id=${encodeURIComponent(contactId.trim())}`);
-      
+
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.details?.message || `API error: ${res.status}`);
@@ -60,7 +60,10 @@ export default function MemoryPage() {
       <form onSubmit={handleSearch} className="mb-8">
         <div className="flex gap-3">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: "var(--text-muted)" }} />
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5"
+              style={{ color: "var(--text-muted)" }}
+            />
             <input
               type="text"
               value={contactId}
@@ -94,9 +97,9 @@ export default function MemoryPage() {
         <div
           className="p-4 rounded-lg mb-6"
           style={{
-            backgroundColor: "var(--error-bg)",
-            border: "1px solid var(--error)",
-            color: "var(--error)",
+            backgroundColor: "var(--negative-soft)",
+            border: "1px solid var(--negative)",
+            color: "var(--negative)",
           }}
         >
           <strong>{t("error")}:</strong> {error}
@@ -126,18 +129,21 @@ export default function MemoryPage() {
               <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                 {t("found", { count: memories.length })}
               </p>
-              
+
               {/* Timeline */}
               <div className="space-y-0">
                 {memories.map((memory, index) => {
                   const date = new Date(memory.created_at);
-                  const formattedDate = date.toLocaleDateString(getLocale() === "es" ? "es-AR" : "en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  });
+                  const formattedDate = date.toLocaleDateString(
+                    getLocale() === "es" ? "es-AR" : "en-US",
+                    {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }
+                  );
 
                   return (
                     <div

@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { BRANDING } from "@/config/branding";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Card } from "@/components/ui/Card";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { usePolling } from "@/hooks/usePolling";
 import {
   Activity,
   History,
@@ -24,92 +27,52 @@ interface OverviewStats {
 
 export default function DashboardPage() {
   const t = useTranslations("home");
-  const [stats, setStats] = useState<OverviewStats | null>(null);
-  const [error, setError] = useState(false);
-  const statsRef = useRef(stats);
-  useEffect(() => {
-    statsRef.current = stats;
-  });
 
-  useEffect(() => {
-    const fetchOverview = async () => {
-      try {
-        const [actRes, sessRes, sysRes] = await Promise.all([
-          fetch("/api/activity?limit=1&page=1"),
-          fetch("/api/sessions?limit=1&page=1"),
-          fetch("/api/system"),
-        ]);
+  const { data: stats, error } = usePolling(
+    async () => {
+      const [actRes, sessRes, sysRes] = await Promise.all([
+        fetch("/api/activity?limit=1&page=1"),
+        fetch("/api/sessions?limit=1&page=1"),
+        fetch("/api/system"),
+      ]);
 
-        const [actData, sessData, sysData] = await Promise.all([
-          actRes.ok ? actRes.json() : null,
-          sessRes.ok ? sessRes.json() : null,
-          sysRes.ok ? sysRes.json() : null,
-        ]);
+      const [actData, sessData, sysData] = await Promise.all([
+        actRes.ok ? actRes.json() : null,
+        sessRes.ok ? sessRes.json() : null,
+        sysRes.ok ? sysRes.json() : null,
+      ]);
 
-        const running =
-          sysData?.services?.filter((s: { status: string }) => s.status === "running").length ?? 0;
+      const running =
+        sysData?.services?.filter((s: { status: string }) => s.status === "running").length ?? 0;
 
-        setStats({
-          activityTotal: actData?.total ?? 0,
-          sessionTotal: sessData?.total ?? 0,
-          servicesRunning: running,
-          servicesTotal: sysData?.services?.length ?? 4,
-        });
-        setError(false);
-      } catch {
-        if (!statsRef.current) setError(true);
-      }
-    };
-
-    fetchOverview();
-    const interval = setInterval(fetchOverview, 15000);
-    return () => clearInterval(interval);
-  }, []);
+      return {
+        activityTotal: actData?.total ?? 0,
+        sessionTotal: sessData?.total ?? 0,
+        servicesRunning: running,
+        servicesTotal: sysData?.services?.length ?? 4,
+      } satisfies OverviewStats;
+    },
+    { intervalMs: 15_000 }
+  );
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div>
-        <h1
-          className="text-2xl md:text-3xl font-bold mb-1"
-          style={{
-            fontFamily: "var(--font-heading)",
-            color: "var(--text-primary)",
-            letterSpacing: "-1.5px",
-          }}
-        >
-          🧠 {BRANDING.appTitle} {t("overview")}
-        </h1>
-        <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
-          {t("subtitle")}
-        </p>
-      </div>
+      <PageHeader
+        leading="🧠"
+        title={`${BRANDING.appTitle} ${t("overview")}`}
+        subtitle={t("subtitle")}
+      />
 
       {/* Stats Cards */}
       {error ? (
-        <div
-          className="rounded-xl p-8 text-center"
-          style={{
-            backgroundColor: "var(--card)",
-            border: "1px solid var(--border)",
-          }}
-        >
-          <AlertTriangle
-            className="w-10 h-10 mx-auto mb-3"
-            style={{ color: "var(--warning)" }}
-          />
-          <p style={{ color: "var(--text-secondary)" }}>
-            {t("unableToFetch")}
-          </p>
-        </div>
+        <Card className="p-8 text-center">
+          <AlertTriangle className="w-10 h-10 mx-auto mb-3 text-[var(--warning)]" />
+          <p className="text-[var(--text-secondary)]">{t("unableToFetch")}</p>
+        </Card>
       ) : !stats ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-pulse">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[...Array(3)].map((_, i) => (
-            <div
-              key={i}
-              className="h-28 rounded-xl"
-              style={{ backgroundColor: "var(--card)" }}
-            />
+            <Skeleton key={i} variant="card" className="h-28 rounded-xl" />
           ))}
         </div>
       ) : (
@@ -124,27 +87,15 @@ export default function DashboardPage() {
             }}
           >
             <div className="flex flex-col gap-1">
-              <div
-                className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider"
-                style={{ color: "var(--text-muted)" }}
-              >
-                <Activity className="w-4 h-4" style={{ color: "var(--info)" }} />
+              <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+                <Activity className="w-4 h-4 text-[var(--info)]" />
                 {t("filterLogEvents")}
               </div>
-              <div
-                className="text-2xl font-bold"
-                style={{
-                  fontFamily: "var(--font-heading)",
-                  color: "var(--text-primary)",
-                }}
-              >
+              <div className="text-2xl font-bold font-[var(--font-heading)] text-[var(--text-primary)]">
                 {stats.activityTotal.toLocaleString()}
               </div>
             </div>
-            <ArrowRight
-              className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{ color: "var(--text-muted)" }}
-            />
+            <ArrowRight className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity text-[var(--text-muted)]" />
           </Link>
 
           {/* Session Count */}
@@ -157,27 +108,15 @@ export default function DashboardPage() {
             }}
           >
             <div className="flex flex-col gap-1">
-              <div
-                className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider"
-                style={{ color: "var(--text-muted)" }}
-              >
-                <History className="w-4 h-4" style={{ color: "var(--accent)" }} />
+              <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+                <History className="w-4 h-4 text-[var(--accent)]" />
                 {t("cognitiveSessions")}
               </div>
-              <div
-                className="text-2xl font-bold"
-                style={{
-                  fontFamily: "var(--font-heading)",
-                  color: "var(--text-primary)",
-                }}
-              >
+              <div className="text-2xl font-bold font-[var(--font-heading)] text-[var(--text-primary)]">
                 {stats.sessionTotal.toLocaleString()}
               </div>
             </div>
-            <ArrowRight
-              className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{ color: "var(--text-muted)" }}
-            />
+            <ArrowRight className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity text-[var(--text-muted)]" />
           </Link>
 
           {/* Services Status */}
@@ -190,80 +129,41 @@ export default function DashboardPage() {
             }}
           >
             <div className="flex flex-col gap-1">
-              <div
-                className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider"
-                style={{ color: "var(--text-muted)" }}
-              >
-                <Server className="w-4 h-4" style={{ color: "var(--positive)" }} />
+              <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+                <Server className="w-4 h-4 text-[var(--positive)]" />
                 {t("coreServices")}
               </div>
               <div className="flex items-center gap-2">
-                <span
-                  className="text-2xl font-bold"
-                  style={{
-                    fontFamily: "var(--font-heading)",
-                    color: "var(--text-primary)",
-                  }}
-                >
+                <span className="text-2xl font-bold font-[var(--font-heading)] text-[var(--text-primary)]">
                   {stats.servicesRunning}/{stats.servicesTotal}
                 </span>
                 {stats.servicesRunning === stats.servicesTotal ? (
-                  <CheckCircle
-                    className="w-5 h-5"
-                    style={{ color: "var(--positive)" }}
-                  />
+                  <CheckCircle className="w-5 h-5 text-[var(--positive)]" />
                 ) : (
-                  <XCircle
-                    className="w-5 h-5"
-                    style={{ color: "var(--negative)" }}
-                  />
+                  <XCircle className="w-5 h-5 text-[var(--negative)]" />
                 )}
               </div>
             </div>
-            <ArrowRight
-              className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{ color: "var(--text-muted)" }}
-            />
+            <ArrowRight className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity text-[var(--text-muted)]" />
           </Link>
         </div>
       )}
 
       {/* Recent Activity */}
-      <div
-        className="rounded-xl overflow-hidden"
-        style={{
-          backgroundColor: "var(--card)",
-          border: "1px solid var(--border)",
-        }}
-      >
-        <div
-          className="flex items-center justify-between px-5 py-4"
-          style={{ borderBottom: "1px solid var(--border)" }}
-        >
+      <Card>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
           <div className="flex items-center gap-3">
             <div className="accent-line" />
-            <h2
-              className="text-base font-semibold"
-              style={{
-                fontFamily: "var(--font-heading)",
-                color: "var(--text-primary)",
-              }}
-            >
+            <h2 className="text-base font-semibold font-[var(--font-heading)] text-[var(--text-primary)]">
               {t("recentActivity")}
             </h2>
           </div>
-          <Link
-            href="/activity"
-            className="text-sm font-medium"
-            style={{ color: "var(--accent)" }}
-          >
+          <Link href="/activity" className="text-sm font-medium text-[var(--accent)]">
             {t("viewAll")}
           </Link>
         </div>
-        <div className="p-0">
-          <ActivityFeed />
-        </div>
-      </div>
+        <ActivityFeed />
+      </Card>
     </div>
   );
 }

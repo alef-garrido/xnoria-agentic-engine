@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useState } from "react";
+import type { CSSProperties } from "react";
+import type { ReactNode } from "react";
 import {
   TrendingUp,
   Shield,
@@ -10,154 +12,114 @@ import {
   Clock,
   RefreshCw,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { STAGE_META, getStageAverageSeverity } from "@/lib/compass";
+import { ACTIVE_STAGES } from "@/lib/constants";
 import {
-  STAGE_META,
-  getStageAverageSeverity,
-  type JourneyStage,
-} from "@/lib/compass";
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-interface StageHealthMetrics {
-  stage: string;
-  period_days: number;
-  total_actions: number;
-  executed: number;
-  rejected: number;
-  pending_hitl: number;
-  execution_rate: number;
-  hitl_total: number;
-  hitl_approved: number;
-  hitl_rejected: number;
-  hitl_approval_rate: number;
-  avg_review_minutes: number | null;
-  top_rejection_code: string | null;
-}
-
-// ---------------------------------------------------------------------------
-// Threshold constants — adjust without code change
-// ---------------------------------------------------------------------------
-const THRESHOLDS = {
-  executionRate:    { healthy: 0.85, warning: 0.60 },
-  avgSeverity:     { healthy: 0.5,  warning: 0.7  },
-  hitlApproval:    { healthy: 0.80, warning: 0.60 },
-} as const;
-
-type StatusLevel = "healthy" | "warning" | "critical";
-
-function getStatus(value: number, threshold: { healthy: number; warning: number }, invert = false): StatusLevel {
-  if (invert) {
-    // Lower is better (severity)
-    if (value < threshold.healthy) return "healthy";
-    if (value <= threshold.warning) return "warning";
-    return "critical";
-  }
-  // Higher is better (rates)
-  if (value > threshold.healthy) return "healthy";
-  if (value >= threshold.warning) return "warning";
-  return "critical";
-}
+  HEALTH_THRESHOLDS,
+  getCombinedStatus,
+  getStageMetrics,
+  getStatus,
+  type StageHealthMetrics,
+  type StatusLevel,
+} from "@/lib/healthStatus";
+import { usePolling } from "@/hooks/usePolling";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 const STATUS_COLORS: Record<StatusLevel, string> = {
-  healthy:  "var(--positive)",
-  warning:  "var(--warning)",
+  healthy: "var(--positive)",
+  warning: "var(--warning)",
   critical: "var(--negative)",
 };
 
-const STATUS_ICONS: Record<StatusLevel, typeof CheckCircle> = {
-  healthy:  CheckCircle,
-  warning:  AlertTriangle,
+const STATUS_ICONS: Record<StatusLevel, LucideIcon> = {
+  healthy: CheckCircle,
+  warning: AlertTriangle,
   critical: XCircle,
 };
 
-// Active stages to display (expand as phases add stages)
-const ACTIVE_STAGES: JourneyStage[] = ["ACQ", "SAL", "SUP", "RET"];
+// ---------------------------------------------------------------------------
+// Local presentational components
+// ---------------------------------------------------------------------------
+
+function PanelHeader({
+  icon,
+  title,
+  caption,
+}: {
+  icon: ReactNode;
+  title: string;
+  caption?: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 px-5 py-4 border-b border-[var(--border)]">
+      <div className="accent-line" />
+      {icon}
+      <h2 className="text-base font-semibold font-[var(--font-heading)] text-[var(--text-primary)]">
+        {title}
+      </h2>
+      {caption && <span className="text-[var(--text-muted)] text-[12px]">{caption}</span>}
+    </div>
+  );
+}
+
+function StageChip({ stage, color }: { stage: string; color: string }) {
+  return (
+    <span
+      className="text-[11px] font-bold px-2 py-0.5 rounded tracking-wide"
+      style={{ backgroundColor: `${color}20`, color }}
+    >
+      {stage}
+    </span>
+  );
+}
+
+function StageStat({ label, value, color }: { label: string; value: ReactNode; color?: string }) {
+  return (
+    <div>
+      <div className="text-[11px] text-[var(--text-muted)] mb-0.5">{label}</div>
+      <div
+        className="text-[18px] font-bold font-[var(--font-heading)]"
+        style={{ color: color ?? "var(--text-primary)" }}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
+
 export function JourneyHealthMap() {
   const t = useTranslations("journey");
-  const [metrics, setMetrics] = useState<StageHealthMetrics[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
   const [days, setDays] = useState(30);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const metricsRef = useRef(metrics);
-  useEffect(() => {
-    metricsRef.current = metrics;
-  });
 
-  const fetchHealth = useCallback(async () => {
-    try {
+  const { data, error, refresh } = usePolling(
+    async () => {
       const res = await fetch(`/api/filter/health?days=${days}`);
       if (!res.ok) throw new Error("Failed to fetch health metrics");
       const data = await res.json();
-      setMetrics(data.metrics ?? []);
-      setError(false);
-      setLastUpdated(new Date());
-    } catch {
-      if (metricsRef.current.length === 0) setError(true);
-    } finally {
-      setLoading(false);
-    }
-  }, [days]);
+      return {
+        metrics: (data.metrics ?? []) as StageHealthMetrics[],
+        fetchedAt: new Date(),
+      };
+    },
+    { intervalMs: 30_000 }
+  );
 
-  useEffect(() => {
-    setTimeout(() => {
-      setLoading(true);
-      fetchHealth();
-    }, 0);
-    const interval = setInterval(fetchHealth, 30000);
-    return () => clearInterval(interval);
-  }, [fetchHealth]);
+  const metrics = data?.metrics ?? [];
+  const loading = !data;
+  const lastUpdated = data?.fetchedAt ?? null;
 
-  // Get metrics for a specific stage, or return null/empty
-  function getStageMetrics(stage: JourneyStage): StageHealthMetrics | null {
-    return metrics.find((m) => m.stage === stage) ?? null;
-  }
-
-  // Compute combined status for a stage
-  function getCombinedStatus(stage: JourneyStage): StatusLevel {
-    const m = getStageMetrics(stage);
-    const severity = getStageAverageSeverity(stage);
-    const severityStatus = getStatus(severity, THRESHOLDS.avgSeverity, true);
-
-    if (!m || m.total_actions === 0) return severityStatus;
-
-    const execStatus = getStatus(m.execution_rate, THRESHOLDS.executionRate);
-    const hitlStatus = m.hitl_total > 0
-      ? getStatus(m.hitl_approval_rate, THRESHOLDS.hitlApproval)
-      : "healthy";
-
-    const statuses = [severityStatus, execStatus, hitlStatus];
-    if (statuses.includes("critical")) return "critical";
-    if (statuses.includes("warning")) return "warning";
-    return "healthy";
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // Render
-  // ─────────────────────────────────────────────────────────────────────────
-
+  // Error state
   if (error) {
     return (
-      <div
-        className="rounded-xl p-8 text-center"
-        style={{
-          backgroundColor: "var(--card)",
-          border: "1px solid var(--border)",
-        }}
-      >
-        <AlertTriangle
-          className="w-10 h-10 mx-auto mb-3"
-          style={{ color: "var(--warning)" }}
-        />
-        <p style={{ color: "var(--text-secondary)" }}>
-          {t("fetchFailed")}
-        </p>
+      <div className="rounded-xl p-8 text-center bg-[var(--card)] border border-[var(--border)]">
+        <AlertTriangle className="w-10 h-10 mx-auto mb-3 text-[var(--warning)]" />
+        <p className="text-[var(--text-secondary)]">{t("fetchFailed")}</p>
       </div>
     );
   }
@@ -189,23 +151,13 @@ export function JourneyHealthMap() {
         </div>
         <div className="flex items-center gap-2">
           {lastUpdated && (
-            <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>
+            <span className="text-[var(--text-muted)] text-[12px]">
               {t("updated", { time: lastUpdated.toLocaleTimeString() })}
             </span>
           )}
           <button
-            onClick={() => fetchHealth()}
-            style={{
-              padding: "6px",
-              borderRadius: "6px",
-              cursor: "pointer",
-              border: "1px solid var(--border)",
-              backgroundColor: "var(--card)",
-              color: "var(--text-muted)",
-              display: "flex",
-              alignItems: "center",
-              transition: "all 0.2s ease",
-            }}
+            onClick={refresh}
+            className="p-1.5 rounded-md cursor-pointer border border-[var(--border)] bg-[var(--card)] text-[var(--text-muted)] flex items-center transition-all"
             aria-label={t("refresh")}
           >
             <RefreshCw className="w-4 h-4" />
@@ -225,70 +177,34 @@ export function JourneyHealthMap() {
       >
         {ACTIVE_STAGES.map((stage) => {
           const meta = STAGE_META[stage];
-          const m = getStageMetrics(stage);
+          const m = getStageMetrics(metrics, stage);
           const severity = getStageAverageSeverity(stage);
-          const status = getCombinedStatus(stage);
+          const status = getCombinedStatus(metrics, stage);
           const StatusIcon = STATUS_ICONS[status];
 
           return (
             <div
               key={stage}
-              className="rounded-xl p-5"
-              style={{
-                backgroundColor: "var(--card)",
-                border: "1px solid var(--border)",
-                borderTop: `3px solid ${meta.color}`,
-                transition: "transform 0.15s ease, box-shadow 0.15s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = `0 4px 16px ${meta.color}22`;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "none";
-              }}
+              className="stage-card rounded-xl p-5 bg-[var(--card)] border border-[var(--border)]"
+              style={
+                {
+                  borderTop: `3px solid ${meta.color}`,
+                  "--stage-accent": meta.color,
+                } as CSSProperties
+              }
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      padding: "2px 8px",
-                      borderRadius: "4px",
-                      backgroundColor: `${meta.color}20`,
-                      color: meta.color,
-                      letterSpacing: "0.5px",
-                    }}
-                  >
-                    {stage}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: "13px",
-                      color: "var(--text-secondary)",
-                      fontWeight: 500,
-                    }}
-                  >
+                  <StageChip stage={stage} color={meta.color} />
+                  <span className="text-[13px] text-[var(--text-secondary)] font-medium">
                     {meta.name}
                   </span>
                 </div>
-                <StatusIcon
-                  className="w-4 h-4"
-                  style={{ color: STATUS_COLORS[status] }}
-                />
+                <StatusIcon className="w-4 h-4" style={{ color: STATUS_COLORS[status] }} />
               </div>
 
               {loading ? (
-                <div
-                  className="animate-pulse"
-                  style={{
-                    height: "48px",
-                    borderRadius: "8px",
-                    backgroundColor: "var(--card-elevated)",
-                  }}
-                />
+                <Skeleton className="h-12 rounded-lg" />
               ) : (
                 <div
                   style={{
@@ -297,78 +213,23 @@ export function JourneyHealthMap() {
                     gap: "8px",
                   }}
                 >
-                  <div>
-                    <div
-                      style={{
-                        fontSize: "11px",
-                        color: "var(--text-muted)",
-                        marginBottom: "2px",
-                      }}
-                    >
-                      {t("actions")}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "18px",
-                        fontWeight: 700,
-                        color: "var(--text-primary)",
-                        fontFamily: "var(--font-heading)",
-                      }}
-                    >
-                      {m?.total_actions ?? 0}
-                    </div>
-                  </div>
-                  <div>
-                    <div
-                      style={{
-                        fontSize: "11px",
-                        color: "var(--text-muted)",
-                        marginBottom: "2px",
-                      }}
-                    >
-                      {t("execRate")}
-                    </div>                    <div
-                      style={{
-                        fontSize: "18px",
-                        fontWeight: 700,
-                        color: m
-                          ? STATUS_COLORS[
-                              getStatus(
-                                m.execution_rate,
-                                THRESHOLDS.executionRate
-                              )
-                            ]
-                          : "var(--text-muted)",
-                        fontFamily: "var(--font-heading)",
-                      }}
-                    >
-                      {m ? `${Math.round(m.execution_rate * 100)}%` : "—"}
-                    </div>
-                  </div>
-                  <div>
-                    <div
-                      style={{
-                        fontSize: "11px",
-                        color: "var(--text-muted)",
-                        marginBottom: "2px",
-                      }}
-                    >
-                      {t("severity")}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "18px",
-                        fontWeight: 700,
-                        color:
-                          STATUS_COLORS[
-                            getStatus(severity, THRESHOLDS.avgSeverity, true)
-                          ],
-                        fontFamily: "var(--font-heading)",
-                      }}
-                    >
-                      {severity.toFixed(2)}
-                    </div>
-                  </div>
+                  <StageStat label={t("actions")} value={m?.total_actions ?? 0} />
+                  <StageStat
+                    label={t("execRate")}
+                    value={m ? `${Math.round(m.execution_rate * 100)}%` : "—"}
+                    color={
+                      m
+                        ? STATUS_COLORS[
+                            getStatus(m.execution_rate, HEALTH_THRESHOLDS.executionRate)
+                          ]
+                        : undefined
+                    }
+                  />
+                  <StageStat
+                    label={t("severity")}
+                    value={severity.toFixed(2)}
+                    color={STATUS_COLORS[getStatus(severity, HEALTH_THRESHOLDS.avgSeverity, true)]}
+                  />
                 </div>
               )}
             </div>
@@ -379,86 +240,40 @@ export function JourneyHealthMap() {
       {/* ──────────────────────────────────────────────────────────────────── */}
       {/* 2. Action Volume Chart (table-based for zero dependencies)          */}
       {/* ──────────────────────────────────────────────────────────────────── */}
-      <div
-        className="rounded-xl overflow-hidden"
-        style={{
-          backgroundColor: "var(--card)",
-          border: "1px solid var(--border)",
-        }}
-      >
-        <div
-          className="flex items-center gap-3 px-5 py-4"
-          style={{ borderBottom: "1px solid var(--border)" }}
-        >
-          <div className="accent-line" />
-          <TrendingUp className="w-5 h-5" style={{ color: "var(--accent)" }} />
-          <h2
-            className="text-base font-semibold"
-            style={{
-              fontFamily: "var(--font-heading)",
-              color: "var(--text-primary)",
-            }}
-          >
-            {t("actionVolume")}
-          </h2>
-          <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>
-            {t("lastDays", { days })}
-          </span>
-        </div>
+      <div className="rounded-xl overflow-hidden bg-[var(--card)] border border-[var(--border)]">
+        <PanelHeader
+          icon={<TrendingUp className="w-5 h-5 text-[var(--accent)]" />}
+          title={t("actionVolume")}
+          caption={t("lastDays", { days })}
+        />
 
         <div className="p-5">
           {loading ? (
-            <div
-              className="animate-pulse"
-              style={{
-                height: "120px",
-                borderRadius: "8px",
-                backgroundColor: "var(--card-elevated)",
-              }}
-            />
+            <Skeleton className="h-[120px] rounded-lg" />
           ) : metrics.length === 0 ? (
-            <div
-              className="text-center py-8"
-              style={{ color: "var(--text-muted)", fontSize: "14px" }}
-            >
+            <div className="text-center py-8 text-[var(--text-muted)] text-[14px]">
               {t("noActionData")}
             </div>
           ) : (
             <div className="flex flex-col gap-3">
               {ACTIVE_STAGES.map((stage) => {
-                const m = getStageMetrics(stage);
+                const m = getStageMetrics(metrics, stage);
                 const meta = STAGE_META[stage];
                 const total = m?.total_actions ?? 0;
                 const maxTotal = Math.max(
-                  ...ACTIVE_STAGES.map(
-                    (s) => getStageMetrics(s)?.total_actions ?? 0
-                  ),
+                  ...ACTIVE_STAGES.map((s) => getStageMetrics(metrics, s)?.total_actions ?? 0),
                   1
                 );
 
                 return (
                   <div key={stage} className="flex items-center gap-3">
                     <span
-                      style={{
-                        width: "40px",
-                        fontSize: "12px",
-                        fontWeight: 700,
-                        color: meta.color,
-                        textAlign: "right",
-                      }}
+                      className="w-10 text-[12px] font-bold text-right"
+                      style={{ color: meta.color }}
                     >
                       {stage}
                     </span>
-                    <div
-                      style={{
-                        flex: 1,
-                        height: "28px",
-                        backgroundColor: "var(--card-elevated)",
-                        borderRadius: "6px",
-                        overflow: "hidden",
-                        position: "relative",
-                      }}
-                    >
+                    <div className="flex-1 h-7 rounded-md overflow-hidden relative bg-[var(--card-elevated)]">
                       {/* Executed bar */}
                       <div
                         style={{
@@ -491,16 +306,7 @@ export function JourneyHealthMap() {
                         </div>
                       )}
                     </div>
-                    <span
-                      style={{
-                        width: "40px",
-                        fontSize: "13px",
-                        fontWeight: 700,
-                        color: "var(--text-primary)",
-                        textAlign: "right",
-                        fontFamily: "var(--font-heading)",
-                      }}
-                    >
+                    <span className="w-10 text-[13px] font-bold text-right font-[var(--font-heading)] text-[var(--text-primary)]">
                       {total}
                     </span>
                   </div>
@@ -514,47 +320,17 @@ export function JourneyHealthMap() {
       {/* ──────────────────────────────────────────────────────────────────── */}
       {/* 3. Decision Quality Panel                                           */}
       {/* ──────────────────────────────────────────────────────────────────── */}
-      <div
-        className="rounded-xl overflow-hidden"
-        style={{
-          backgroundColor: "var(--card)",
-          border: "1px solid var(--border)",
-        }}
-      >
-        <div
-          className="flex items-center gap-3 px-5 py-4"
-          style={{ borderBottom: "1px solid var(--border)" }}
-        >
-          <div className="accent-line" />
-          <Shield className="w-5 h-5" style={{ color: "var(--info)" }} />
-          <h2
-            className="text-base font-semibold"
-            style={{
-              fontFamily: "var(--font-heading)",
-              color: "var(--text-primary)",
-            }}
-          >
-            {t("decisionQuality")}
-          </h2>
-          <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>
-            {t("hitlMetrics", { days })}
-          </span>
-        </div>
+      <div className="rounded-xl overflow-hidden bg-[var(--card)] border border-[var(--border)]">
+        <PanelHeader
+          icon={<Shield className="w-5 h-5 text-[var(--info)]" />}
+          title={t("decisionQuality")}
+          caption={t("hitlMetrics", { days })}
+        />
 
-        <div style={{ overflowX: "auto" }}>
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              fontSize: "13px",
-            }}
-          >
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-[13px]">
             <thead>
-              <tr
-                style={{
-                  borderBottom: "1px solid var(--border)",
-                }}
-              >
+              <tr className="border-b border-[var(--border)]">
                 {[
                   t("colStage"),
                   t("colHitlActions"),
@@ -566,15 +342,7 @@ export function JourneyHealthMap() {
                 ].map((h) => (
                   <th
                     key={h}
-                    style={{
-                      padding: "10px 16px",
-                      textAlign: "left",
-                      fontWeight: 600,
-                      color: "var(--text-muted)",
-                      fontSize: "11px",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                    }}
+                    className="px-4 py-2.5 text-left font-semibold text-[var(--text-muted)] text-[11px] uppercase tracking-wide"
                   >
                     {h}
                   </th>
@@ -584,126 +352,59 @@ export function JourneyHealthMap() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} style={{ padding: "24px", textAlign: "center" }}>
-                    <div
-                      className="animate-pulse"
-                      style={{
-                        height: "20px",
-                        borderRadius: "4px",
-                        backgroundColor: "var(--card-elevated)",
-                        width: "60%",
-                        margin: "0 auto",
-                      }}
-                    />
+                  <td colSpan={7} className="p-6 text-center">
+                    <Skeleton className="h-5 rounded w-3/5 mx-auto" />
                   </td>
                 </tr>
               ) : ACTIVE_STAGES.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={7}
-                    style={{
-                      padding: "24px",
-                      textAlign: "center",
-                      color: "var(--text-muted)",
-                    }}
-                  >
+                  <td colSpan={7} className="p-6 text-center text-[var(--text-muted)]">
                     {t("noDecisionData")}
                   </td>
                 </tr>
               ) : (
                 ACTIVE_STAGES.map((stage) => {
-                  const m = getStageMetrics(stage);
+                  const m = getStageMetrics(metrics, stage);
                   const meta = STAGE_META[stage];
-                  const approvalStatus = m && m.hitl_total > 0
-                    ? getStatus(m.hitl_approval_rate, THRESHOLDS.hitlApproval)
-                    : "healthy";
+                  const approvalStatus =
+                    m && m.hitl_total > 0
+                      ? getStatus(m.hitl_approval_rate, HEALTH_THRESHOLDS.hitlApproval)
+                      : "healthy";
 
                   return (
                     <tr
                       key={stage}
-                      style={{
-                        borderBottom: "1px solid var(--border)",
-                        transition: "background-color 0.15s ease",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = "var(--card-elevated)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "transparent";
-                      }}
+                      className="border-b border-[var(--border)] transition-colors hover:bg-[var(--card-elevated)]"
                     >
-                      <td style={{ padding: "12px 16px" }}>
-                        <span
-                          style={{
-                            fontSize: "11px",
-                            fontWeight: 700,
-                            padding: "2px 8px",
-                            borderRadius: "4px",
-                            backgroundColor: `${meta.color}20`,
-                            color: meta.color,
-                          }}
-                        >
-                          {stage}
-                        </span>
+                      <td className="px-4 py-3">
+                        <StageChip stage={stage} color={meta.color} />
                       </td>
-                      <td
-                        style={{
-                          padding: "12px 16px",
-                          fontWeight: 600,
-                          color: "var(--text-primary)",
-                          fontFamily: "var(--font-heading)",
-                        }}
-                      >
+                      <td className="px-4 py-3 font-semibold font-[var(--font-heading)] text-[var(--text-primary)]">
                         {m?.hitl_total ?? 0}
                       </td>
-                      <td
-                        style={{
-                          padding: "12px 16px",
-                          color: "var(--positive)",
-                          fontWeight: 600,
-                        }}
-                      >
+                      <td className="px-4 py-3 text-[var(--positive)] font-semibold">
                         {m?.hitl_approved ?? 0}
                       </td>
-                      <td
-                        style={{
-                          padding: "12px 16px",
-                          color: "var(--negative)",
-                          fontWeight: 600,
-                        }}
-                      >
+                      <td className="px-4 py-3 text-[var(--negative)] font-semibold">
                         {m?.hitl_rejected ?? 0}
                       </td>
-                      <td style={{ padding: "12px 16px" }}>
+                      <td className="px-4 py-3">
                         <span
-                          style={{
-                            fontWeight: 700,
-                            color: STATUS_COLORS[approvalStatus],
-                            fontFamily: "var(--font-heading)",
-                          }}
+                          className="font-bold font-[var(--font-heading)]"
+                          style={{ color: STATUS_COLORS[approvalStatus] }}
                         >
                           {m && m.hitl_total > 0
                             ? `${Math.round(m.hitl_approval_rate * 100)}%`
                             : "—"}
                         </span>
                       </td>
-                      <td
-                        style={{
-                          padding: "12px 16px",
-                          color: "var(--text-secondary)",
-                          fontSize: "12px",
-                          fontFamily: "monospace",
-                        }}
-                      >
+                      <td className="px-4 py-3 text-[var(--text-secondary)] text-[12px] font-mono">
                         {m?.top_rejection_code ?? "—"}
                       </td>
-                      <td style={{ padding: "12px 16px" }}>
+                      <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
-                          <Clock
-                            className="w-3.5 h-3.5"
-                            style={{ color: "var(--text-muted)" }}
-                          />
-                          <span style={{ color: "var(--text-secondary)" }}>
+                          <Clock className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+                          <span className="text-[var(--text-secondary)]">
                             {m?.avg_review_minutes != null
                               ? `${m.avg_review_minutes} ${t("min")}`
                               : "—"}

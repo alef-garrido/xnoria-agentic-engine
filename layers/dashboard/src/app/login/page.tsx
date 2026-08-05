@@ -8,9 +8,9 @@ import { useTranslations } from "next-intl";
 
 function LoginForm() {
   const t = useTranslations("login");
-  const [handle, setHandle]   = useState("");
+  const [handle, setHandle] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError]     = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -22,9 +22,9 @@ function LoginForm() {
 
     try {
       const res = await fetch("/api/auth/login", {
-        method:  "POST",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ handle, password }),
+        body: JSON.stringify({ handle, password }),
       });
 
       const data = await res.json();
@@ -63,10 +63,7 @@ function LoginForm() {
       {/* Header */}
       <div className="text-center mb-8 flex flex-col items-center gap-2">
         <div className="flex items-center gap-2.5">
-          <Terminal
-            className="w-7 h-7"
-            style={{ color: "var(--accent)" }}
-          />
+          <Terminal className="w-7 h-7" style={{ color: "var(--accent)" }} />
           <span className="text-2xl">🧠</span>
           <h1
             className="text-xl font-bold"
@@ -79,12 +76,10 @@ function LoginForm() {
             {BRANDING.agentName}
           </h1>
         </div>
-        <p
-          className="text-sm"
-          style={{ color: "var(--text-secondary)" }}
-        >
+        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
           {t("subtitle")}
-        </p>      </div>
+        </p>{" "}
+      </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -138,8 +133,8 @@ function LoginForm() {
           <div
             className="flex items-center gap-2 text-sm px-4 py-3 rounded-lg"
             style={{
-              backgroundColor: "var(--error-bg)",
-              color: "var(--error)",
+              backgroundColor: "var(--negative-soft)",
+              color: "var(--negative)",
             }}
           >
             <AlertCircle className="w-4 h-4 shrink-0" />
@@ -162,10 +157,7 @@ function LoginForm() {
       </form>
 
       {/* Footer */}
-      <p
-        className="text-center text-xs mt-6"
-        style={{ color: "var(--text-muted)" }}
-      >
+      <p className="text-center text-xs mt-6" style={{ color: "var(--text-muted)" }}>
         {BRANDING.agentName} CX Intelligence Engine
       </p>
     </div>

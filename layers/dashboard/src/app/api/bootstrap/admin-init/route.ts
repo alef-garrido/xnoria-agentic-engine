@@ -14,10 +14,10 @@
 // call makes the endpoint permanently unusable.
 // ==============================================================================
 
-import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcrypt';
-import { query } from '@/lib/db';
-import { logger } from '@/lib/logger';
+import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcrypt";
+import { query } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 const BCRYPT_COST = 12;
 const MIN_PASSWORD_LENGTH = 8;
@@ -43,15 +43,12 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     password = body.password;
   } catch {
-    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
   // Validate password provided
-  if (!password || typeof password !== 'string') {
-    return NextResponse.json(
-      { error: 'Missing required field: password' },
-      { status: 400 }
-    );
+  if (!password || typeof password !== "string") {
+    return NextResponse.json({ error: "Missing required field: password" }, { status: 400 });
   }
 
   // Validate password length
@@ -64,14 +61,13 @@ export async function POST(request: NextRequest) {
 
   try {
     // Check if admin password_hash is NULL (guard against reuse)
-    const adminCheck = await query(
-      'SELECT id, password_hash FROM operators WHERE handle = $1',
-      ['admin']
-    );
+    const adminCheck = await query("SELECT id, password_hash FROM operators WHERE handle = $1", [
+      "admin",
+    ]);
 
     if (adminCheck.rows.length === 0) {
       return NextResponse.json(
-        { error: 'Admin user not found. This should not happen — check migrations.' },
+        { error: "Admin user not found. This should not happen — check migrations." },
         { status: 403 }
       );
     }
@@ -82,8 +78,7 @@ export async function POST(request: NextRequest) {
     if (adminUser.password_hash !== null) {
       return NextResponse.json(
         {
-          error:
-            'Admin already initialized. This endpoint can only be used once during setup.',
+          error: "Admin already initialized. This endpoint can only be used once during setup.",
         },
         { status: 403 }
       );
@@ -94,21 +89,21 @@ export async function POST(request: NextRequest) {
 
     // Update admin row with password hash and mark password as changed
     const result = await query(
-      'UPDATE operators SET password_hash = $1, password_changed = true WHERE handle = $2 RETURNING id, handle, display_name',
-      [passwordHash, 'admin']
+      "UPDATE operators SET password_hash = $1, password_changed = true WHERE handle = $2 RETURNING id, handle, display_name",
+      [passwordHash, "admin"]
     );
 
     return NextResponse.json(
       {
-        message: 'Admin password initialized successfully',
+        message: "Admin password initialized successfully",
         admin: result.rows[0],
       },
       { status: 200 }
     );
   } catch (err: unknown) {
-    logger.error({ error: err }, 'Bootstrap admin password initialization failed');
+    logger.error({ error: err }, "Bootstrap admin password initialization failed");
     return NextResponse.json(
-      { error: 'Internal server error during password initialization' },
+      { error: "Internal server error during password initialization" },
       { status: 500 }
     );
   }

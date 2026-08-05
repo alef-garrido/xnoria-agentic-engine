@@ -66,6 +66,10 @@ src/
 │   ├── db.ts             # Postgres pool wrapper
 │   ├── constants.ts      # STAGES, ACTIVE_STAGES, JourneyStage, TOAST_DURATION_MS (single source of truth)
 │   ├── healthStatus.ts   # Journey health derivation logic (pure, unit-testable)
+│   ├── pagination.ts     # parsePagination + paginate — shared list/pagination envelope
+│   ├── service-client.ts # filterFetch / memoryFetch — server proxy to filter & memory services
+│   ├── client-api.ts     # apiFetch + ApiError — typed client fetch wrapper
+│   ├── docker.ts         # Docker Engine API client + project service lookup helpers
 │   ├── logger.ts         # Server-side structured logger (pino)
 │   └── client-logger.ts  # Client-side structured logger wrapper
 └── proxy.ts              # Auth middleware (cookie presence check only)
@@ -229,6 +233,13 @@ docker exec exnoria_postgres psql -U xnoria -d exnoria -c \
   - Pass a stable fetcher (wrap in `useCallback` when it depends on state, e.g. the `days` selector)
   - Default behavior keeps stale data on fetch errors; pass `keepStaleOnError: false` to override
   - Use `setData` for optimistic updates (toggles, removals, appends)
+- All client fetches go through `apiFetch` from `src/lib/client-api.ts` — never raw `fetch`
+  - `apiFetch<T>(path, { method, body })` — typed, JSON body, throws `ApiError` (`.status`, `.data`, `.message` from `details.message` → `error` → `HTTP <status>`)
+  - `ApiError.status === 0` means a transport/network failure; call sites keep their existing try/catch + toast patterns
+- Server-side API routes:
+  - Proxy to the filter service via `filterFetch` / `memoryFetch` from `src/lib/service-client.ts` — never hand-roll `fetch` + 502 mapping
+  - Paginated list endpoints use `parsePagination` + `paginate` from `src/lib/pagination.ts`
+  - Container status lookups use `listProjectServiceNames` / `findContainer` from `src/lib/docker.ts`
 - Toasts: use `useToast()` from `src/components/ToastProvider.tsx` (provider is mounted in the dashboard layout) — never re-implement toast state
 - Stage knowledge: import `STAGES` / `ACTIVE_STAGES` / `JourneyStage` from `src/lib/constants.ts` — never hardcode stage lists
 - Journey health status logic lives in `src/lib/healthStatus.ts` (pure functions) — keep derivation out of components

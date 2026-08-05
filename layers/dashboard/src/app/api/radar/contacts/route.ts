@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
-import { query } from '@/lib/db';
-import { logger } from '@/lib/logger';
+import { NextResponse } from "next/server";
+import { query } from "@/lib/db";
+import { logger } from "@/lib/logger";
 
 export async function GET() {
   try {
@@ -32,7 +32,7 @@ export async function GET() {
       })),
     });
   } catch (error) {
-    logger.error({ error }, 'Failed to fetch radar contacts from database');
-    return NextResponse.json({ error: 'Failed to fetch radar contacts' }, { status: 500 });
+    logger.error({ error }, "Failed to fetch radar contacts from database");
+    return NextResponse.json({ error: "Failed to fetch radar contacts" }, { status: 500 });
   }
 }

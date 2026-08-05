@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Terminal, Lock, User, AlertCircle, KeyRound } from "lucide-react";
 import { BRANDING } from "@/config/branding";
 import { useTranslations } from "next-intl";
+import { ApiError, apiFetch } from "@/lib/client-api";
 
 function LoginForm() {
   const t = useTranslations("login");
@@ -21,32 +22,30 @@ function LoginForm() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ handle, password }),
-      });
+      const data = await apiFetch<{ requires_password_change?: boolean; error?: string }>(
+        "/api/auth/login",
+        { method: "POST", body: { handle, password } }
+      );
 
-      const data = await res.json();
-
-      if (res.ok) {
-        // If the operator has never changed their password, redirect to change-password page
-        if (data.requires_password_change) {
-          router.push("/change-password");
-          return;
-        }
-        const from = searchParams.get("from") || "/";
-        router.push(from);
-        router.refresh();
-      } else if (res.status === 423) {
-        setError(t("locked"));
-      } else if (res.status === 401) {
-        setError(t("invalidCredentials"));
-      } else {
-        setError(data.error ?? t("loginFailed"));
+      // If the operator has never changed their password, redirect to change-password page
+      if (data.requires_password_change) {
+        router.push("/change-password");
+        return;
       }
-    } catch {
-      setError(t("connectionError"));
+      const from = searchParams.get("from") || "/";
+      router.push(from);
+      router.refresh();
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 423) {
+        setError(t("locked"));
+      } else if (err instanceof ApiError && err.status === 401) {
+        setError(t("invalidCredentials"));
+      } else if (err instanceof ApiError && err.status !== 0) {
+        const body = err.data as { error?: string } | undefined;
+        setError(body?.error ?? t("loginFailed"));
+      } else {
+        setError(t("connectionError"));
+      }
     }
 
     setLoading(false);

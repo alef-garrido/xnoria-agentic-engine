@@ -26,6 +26,7 @@ import {
 } from "@/lib/healthStatus";
 import { usePolling } from "@/hooks/usePolling";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { apiFetch } from "@/lib/client-api";
 
 const STATUS_COLORS: Record<StatusLevel, string> = {
   healthy: "var(--positive)",
@@ -99,11 +100,11 @@ export function JourneyHealthMap() {
 
   const { data, error, refresh } = usePolling(
     async () => {
-      const res = await fetch(`/api/filter/health?days=${days}`);
-      if (!res.ok) throw new Error("Failed to fetch health metrics");
-      const data = await res.json();
+      const fetched = await apiFetch<{ metrics?: StageHealthMetrics[] }>(
+        `/api/filter/health?days=${days}`
+      );
       return {
-        metrics: (data.metrics ?? []) as StageHealthMetrics[],
+        metrics: fetched.metrics ?? [],
         fetchedAt: new Date(),
       };
     },

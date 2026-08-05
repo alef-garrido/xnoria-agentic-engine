@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Search, BrainCog } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { getLocale } from "@/i18n/locale";
+import { apiFetch } from "@/lib/client-api";
 
 interface Memory {
   title: string;
@@ -28,14 +29,9 @@ export default function MemoryPage() {
     setSearched(true);
 
     try {
-      const res = await fetch(`/api/memory?contact_id=${encodeURIComponent(contactId.trim())}`);
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.details?.message || `API error: ${res.status}`);
-      }
-
-      const data = await res.json();
+      const data = await apiFetch<{ memories?: Memory[] }>(
+        `/api/memory?contact_id=${encodeURIComponent(contactId.trim())}`
+      );
       setMemories(data.memories || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch memory");

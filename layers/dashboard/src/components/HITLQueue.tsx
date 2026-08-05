@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { usePolling } from "@/hooks/usePolling";
 import { useToast } from "@/components/ToastProvider";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { ApiError, apiFetch } from "@/lib/client-api";
 import { PendingActionCard, type PendingAction } from "./hitl/PendingActionCard";
 
 export function HITLQueue() {
@@ -23,10 +24,8 @@ export function HITLQueue() {
     refresh,
   } = usePolling(
     async () => {
-      const res = await fetch("/api/filter/hitl");
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data = await res.json();
-      return (data.pending ?? []) as PendingAction[];
+      const data = await apiFetch<{ pending?: PendingAction[] }>("/api/filter/hitl");
+      return data.pending ?? [];
     },
     { intervalMs: 10_000 }
   );
@@ -49,12 +48,10 @@ export function HITLQueue() {
         body.payload = edited;
       }
 
-      const res = await fetch(`/api/filter/hitl/${logId}/approve`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = await res.json();
+      const data = await apiFetch<{ success?: boolean; error?: string }>(
+        `/api/filter/hitl/${logId}/approve`,
+        { method: "POST", body }
+      );
 
       if (data.success) {
         setData((prev) => prev?.filter((a) => a.log_id !== logId) ?? null);
@@ -72,8 +69,11 @@ export function HITLQueue() {
       } else {
         toast(data.error ?? t("failedToApprove"), "error");
       }
-    } catch {
-      toast(t("approveNetworkError"), "error");
+    } catch (err) {
+      toast(
+        err instanceof ApiError && err.status !== 0 ? err.message : t("approveNetworkError"),
+        "error"
+      );
     } finally {
       setActionInProgress(null);
     }
@@ -82,8 +82,10 @@ export function HITLQueue() {
   const handleReject = async (logId: string) => {
     setActionInProgress(logId);
     try {
-      const res = await fetch(`/api/filter/hitl/${logId}/reject`, { method: "POST" });
-      const data = await res.json();
+      const data = await apiFetch<{ success?: boolean; error?: string }>(
+        `/api/filter/hitl/${logId}/reject`,
+        { method: "POST" }
+      );
 
       if (data.success) {
         setData((prev) => prev?.filter((a) => a.log_id !== logId) ?? null);
@@ -91,8 +93,11 @@ export function HITLQueue() {
       } else {
         toast(data.error ?? t("failedToReject"), "error");
       }
-    } catch {
-      toast(t("rejectNetworkError"), "error");
+    } catch (err) {
+      toast(
+        err instanceof ApiError && err.status !== 0 ? err.message : t("rejectNetworkError"),
+        "error"
+      );
     } finally {
       setActionInProgress(null);
     }

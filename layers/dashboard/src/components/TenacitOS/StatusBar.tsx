@@ -4,6 +4,7 @@ import type { ComponentType, CSSProperties } from "react";
 import { Cpu, HardDrive, MemoryStick, Clock } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { usePolling } from "@/hooks/usePolling";
+import { apiFetch } from "@/lib/client-api";
 
 interface SystemStats {
   cpu: number;
@@ -85,12 +86,17 @@ export function StatusBar() {
 
   const { data: stats } = usePolling(
     async () => {
-      const res = await fetch("/api/system");
-      if (!res.ok) throw new Error("Failed to fetch system stats");
-      const data = await res.json();
-      const runningServices = data.services.filter(
-        (s: { status: string }) => s.status === "running"
-      ).length;
+      const data = await apiFetch<{
+        services: Array<{ status: string; uptime?: string }>;
+        host: {
+          cpuPercent: number;
+          ramUsed: number;
+          ramTotal: number;
+          diskUsed: number;
+          diskTotal: number;
+        };
+      }>("/api/system");
+      const runningServices = data.services.filter((s) => s.status === "running").length;
 
       return {
         cpu: data.host.cpuPercent * 100,

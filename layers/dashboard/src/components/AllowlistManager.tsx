@@ -8,6 +8,7 @@ import { useToast } from "@/components/ToastProvider";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { STAGES } from "@/lib/constants";
 import { getLocale } from "@/i18n/locale";
+import { ApiError, apiFetch } from "@/lib/client-api";
 import { ActionRow, type FilterAction, type ToggleField } from "./allowlist/ActionRow";
 import { AddActionModal, type NewActionInput } from "./allowlist/AddActionModal";
 
@@ -26,10 +27,8 @@ export function AllowlistManager() {
     refresh,
   } = usePolling(
     async () => {
-      const res = await fetch("/api/filter/allowlist");
-      if (!res.ok) throw new Error("Failed to fetch");
-      const data = await res.json();
-      return (data.actions ?? []) as FilterAction[];
+      const data = await apiFetch<{ actions?: FilterAction[] }>("/api/filter/allowlist");
+      return data.actions ?? [];
     },
     { intervalMs: 0 }
   );
@@ -38,41 +37,32 @@ export function AllowlistManager() {
     setData((prev) => prev?.map((a) => (a.id === id ? { ...a, [field]: !value } : a)) ?? null);
   };
 
+  const isNetworkError = (err: unknown) => err instanceof ApiError && err.status === 0;
+
   const handleToggle = async (id: string, field: ToggleField, value: boolean) => {
     // Optimistic update
     setData((prev) => prev?.map((a) => (a.id === id ? { ...a, [field]: value } : a)) ?? null);
 
     try {
-      const res = await fetch(`/api/filter/allowlist/${id}`, {
+      await apiFetch(`/api/filter/allowlist/${id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [field]: value }),
+        body: { [field]: value },
       });
-
-      if (!res.ok) {
-        revertToggle(id, field, value);
-        toast(t("failedToUpdate"), "error");
-      }
-    } catch {
+    } catch (err) {
       revertToggle(id, field, value);
-      toast(t("networkError"), "error");
+      toast(isNetworkError(err) ? t("networkError") : t("failedToUpdate"), "error");
     }
   };
 
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetch(`/api/filter/allowlist/${id}`, {
+      await apiFetch(`/api/filter/allowlist/${id}`, {
         method: "DELETE",
       });
-
-      if (res.ok) {
-        setData((prev) => prev?.filter((a) => a.id !== id) ?? null);
-        toast(t("actionDeleted"), "success");
-      } else {
-        toast(t("failedToDelete"), "error");
-      }
-    } catch {
-      toast(t("networkError"), "error");
+      setData((prev) => prev?.filter((a) => a.id !== id) ?? null);
+      toast(t("actionDeleted"), "success");
+    } catch (err) {
+      toast(isNetworkError(err) ? t("networkError") : t("failedToDelete"), "error");
     } finally {
       setDeleteConfirmId(null);
     }
@@ -80,23 +70,20 @@ export function AllowlistManager() {
 
   const handleCreate = async (data: NewActionInput) => {
     try {
-      const res = await fetch("/api/filter/allowlist", {
+      const result = await apiFetch<{ action: FilterAction }>("/api/filter/allowlist", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: data,
       });
-
-      if (res.ok) {
-        const result = await res.json();
-        setData((prev) => [...(prev ?? []), result.action]);
-        toast(t("actionCreated"), "success");
-        setShowAddModal(false);
-      } else {
-        const err = await res.json();
-        toast(err.error ?? t("failedToCreate"), "error");
-      }
-    } catch {
-      toast(t("networkError"), "error");
+      setData((prev) => [...(prev ?? []), result.action]);
+      toast(t("actionCreated"), "success");
+      setShowAddModal(false);
+    } catch (err) {
+      const body =
+        err instanceof ApiError ? (err.data as { error?: string } | undefined) : undefined;
+      toast(
+        body?.error ?? (isNetworkError(err) ? t("networkError") : t("failedToCreate")),
+        "error"
+      );
     }
   };
 

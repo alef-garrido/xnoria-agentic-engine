@@ -5,6 +5,7 @@ import { formatDistanceToNow, format } from "date-fns";
 import { es } from "date-fns/locale";
 import { MessagesSquare, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { clientLogger } from "@/lib/client-logger";
+import { apiFetch } from "@/lib/client-api";
 import { useTranslations } from "next-intl";
 import { getLocale } from "@/i18n/locale";
 
@@ -36,11 +37,8 @@ export function SessionRow({ session }: { session: Session }) {
     if (!expanded && !history) {
       setLoading(true);
       try {
-        const res = await fetch(`/api/sessions/${session.id}`);
-        if (res.ok) {
-          const data = await res.json();
-          setHistory(data.history);
-        }
+        const data = await apiFetch<{ history: HistoryMessage[] }>(`/api/sessions/${session.id}`);
+        setHistory(data.history);
       } catch (err) {
         clientLogger.error("Failed to load session history", { error: err });
       }

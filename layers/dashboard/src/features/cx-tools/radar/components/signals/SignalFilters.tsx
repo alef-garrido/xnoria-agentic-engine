@@ -1,6 +1,7 @@
 "use client";
 
 import { Search } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface SignalFiltersProps {
     searchQuery: string;
@@ -32,6 +33,7 @@ export function SignalFilters({
     selectedCause, setSelectedCause,
     domains, causes
 }: SignalFiltersProps) {
+    const t = useTranslations("cxtools");
     return (
         <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
@@ -41,7 +43,7 @@ export function SignalFilters({
                 />
                 <input
                     type="text"
-                    placeholder="Search signal code or name..."
+                    placeholder={t("searchSignal")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pl-9 pr-4 py-2.5 rounded-lg text-sm focus:outline-none"
@@ -71,7 +73,7 @@ export function SignalFilters({
                         e.currentTarget.style.borderColor = "var(--border)";
                     }}
                 >
-                    <option value="ALL">All Domains</option>
+                    <option value="ALL">{t("allDomains")}</option>
                     {domains.map((d) => (
                         <option key={d.code} value={d.code}>
                             {d.label}
@@ -90,7 +92,7 @@ export function SignalFilters({
                         e.currentTarget.style.borderColor = "var(--border)";
                     }}
                 >
-                    <option value="ALL">All Causes</option>
+                    <option value="ALL">{t("allCauses")}</option>
                     {causes.map((c) => (
                         <option key={c.code} value={c.code}>
                             {c.label}

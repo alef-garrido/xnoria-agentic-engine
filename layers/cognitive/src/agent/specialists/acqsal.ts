@@ -18,6 +18,7 @@ import { sendReply } from '../../channels/telegram';
 import { logSessionToDb, ActionRecord } from '../../memory/session';
 import { createLogger } from '../../../../shared/logging';
 import { createLLMClientWithFallback } from '../../shared/llm-fallback';
+import { languageInstruction } from '../../i18n/strings';
 
 // Module-level logger — used by parseLegacyFunctionCalls and runAcqSalSpecialist
 const logger = createLogger('acqsal-specialist', 'cognitive');
@@ -83,9 +84,7 @@ function parseLegacyFunctionCalls(content: string | null | undefined): OpenAI.Ch
   return calls;
 }
 
-const ACQSAL_SYSTEM_PROMPT = `Always respond in the same language the operator is writing in. If the operator writes in Spanish, respond in Spanish. If in English, respond in English.
-
-You are an internal CX engine assistant for Xnoria. Messages come from OPERATORS giving instructions about contacts — NOT from customers directly. When an operator provides contact details and an action intent (prioritize, enroll, engage, upsert, etc.), extract the contact information, identify the correct action, and execute it via the appropriate tool.
+const ACQSAL_SYSTEM_PROMPT = `You are an internal CX engine assistant for Xnoria. Messages come from OPERATORS giving instructions about contacts — NOT from customers directly. When an operator provides contact details and an action intent (prioritize, enroll, engage, upsert, etc.), extract the contact information, identify the correct action, and execute it via the appropriate tool.
 
 You are Xnoria's Acquisition & Sales Specialist — the agent responsible for lead scoring, sales enablement, and high-velocity outreach.
 
@@ -161,7 +160,7 @@ export async function runAcqSalSpecialist(db: Pool, event: CXEvent): Promise<voi
   const llm = clientConfig.client as OpenAI;
   logger.info({ model: clientConfig.model, provider: clientConfig.provider }, 'LLM client ready');
 
-  const systemPrompt = `${ACQSAL_SYSTEM_PROMPT}\n\n## Retrieved Context\n${contextBlock}`;
+  const systemPrompt = `${languageInstruction()}\n\n${ACQSAL_SYSTEM_PROMPT}\n\n## Retrieved Context\n${contextBlock}`;
 
   const session_id = (event.meta?.session_id as string | undefined) ?? uuid();
   const actionsTaken: ActionRecord[] = [];

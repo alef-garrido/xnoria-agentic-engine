@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale";
 import {
   Zap,
   CheckCircle,
@@ -9,6 +10,8 @@ import {
   Clock,
   Activity as ActivityIcon
 } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { getLocale } from "@/i18n/locale";
 
 interface Activity {
   id: string;
@@ -38,6 +41,7 @@ const statusConfig: Record<string, {
 };
 
 export function ActivityFeed() {
+  const t = useTranslations("activity");
   const [activities, setActivities] = useState<Activity[] | null>(null);
   const [error, setError] = useState<boolean>(false);
   const activitiesRef = useRef(activities);
@@ -70,7 +74,7 @@ export function ActivityFeed() {
     return (
       <div className="text-center py-12" style={{ color: 'var(--error)' }}>
         <XCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-        <p>Failed to load activities</p>
+        <p>{t("failedToLoad")}</p>
       </div>
     );
   }
@@ -93,7 +97,7 @@ export function ActivityFeed() {
     return (
       <div className="text-center py-12" style={{ color: 'var(--text-secondary)' }}>
         <ActivityIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
-        <p>No activities logged yet</p>
+        <p>{t("noActivities")}</p>
       </div>
     );
   }
@@ -158,7 +162,7 @@ export function ActivityFeed() {
                 className="text-xs md:text-sm truncate"
                 style={{ color: 'var(--text-secondary)' }}
               >
-                Session: {activity.session_id.substring(0, 8)}...
+                {t("session")}: {activity.session_id.substring(0, 8)}...
               </div>
             </div>
 
@@ -167,7 +171,10 @@ export function ActivityFeed() {
               className="text-[10px] md:text-xs whitespace-nowrap flex-shrink-0"
               style={{ color: 'var(--text-muted)' }}
             >
-              {formatDistanceToNow(new Date(activity.created_at), { addSuffix: false })}
+              {formatDistanceToNow(new Date(activity.created_at), {
+                addSuffix: false,
+                locale: getLocale() === "es" ? es : undefined,
+              })}
             </time>
           </div>
         );

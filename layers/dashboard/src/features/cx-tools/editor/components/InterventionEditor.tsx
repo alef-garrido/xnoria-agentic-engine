@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { useEditor, type EditorIntervention } from "@/features/cx-tools/editor/EditorContext";
 import { EntityDialog } from "./EntityDialog";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
 
 export function InterventionEditor() {
+  const t = useTranslations("cxtools");
   const { interventions, domains, addIntervention, updateIntervention, deleteIntervention } = useEditor();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<EditorIntervention | null>(null);
@@ -80,8 +82,8 @@ export function InterventionEditor() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-[var(--text-primary)]">Interventions</h3>
-          <p className="text-sm text-[var(--text-muted)]">{Object.keys(interventions).length} registered interventions</p>
+          <h3 className="text-lg font-semibold text-[var(--text-primary)]">{t("interventionsTitle")}</h3>
+          <p className="text-sm text-[var(--text-muted)]">{t("registeredInterventions", { count: Object.keys(interventions).length })}</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
@@ -89,12 +91,12 @@ export function InterventionEditor() {
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search interventions..."
+              placeholder={t("searchInterventions")}
               className="w-[220px] pl-9 text-sm"
             />
           </div>
           <Button onClick={openCreate} size="sm" className="gap-1.5">
-            <Plus className="h-4 w-4" /> Add Intervention
+            <Plus className="h-4 w-4" /> {t("addIntervention")}
           </Button>
         </div>
       </div>
@@ -103,10 +105,10 @@ export function InterventionEditor() {
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-[var(--surface-hover)]">
-              <TableHead className="w-[200px]">ID</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead className="w-16 text-center">Refs</TableHead>
-              <TableHead className="w-24 text-right">Actions</TableHead>
+              <TableHead className="w-[200px]">{t("colId")}</TableHead>
+              <TableHead>{t("colName")}</TableHead>
+              <TableHead className="w-16 text-center">{t("colRefs")}</TableHead>
+              <TableHead className="w-24 text-right">{t("colActions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -137,18 +139,18 @@ export function InterventionEditor() {
       <EntityDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        title={editTarget ? "Edit Intervention" : "Add Intervention"}
-        description={editTarget ? `Editing "${editTarget.id}"` : "Register a new intervention action."}
+        title={editTarget ? t("editIntervention") : t("addInterventionTitle")}
+        description={editTarget ? t("editingEntity", { name: editTarget.id }) : t("createInterventionDesc")}
         onSave={handleSave}
       >
         <div className="grid gap-3">
           <div>
-            <Label className="mb-1 block">Intervention ID</Label>
-            <Input value={formId} onChange={(e) => setFormId(e.target.value.toUpperCase())} placeholder="e.g. INT_ACQ_VIS_01_A" className="font-mono" disabled={!!editTarget} />
+            <Label className="mb-1 block">{t("fieldSignalId")}</Label>
+            <Input value={formId} onChange={(e) => setFormId(e.target.value.toUpperCase())} placeholder={t("placeholderIntId")} className="font-mono" disabled={!!editTarget} />
           </div>
           <div>
-            <Label className="mb-1 block">Name</Label>
-            <Input value={formNameEn} onChange={(e) => setFormNameEn(e.target.value)} placeholder="e.g. launch targeted display ads" />
+            <Label className="mb-1 block">{t("fieldName")}</Label>
+            <Input value={formNameEn} onChange={(e) => setFormNameEn(e.target.value)} placeholder={t("placeholderIntName")} />
           </div>
         </div>
       </EntityDialog>
@@ -157,19 +159,19 @@ export function InterventionEditor() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Intervention</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteIntervention")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Delete intervention <strong className="font-mono text-[var(--text-primary)]">{deleteTarget?.id}</strong>?
+              {t("deleteInterventionDesc", { id: deleteTarget?.id ?? "" })}
               {deleteTarget && countRefs(deleteTarget.id) > 0 && (
                 <span className="mt-2 block text-yellow-400">
-                  ⚠ This intervention is referenced by {countRefs(deleteTarget.id)} signal(s).
+                  {t("interventionReferenced", { count: countRefs(deleteTarget.id) })}
                 </span>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>{t("delete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

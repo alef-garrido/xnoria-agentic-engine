@@ -11,6 +11,7 @@ const telegram_1 = require("../../channels/telegram");
 const session_1 = require("../../memory/session");
 const logging_1 = require("../../../../shared/logging");
 const llm_fallback_1 = require("../../shared/llm-fallback");
+const strings_1 = require("../../i18n/strings");
 // Module-level logger — used by parseLegacyFunctionCalls and runAcqSalSpecialist
 const logger = (0, logging_1.createLogger)('acqsal-specialist', 'cognitive');
 const MAX_LOOP_ITERATIONS = 5;
@@ -70,9 +71,7 @@ function parseLegacyFunctionCalls(content) {
     }
     return calls;
 }
-const ACQSAL_SYSTEM_PROMPT = `Always respond in the same language the operator is writing in. If the operator writes in Spanish, respond in Spanish. If in English, respond in English.
-
-You are an internal CX engine assistant for Xnoria. Messages come from OPERATORS giving instructions about contacts — NOT from customers directly. When an operator provides contact details and an action intent (prioritize, enroll, engage, upsert, etc.), extract the contact information, identify the correct action, and execute it via the appropriate tool.
+const ACQSAL_SYSTEM_PROMPT = `You are an internal CX engine assistant for Xnoria. Messages come from OPERATORS giving instructions about contacts — NOT from customers directly. When an operator provides contact details and an action intent (prioritize, enroll, engage, upsert, etc.), extract the contact information, identify the correct action, and execute it via the appropriate tool.
 
 You are Xnoria's Acquisition & Sales Specialist — the agent responsible for lead scoring, sales enablement, and high-velocity outreach.
 
@@ -136,7 +135,7 @@ async function runAcqSalSpecialist(db, event) {
         const clientConfig = await (0, llm_fallback_1.createLLMClientWithFallback)();
         const llm = clientConfig.client;
         logger.info({ model: clientConfig.model, provider: clientConfig.provider }, 'LLM client ready');
-        const systemPrompt = `${ACQSAL_SYSTEM_PROMPT}\n\n## Retrieved Context\n${contextBlock}`;
+        const systemPrompt = `${(0, strings_1.languageInstruction)()}\n\n${ACQSAL_SYSTEM_PROMPT}\n\n## Retrieved Context\n${contextBlock}`;
         const session_id = event.meta?.session_id ?? (0, uuid_1.v4)();
         const actionsTaken = [];
         let botReply;

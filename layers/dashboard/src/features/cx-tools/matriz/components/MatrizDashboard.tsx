@@ -5,24 +5,25 @@ import { MatrizData } from "@/features/cx-tools/matriz/lib/types";
 import { LayerControls } from "./LayerControls";
 import { TimelineJourney } from "./TimelineJourney";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 interface MatrizDashboardProps {
   data: MatrizData;
 }
 
-const labels = {
-  workflows: "Workflows",
-  agent: "AI Agent",
-  human: "Human Control",
-  title: "CX Operational Matrix",
-  subtitle: "Xnoria CX Intelligence System Map",
-  footer: "© 2026 XNORIA CX OS — OPERATIONAL LAYER",
-  efficiency: "Efficiency",
-  intelligence: "Intelligence",
-  strategy: "Strategy",
-};
-
 export const MatrizDashboard: React.FC<MatrizDashboardProps> = ({ data }) => {
+  const t = useTranslations("cxtools");
+  const labels = {
+    workflows: t("layerWorkflows"),
+    agent: t("layerAgent"),
+    human: t("layerHuman"),
+    title: t("matrizTitle"),
+    subtitle: t("matrizSubtitle"),
+    footer: t("matrizFooter"),
+    efficiency: t("matrizEfficiency"),
+    intelligence: t("matrizIntelligence"),
+    strategy: t("matrizStrategy"),
+  };
   const [activeLayers, setActiveLayers] = useState({
     workflows: true,
     agent: true,

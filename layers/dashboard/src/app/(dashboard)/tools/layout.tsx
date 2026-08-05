@@ -1,13 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-
-const TOOL_LABELS: Record<string, string> = {
-  compass: "Compass",
-  radar: "Radar",
-  matriz: "Matriz",
-  editor: "Editor",
-};
+import { useTranslations } from "next-intl";
 
 export default function ToolsLayout({
   children,
@@ -15,7 +9,9 @@ export default function ToolsLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const t = useTranslations("cxtools");
   const tool = pathname.split("/")[2];
+  const toolLabel = tool ? t(`tool${tool.charAt(0).toUpperCase()}${tool.slice(1)}` as never) : "";
 
   return (
     <div className="flex flex-col gap-6">
@@ -26,11 +22,11 @@ export default function ToolsLayout({
           color: "var(--text-secondary)",
         }}
       >
-        <span style={{ color: "var(--text-muted)" }}>CX Tools</span>
-        {tool && TOOL_LABELS[tool] && (
+        <span style={{ color: "var(--text-muted)" }}>{t("toolsSection")}</span>
+        {toolLabel && (
           <>
             <span style={{ color: "var(--text-muted)" }}>›</span>
-            <span style={{ color: "var(--text-primary)" }}>{TOOL_LABELS[tool]}</span>
+            <span style={{ color: "var(--text-primary)" }}>{toolLabel}</span>
           </>
         )}
       </div>

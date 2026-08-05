@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { useEditor } from "@/features/cx-tools/editor/EditorContext";
 import { EntityDialog } from "./EntityDialog";
 import { Button } from "@/components/ui/button";
@@ -24,13 +25,14 @@ interface FlatSignal {
 }
 
 const LEVELS = [
-  { value: 0, label: "Entry" },
-  { value: 1, label: "Commitment" },
-  { value: 2, label: "Usage" },
-  { value: 3, label: "Engagement" },
+  { value: 0, label: "levelEntry" },
+  { value: 1, label: "levelCommitment" },
+  { value: 2, label: "levelUsage" },
+  { value: 3, label: "levelEngagement" },
 ];
 
 export function SignalEditor() {
+  const t = useTranslations("cxtools");
   const { domains, addSignal, updateSignal, deleteSignal } = useEditor();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<FlatSignal | null>(null);
@@ -147,17 +149,17 @@ export function SignalEditor() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-[var(--text-primary)]">Signals</h3>
-          <p className="text-sm text-[var(--text-muted)]">{flatSignals.length} diagnostic signals</p>
+          <h3 className="text-lg font-semibold text-[var(--text-primary)]">{t("signalsTitle")}</h3>
+          <p className="text-sm text-[var(--text-muted)]">{t("diagnosticSignals", { count: flatSignals.length })}</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-[180px]">
             <Select value={filterDomain} onValueChange={setFilterDomain}>
               <SelectTrigger>
-                <SelectValue placeholder="Filter by domain" />
+                <SelectValue placeholder={t("filterByDomain")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All Domains</SelectItem>
+                <SelectItem value="ALL">{t("allDomains")}</SelectItem>
                 {domains.map((d) => (
                   <SelectItem key={d.id} value={d.id}>
                     <span className="flex items-center gap-2">
@@ -170,7 +172,7 @@ export function SignalEditor() {
             </Select>
           </div>
           <Button onClick={openCreate} size="sm" className="gap-1.5">
-            <Plus className="h-4 w-4" /> Add Signal
+            <Plus className="h-4 w-4" /> {t("addSignal")}
           </Button>
         </div>
       </div>
@@ -179,12 +181,12 @@ export function SignalEditor() {
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-[var(--surface-hover)]">
-              <TableHead>ID</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Cause</TableHead>
-              <TableHead className="text-center">Severity</TableHead>
-              <TableHead className="text-center">Level</TableHead>
-              <TableHead className="w-24 text-right">Actions</TableHead>
+              <TableHead>{t("colId")}</TableHead>
+              <TableHead>{t("colName")}</TableHead>
+              <TableHead>{t("colCause")}</TableHead>
+              <TableHead className="text-center">{t("colSeverity")}</TableHead>
+              <TableHead className="text-center">{t("colLevel")}</TableHead>
+              <TableHead className="w-24 text-right">{t("colActions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -202,7 +204,7 @@ export function SignalEditor() {
                   {((fs.signal.severity ?? 0) * 100).toFixed(0)}%
                 </TableCell>
                 <TableCell className="text-center text-xs text-[var(--text-secondary)]">
-                  {LEVELS.find((l) => l.value === fs.signal.level)?.label ?? fs.signal.level}
+                  {LEVELS.find((l) => l.value === fs.signal.level) ? t(LEVELS.find((l) => l.value === fs.signal.level)!.label) : fs.signal.level}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
@@ -224,14 +226,14 @@ export function SignalEditor() {
       <EntityDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        title={editTarget ? "Edit Signal" : "Add Signal"}
-        description={editTarget ? `Editing "${editTarget.signal.id}"` : "Add a new diagnostic signal."}
+        title={editTarget ? t("editSignal") : t("addSignalTitle")}
+        description={editTarget ? t("editingEntity", { name: editTarget.signal.id }) : t("createSignalDesc")}
         onSave={handleSave}
       >
         <div className="grid max-h-[400px] gap-3 overflow-y-auto pr-2">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="mb-1 block">Domain</Label>
+              <Label className="mb-1 block">{t("colDomain")}</Label>
               <Select value={formDomainId} onValueChange={(v) => { setFormDomainId(v); setFormCauseId(""); }} disabled={!!editTarget}>
                 <SelectTrigger>
                   <SelectValue />
@@ -244,10 +246,10 @@ export function SignalEditor() {
               </Select>
             </div>
             <div>
-              <Label className="mb-1 block">Cause</Label>
+              <Label className="mb-1 block">{t("fieldCause")}</Label>
               <Select value={formCauseId} onValueChange={setFormCauseId} disabled={!!editTarget}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select cause" />
+                  <SelectValue placeholder={t("selectCause")} />
                 </SelectTrigger>
                 <SelectContent>
                   {selectedDomainCauses.map((c) => (
@@ -258,37 +260,37 @@ export function SignalEditor() {
             </div>
           </div>
           <div>
-            <Label className="mb-1 block">Signal ID</Label>
-            <Input value={formId} onChange={(e) => setFormId(e.target.value.toUpperCase())} placeholder="e.g. ACQ_VIS_01" className="font-mono" disabled={!!editTarget} />
+            <Label className="mb-1 block">{t("fieldSignalId")}</Label>
+            <Input value={formId} onChange={(e) => setFormId(e.target.value.toUpperCase())} placeholder={t("placeholderSignalId")} className="font-mono" disabled={!!editTarget} />
           </div>
           <div>
-            <Label className="mb-1 block">Name</Label>
-            <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. low awareness" />
+            <Label className="mb-1 block">{t("fieldName")}</Label>
+            <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder={t("placeholderSignalName")} />
           </div>
           <div>
-            <Label className="mb-1 block">Severity: {(formSeverity * 100).toFixed(0)}%</Label>
+            <Label className="mb-1 block">{t("severityValue", { value: (formSeverity * 100).toFixed(0) })}</Label>
             <Slider value={[formSeverity]} onValueChange={([v]) => setFormSeverity(v)} min={0} max={1} step={0.05} className="mt-2" />
           </div>
           <div>
-            <Label className="mb-1 block">Level (Funnel Stage)</Label>
+            <Label className="mb-1 block">{t("fieldLevel")}</Label>
             <Select value={String(formLevel)} onValueChange={(v) => setFormLevel(Number(v))}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {LEVELS.map((l) => (
-                  <SelectItem key={l.value} value={String(l.value)}>{l.value} — {l.label}</SelectItem>
+                  <SelectItem key={l.value} value={String(l.value)}>{l.value} — {t(l.label)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label className="mb-1 block">Indicators <span className="text-[var(--text-muted)]">(comma-separated id:name)</span></Label>
-            <Input value={formIndicators} onChange={(e) => setFormIndicators(e.target.value)} placeholder="e.g. ACQ_VIS_01_SV:brand_search_volume" className="font-mono text-xs" />
+            <Label className="mb-1 block">{t("fieldIndicators")} <span className="text-[var(--text-muted)]">{t("fieldIndicatorHint")}</span></Label>
+            <Input value={formIndicators} onChange={(e) => setFormIndicators(e.target.value)} placeholder={t("placeholderIndicator")} className="font-mono text-xs" />
           </div>
           <div>
-            <Label className="mb-1 block">Intervention IDs <span className="text-[var(--text-muted)]">(comma-separated)</span></Label>
-            <Input value={formInterventions} onChange={(e) => setFormInterventions(e.target.value)} placeholder="e.g. INT_ACQ_VIS_01_A, INT_ACQ_VIS_01_B" className="font-mono text-xs" />
+            <Label className="mb-1 block">{t("fieldInterventionIds")} <span className="text-[var(--text-muted)]">{t("fieldInterventionHint")}</span></Label>
+            <Input value={formInterventions} onChange={(e) => setFormInterventions(e.target.value)} placeholder={t("placeholderInterventionIds")} className="font-mono text-xs" />
           </div>
         </div>
       </EntityDialog>
@@ -297,14 +299,14 @@ export function SignalEditor() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Signal</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteSignal")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Delete signal <strong className="font-mono text-[var(--text-primary)]">{deleteTarget?.signal.id}</strong> — &quot;{deleteTarget?.signal.name}&quot;? This cannot be undone.
+              {t("deleteSignalDesc", { id: deleteTarget?.signal.id ?? "", name: deleteTarget?.signal.name ?? "" })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>{t("delete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

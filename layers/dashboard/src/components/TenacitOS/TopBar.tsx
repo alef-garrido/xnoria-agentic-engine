@@ -1,8 +1,10 @@
 "use client";
 
 import { BRANDING } from "@/config/branding";
+import { useTranslations } from "next-intl";
 
 export function TopBar() {
+  const t = useTranslations("topbar");
   return (
     <>
       <div
@@ -108,7 +110,7 @@ export function TopBar() {
                 color: "var(--text-secondary)",
               }}
             >
-              Admin
+              {t("admin")}
             </span>
           </div>
         </div>

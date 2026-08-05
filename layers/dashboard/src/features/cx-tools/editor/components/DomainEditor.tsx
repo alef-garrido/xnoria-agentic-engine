@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useEditor } from "@/features/cx-tools/editor/EditorContext";
 import { EntityDialog } from "./EntityDialog";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,7 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import type { Domain } from "@/features/cx-tools/shared/types/wheel";
 
 export function DomainEditor() {
+  const t = useTranslations("cxtools");
   const { domains, addDomain, updateDomain, deleteDomain } = useEditor();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Domain | null>(null);
@@ -59,11 +61,11 @@ export function DomainEditor() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-[var(--text-primary)]">Domains</h3>
-          <p className="text-sm text-[var(--text-muted)]">{domains.length} lifecycle stages</p>
+          <h3 className="text-lg font-semibold text-[var(--text-primary)]">{t("domainsTitle")}</h3>
+          <p className="text-sm text-[var(--text-muted)]">{t("lifecycleStages", { count: domains.length })}</p>
         </div>
         <Button onClick={openCreate} size="sm" className="gap-1.5">
-          <Plus className="h-4 w-4" /> Add Domain
+          <Plus className="h-4 w-4" /> {t("addDomain")}
         </Button>
       </div>
 
@@ -71,11 +73,11 @@ export function DomainEditor() {
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-[var(--surface-hover)]">
-              <TableHead className="w-12">Color</TableHead>
-              <TableHead>ID</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead className="text-right">Causes</TableHead>
-              <TableHead className="w-24 text-right">Actions</TableHead>
+              <TableHead className="w-12">{t("colColor")}</TableHead>
+              <TableHead>{t("colId")}</TableHead>
+              <TableHead>{t("colName")}</TableHead>
+              <TableHead className="text-right">{t("colCauses")}</TableHead>
+              <TableHead className="w-24 text-right">{t("colActions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -107,21 +109,23 @@ export function DomainEditor() {
       <EntityDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        title={editTarget ? "Edit Domain" : "Add Domain"}
-        description={editTarget ? `Editing "${editTarget.name}"` : "Create a new lifecycle domain."}
+        title={editTarget ? t("editDomain") : t("addDomainTitle")}
+        description={editTarget
+          ? t("editingEntity", { name: editTarget.name })
+          : t("createDomainDesc")}
         onSave={handleSave}
       >
         <div className="grid gap-3">
           <div>
-            <Label htmlFor="domain-id" className="mb-1 block">Identifier</Label>
-            <Input id="domain-id" value={formId} onChange={(e) => setFormId(e.target.value)} placeholder="e.g. acquisition" disabled={!!editTarget} />
+            <Label htmlFor="domain-id" className="mb-1 block">{t("fieldIdentifier")}</Label>
+            <Input id="domain-id" value={formId} onChange={(e) => setFormId(e.target.value)} placeholder={t("placeholderAcquisition")} disabled={!!editTarget} />
           </div>
           <div>
-            <Label htmlFor="domain-name" className="mb-1 block">Name</Label>
-            <Input id="domain-name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Acquisition" />
+            <Label htmlFor="domain-name" className="mb-1 block">{t("fieldName")}</Label>
+            <Input id="domain-name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder={t("placeholderAcquisitionName")} />
           </div>
           <div>
-            <Label htmlFor="domain-color" className="mb-1 block">Color</Label>
+            <Label htmlFor="domain-color" className="mb-1 block">{t("fieldColor")}</Label>
             <div className="flex items-center gap-3">
               <input type="color" id="domain-color" value={formColor} onChange={(e) => setFormColor(e.target.value)} className="h-10 w-10 cursor-pointer rounded border border-[var(--border)] bg-transparent" />
               <Input value={formColor} onChange={(e) => setFormColor(e.target.value)} className="flex-1 font-mono text-sm" />
@@ -134,14 +138,14 @@ export function DomainEditor() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Domain</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteDomain")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete <strong className="text-[var(--text-primary)]">{deleteTarget?.name}</strong> and all its {deleteTarget?.causes.length ?? 0} causes and signals. This cannot be undone.
+              {t("deleteDomainDesc", { name: deleteTarget?.name ?? "", count: deleteTarget?.causes.length ?? 0 })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>{t("delete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

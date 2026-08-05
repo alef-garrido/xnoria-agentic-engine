@@ -2,8 +2,11 @@
 
 import { AllowlistManager } from "@/components/AllowlistManager";
 import { ListChecks } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function AllowlistPage() {
+  const t = useTranslations("allowlist");
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -20,10 +23,10 @@ export default function AllowlistPage() {
             className="w-7 h-7 inline-block mr-2"
             style={{ color: "var(--accent)", verticalAlign: "text-bottom" }}
           />
-          Action Registry
+          {t("title")}
         </h1>
         <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
-          Manage permitted actions — enable, disable, and configure HITL requirements
+          {t("subtitle")}
         </p>
       </div>
 

@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Sora, JetBrains_Mono } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale } from "@/i18n/locale";
 import "./globals.css";
 
 const inter = Inter({ 
@@ -31,13 +33,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const locale = getLocale();
+  const messages = (await import(`../../messages/${locale}.json`)).default;
+
   return (
-    <html lang="en" className="dark">
+    <html lang={locale} className="dark">
       <body 
         className={`${inter.variable} ${sora.variable} ${jetbrainsMono.variable} font-sans`}
         style={{ 
@@ -46,7 +51,9 @@ export default function RootLayout({
           fontFamily: 'var(--font-body)'
         }}
       >
-        {children}
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   );

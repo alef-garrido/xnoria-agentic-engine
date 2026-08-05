@@ -13,6 +13,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 interface OverviewStats {
   activityTotal: number;
@@ -22,6 +23,7 @@ interface OverviewStats {
 }
 
 export default function DashboardPage() {
+  const t = useTranslations("home");
   const [stats, setStats] = useState<OverviewStats | null>(null);
   const [error, setError] = useState(false);
   const statsRef = useRef(stats);
@@ -76,10 +78,10 @@ export default function DashboardPage() {
             letterSpacing: "-1.5px",
           }}
         >
-          🧠 {BRANDING.appTitle} Overview
+          🧠 {BRANDING.appTitle} {t("overview")}
         </h1>
         <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
-          CX Intelligence Engine — system health and recent activity
+          {t("subtitle")}
         </p>
       </div>
 
@@ -97,7 +99,7 @@ export default function DashboardPage() {
             style={{ color: "var(--warning)" }}
           />
           <p style={{ color: "var(--text-secondary)" }}>
-            Unable to fetch overview data. Ensure services are running.
+            {t("unableToFetch")}
           </p>
         </div>
       ) : !stats ? (
@@ -127,7 +129,7 @@ export default function DashboardPage() {
                 style={{ color: "var(--text-muted)" }}
               >
                 <Activity className="w-4 h-4" style={{ color: "var(--info)" }} />
-                Filter Log Events
+                {t("filterLogEvents")}
               </div>
               <div
                 className="text-2xl font-bold"
@@ -160,7 +162,7 @@ export default function DashboardPage() {
                 style={{ color: "var(--text-muted)" }}
               >
                 <History className="w-4 h-4" style={{ color: "var(--accent)" }} />
-                Cognitive Sessions
+                {t("cognitiveSessions")}
               </div>
               <div
                 className="text-2xl font-bold"
@@ -193,7 +195,7 @@ export default function DashboardPage() {
                 style={{ color: "var(--text-muted)" }}
               >
                 <Server className="w-4 h-4" style={{ color: "var(--positive)" }} />
-                Core Services
+                {t("coreServices")}
               </div>
               <div className="flex items-center gap-2">
                 <span
@@ -247,7 +249,7 @@ export default function DashboardPage() {
                 color: "var(--text-primary)",
               }}
             >
-              Recent Activity
+              {t("recentActivity")}
             </h2>
           </div>
           <Link
@@ -255,7 +257,7 @@ export default function DashboardPage() {
             className="text-sm font-medium"
             style={{ color: "var(--accent)" }}
           >
-            View all →
+            {t("viewAll")}
           </Link>
         </div>
         <div className="p-0">

@@ -1,5 +1,5 @@
 -- Onboarding Stage Seed Pack
-INSERT INTO filter_action (action_id, stage, n8n_workflow_id, requires_hitl, manual_action, enabled, description)
+INSERT INTO filter_action (action_id, stage, n8n_workflow_id, requires_hitl, manual_action, enabled, description, description_es)
 VALUES
   (
     'onb.contact.nudge',
@@ -8,7 +8,8 @@ VALUES
     false,
     false,
     true,
-    'Send re-engagement nudge to stalled onboarding contact'
+    'Send re-engagement nudge to stalled onboarding contact',
+    'Enviar recordatorio de re-enganche al contacto de onboarding estancado'
   ),
   (
     'onb.contact.assist',
@@ -17,7 +18,8 @@ VALUES
     true,
     false,
     true,
-    'Offer white-glove CSM assist to blocked onboarding contact'
+    'Offer white-glove CSM assist to blocked onboarding contact',
+    'Ofrecer asistencia CSM personalizada al contacto de onboarding bloqueado'
   ),
   (
     'onb.ticket.escalate',
@@ -26,7 +28,8 @@ VALUES
     false,
     false,
     true,
-    'Escalate technical onboarding blocker to support queue'
+    'Escalate technical onboarding blocker to support queue',
+    'Escalar bloqueante técnico de onboarding a la cola de soporte'
   ),
   (
     'onb.document.request',
@@ -35,7 +38,8 @@ VALUES
     true,
     true,
     true,
-    'Cannot automate on current HubSpot plan — operator must complete manually in HubSpot. Requires Private App Tasks scope.'
+    'Cannot automate on current HubSpot plan — operator must complete manually in HubSpot. Requires Private App Tasks scope.',
+    'No automatizable con el plan actual de HubSpot — el operador debe completarlo manualmente en HubSpot. Requiere scope de Private App Tasks.'
   ),
   (
     'onb.document.validate',
@@ -44,7 +48,8 @@ VALUES
     false,
     false,
     true,
-    'Validate submitted document, update CRM'
+    'Validate submitted document, update CRM',
+    'Validar documento enviado y actualizar el CRM'
   )
 ON CONFLICT (action_id) DO UPDATE
   SET
@@ -54,4 +59,5 @@ ON CONFLICT (action_id) DO UPDATE
     manual_action   = EXCLUDED.manual_action,
     enabled         = EXCLUDED.enabled,
     description     = EXCLUDED.description,
+    description_es  = EXCLUDED.description_es,
     updated_at      = now();

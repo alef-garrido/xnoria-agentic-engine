@@ -11,13 +11,12 @@ const telegram_1 = require("../../channels/telegram");
 const session_1 = require("../../memory/session");
 const llm_fallback_1 = require("../../shared/llm-fallback");
 const logging_1 = require("../../../../shared/logging");
+const strings_1 = require("../../i18n/strings");
 // Module-level logger
 const logger = (0, logging_1.createLogger)('lifecycle-specialist', 'cognitive');
 const MAX_LOOP_ITERATIONS = 5;
 const MAX_CONTEXT_TOKENS = 800;
-const LIFECYCLE_SYSTEM_PROMPT = `Always respond in the same language the operator is writing in. If the operator writes in Spanish, respond in Spanish. If in English, respond in English.
-
-You are an internal CX engine assistant for Xnoria. Messages come from OPERATORS giving instructions about contacts — NOT from customers directly. When an operator provides contact details and an action intent, extract the contact information, identify the correct action, and execute it via the appropriate tool.
+const LIFECYCLE_SYSTEM_PROMPT = `You are an internal CX engine assistant for Xnoria. Messages come from OPERATORS giving instructions about contacts — NOT from customers directly. When an operator provides contact details and an action intent, extract the contact information, identify the correct action, and execute it via the appropriate tool.
 
 You are Xnoria's Lifecycle Specialist — the agent responsible for customer health across onboarding, product adoption, communication, and retention stages.
 
@@ -72,7 +71,7 @@ async function runLifecycleSpecialist(db, event) {
     const clientConfig = await (0, llm_fallback_1.createLLMClientWithFallback)();
     const llm = clientConfig.client;
     logger.info({ model: clientConfig.model, provider: clientConfig.provider }, 'LLM client ready');
-    const systemPrompt = `${LIFECYCLE_SYSTEM_PROMPT}\n\n## Retrieved Context\n${contextBlock}`;
+    const systemPrompt = `${(0, strings_1.languageInstruction)()}\n\n${LIFECYCLE_SYSTEM_PROMPT}\n\n## Retrieved Context\n${contextBlock}`;
     const session_id = event.meta?.session_id ?? (0, uuid_1.v4)();
     const actionsTaken = [];
     let botReply;
@@ -150,7 +149,7 @@ async function runLifecycleSpecialist(db, event) {
         }
         if (contextCalls.length > 0) {
             logger.warn({ tools: contextCalls.map(t => t.function.name) }, 'LLM requested context tools after pre-processing — sending fallback reply');
-            const fallback = 'I couldn\'t retrieve enough context to process this request. Please provide more details or include a stage keyword (ACQ, SAL, ONB, PRD, SUP, COM, RET, EXP).';
+            const fallback = (0, strings_1.t)().contextFallback;
             botReply = fallback;
             await (0, telegram_1.sendReply)(event.contact_id, fallback);
             break;
@@ -185,19 +184,19 @@ async function runLifecycleSpecialist(db, event) {
             let confirmMsg;
             switch (filterResponse.status) {
                 case 'executed':
-                    confirmMsg = `✅ Action \`${mapping.action_id}\` executed successfully.`;
+                    confirmMsg = (0, strings_1.t)().confirmExecuted(mapping.action_id);
                     break;
                 case 'pending_hitl':
-                    confirmMsg = `⏳ Action \`${mapping.action_id}\` is pending human approval (HITL). Check the dashboard to approve or reject.`;
+                    confirmMsg = (0, strings_1.t)().confirmPendingHitl(mapping.action_id);
                     break;
                 case 'rejected':
-                    confirmMsg = `🚫 Action \`${mapping.action_id}\` was rejected by the filter. Reason: ${filterResponse.rejection_code ?? 'unknown'}.`;
+                    confirmMsg = (0, strings_1.t)().confirmRejected(mapping.action_id, filterResponse.rejection_code);
                     break;
                 case 'error':
-                    confirmMsg = `⚠️ Action \`${mapping.action_id}\` failed to execute. ${filterResponse.message ?? 'Workflow unreachable.'}`;
+                    confirmMsg = (0, strings_1.t)().confirmError(mapping.action_id, filterResponse.message);
                     break;
                 default:
-                    confirmMsg = `ℹ️ Action \`${mapping.action_id}\` — status: ${filterResponse.status}.`;
+                    confirmMsg = (0, strings_1.t)().confirmDefault(mapping.action_id, filterResponse.status);
             }
             botReply = confirmMsg;
             await (0, telegram_1.sendReply)(event.contact_id, confirmMsg);

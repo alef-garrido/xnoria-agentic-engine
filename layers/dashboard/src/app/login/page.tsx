@@ -4,8 +4,10 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Terminal, Lock, User, AlertCircle, KeyRound } from "lucide-react";
 import { BRANDING } from "@/config/branding";
+import { useTranslations } from "next-intl";
 
 function LoginForm() {
+  const t = useTranslations("login");
   const [handle, setHandle]   = useState("");
   const [password, setPassword] = useState("");
   const [error, setError]     = useState("");
@@ -37,14 +39,14 @@ function LoginForm() {
         router.push(from);
         router.refresh();
       } else if (res.status === 423) {
-        setError("Cuenta bloqueada temporalmente. Intentá de nuevo en 30 minutos.");
+        setError(t("locked"));
       } else if (res.status === 401) {
-        setError("Credenciales incorrectas.");
+        setError(t("invalidCredentials"));
       } else {
-        setError(data.error ?? "Error al iniciar sesión.");
+        setError(data.error ?? t("loginFailed"));
       }
     } catch {
-      setError("Error de conexión.");
+      setError(t("connectionError"));
     }
 
     setLoading(false);
@@ -81,9 +83,8 @@ function LoginForm() {
           className="text-sm"
           style={{ color: "var(--text-secondary)" }}
         >
-          Ingresá tus credenciales para acceder
-        </p>
-      </div>
+          {t("subtitle")}
+        </p>      </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -104,7 +105,7 @@ function LoginForm() {
               border: "1px solid var(--border)",
               color: "var(--text-primary)",
             }}
-            placeholder="Usuario"
+            placeholder={t("username")}
             autoComplete="username"
             required
           />
@@ -127,7 +128,7 @@ function LoginForm() {
               border: "1px solid var(--border)",
               color: "var(--text-primary)",
             }}
-            placeholder="Contraseña"
+            placeholder={t("password")}
             autoComplete="current-password"
             required
           />
@@ -156,7 +157,7 @@ function LoginForm() {
           }}
         >
           <KeyRound className="w-4 h-4" />
-          {loading ? "Verificando..." : "Ingresar"}
+          {loading ? t("checking") : t("signIn")}
         </button>
       </form>
 

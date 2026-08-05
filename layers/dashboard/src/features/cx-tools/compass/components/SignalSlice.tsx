@@ -3,6 +3,7 @@ import { useWheel } from "@/features/cx-tools/compass/context/WheelContext";
 import type { Signal } from "@/features/cx-tools/shared/types/wheel";
 import { getSliceGeometry } from "@/features/cx-tools/compass/utils/geometry";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 interface SignalSliceProps {
     signal: Signal;
@@ -26,6 +27,7 @@ export default function SignalSlice({
     wheelRotation,
 }: SignalSliceProps) {
     const { selectSignal, setHoveredLabel } = useWheel();
+    const t = useTranslations("cxtools");
 
     const { pathD, labelX, labelY, rotDeg, flipLabel } = getSliceGeometry({
         startAngle,
@@ -42,7 +44,7 @@ export default function SignalSlice({
             onMouseEnter={() => setHoveredLabel(`${signal.id}`)}
             onMouseLeave={() => setHoveredLabel(null)}
             role="button"
-            aria-label={`Signal: ${signal.name} (${signal.id})`}
+            aria-label={t("signalAria", { name: signal.name, id: signal.id })}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: index * 0.04, ease: "easeOut" }}

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Search, BrainCog } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { getLocale } from "@/i18n/locale";
 
 interface Memory {
   title: string;
@@ -10,6 +12,7 @@ interface Memory {
 }
 
 export default function MemoryPage() {
+  const t = useTranslations("memory");
   const [contactId, setContactId] = useState("");
   const [memories, setMemories] = useState<Memory[]>([]);
   const [loading, setLoading] = useState(false);
@@ -46,10 +49,10 @@ export default function MemoryPage() {
     <div className="p-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold mb-2" style={{ fontFamily: "var(--font-heading)" }}>
-          Contact Memory
+          {t("title")}
         </h1>
         <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-          Search for contact history and prior interventions recorded by the agent.
+          {t("subtitle")}
         </p>
       </div>
 
@@ -62,7 +65,7 @@ export default function MemoryPage() {
               type="text"
               value={contactId}
               onChange={(e) => setContactId(e.target.value)}
-              placeholder="Enter contact ID (e.g., TEST_CID_001)"
+              placeholder={t("placeholder")}
               className="w-full pl-10 pr-4 py-3 rounded-lg border"
               style={{
                 backgroundColor: "var(--card)",
@@ -81,7 +84,7 @@ export default function MemoryPage() {
               cursor: loading || !contactId.trim() ? "not-allowed" : "pointer",
             }}
           >
-            {loading ? "Searching..." : "Search"}
+            {loading ? t("searching") : t("search")}
           </button>
         </div>
       </form>
@@ -96,7 +99,7 @@ export default function MemoryPage() {
             color: "var(--error)",
           }}
         >
-          <strong>Error:</strong> {error}
+          <strong>{t("error")}:</strong> {error}
         </div>
       )}
 
@@ -112,23 +115,23 @@ export default function MemoryPage() {
               }}
             >
               <p className="text-lg mb-2" style={{ color: "var(--text-secondary)" }}>
-                No memory found for this contact
+                {t("noMemory")}
               </p>
               <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                The agent has not recorded any interventions for &quot;{contactId}&quot; yet.
+                {t("noMemoryDetail", { contactId })}
               </p>
             </div>
           ) : (
             <div className="space-y-4">
               <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                Found {memories.length} memory {memories.length === 1 ? "entry" : "entries"}
+                {t("found", { count: memories.length })}
               </p>
               
               {/* Timeline */}
               <div className="space-y-0">
                 {memories.map((memory, index) => {
                   const date = new Date(memory.created_at);
-                  const formattedDate = date.toLocaleDateString("en-US", {
+                  const formattedDate = date.toLocaleDateString(getLocale() === "es" ? "es-AR" : "en-US", {
                     year: "numeric",
                     month: "short",
                     day: "numeric",
@@ -185,10 +188,10 @@ export default function MemoryPage() {
         >
           <BrainCog className="w-12 h-12 mx-auto mb-4" style={{ color: "var(--text-muted)" }} />
           <p className="text-lg mb-2" style={{ color: "var(--text-secondary)" }}>
-            Search for a contact
+            {t("searchForContact")}
           </p>
           <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-            Enter a contact ID above to view their memory history and prior interventions.
+            {t("initialHint")}
           </p>
         </div>
       )}

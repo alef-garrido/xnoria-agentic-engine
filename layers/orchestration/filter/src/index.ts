@@ -7,6 +7,7 @@ import { getPendingActions, approveAction, rejectAction } from './hitl/hitl';
 import { notifyOperator } from './hitl/telegram';
 import { FilterRequest, FilterResponse } from './shared/types';
 import { createLogger } from './shared/logging';
+import { t } from './i18n/strings';
 
 const logger = createLogger('filter', 'filter');
 
@@ -42,9 +43,8 @@ app.post('/filter/execute', async (req: Request, res: Response) => {
     return res.status(400).json({
       status: 'error',
       error_code: 'PAYLOAD_INVALID',
-      message: 'Missing required fields: action_id, stage, session_id, payload'
-    } satisfies Partial<FilterResponse>);
-  }
+      message: t().api.payloadInvalid
+    } satisfies Partial<FilterResponse>);  }
 
   // 1. Allowlist check
   const { action, rejectionCode, rejectionReason } = await lookupAction(
@@ -110,7 +110,7 @@ app.post('/filter/execute', async (req: Request, res: Response) => {
       status:    'pending_hitl',
       log_id,
       queue_id:  log_id,
-      message:   'Action queued for human approval'
+      message:   t().api.actionQueuedForHitl
     } satisfies Partial<FilterResponse>);
   }
 
@@ -178,7 +178,7 @@ app.get('/filter/hitl/pending', async (_req: Request, res: Response) => {
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     logger.error({ err: message, endpoint: 'GET /filter/hitl/pending' }, 'HITL pending fetch failed');
-    return res.status(500).json({ error: 'Failed to fetch pending actions', message });
+    return res.status(500).json({ error: t().api.pendingFetchFailed, message });
   }
 });
 
@@ -333,7 +333,7 @@ app.get('/filter/allowlist', async (_req: Request, res: Response) => {
 
 // POST /filter/allowlist — create a new action
 app.post('/filter/allowlist', async (req: Request, res: Response) => {
-  const { action_id, stage, n8n_workflow_id, requires_hitl, manual_action, enabled, description } = req.body;
+  const { action_id, stage, n8n_workflow_id, requires_hitl, manual_action, enabled, description, description_es } = req.body;
 
   if (!action_id || !stage || !n8n_workflow_id) {
     return res.status(400).json({
@@ -343,7 +343,7 @@ app.post('/filter/allowlist', async (req: Request, res: Response) => {
 
   try {
     const action = await createAction(db, {
-      action_id, stage, n8n_workflow_id, requires_hitl, manual_action, enabled, description
+      action_id, stage, n8n_workflow_id, requires_hitl, manual_action, enabled, description, description_es
     });
     return res.status(201).json({ action });
   } catch (err: unknown) {
@@ -360,11 +360,11 @@ app.post('/filter/allowlist', async (req: Request, res: Response) => {
 // PATCH /filter/allowlist/:id — update an action
 app.patch('/filter/allowlist/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { requires_hitl, manual_action, enabled, description, n8n_workflow_id } = req.body;
+  const { requires_hitl, manual_action, enabled, description, description_es, n8n_workflow_id } = req.body;
 
   try {
     const action = await updateAction(db, id, {
-      requires_hitl, manual_action, enabled, description, n8n_workflow_id
+      requires_hitl, manual_action, enabled, description, description_es, n8n_workflow_id
     });
 
     if (!action) {

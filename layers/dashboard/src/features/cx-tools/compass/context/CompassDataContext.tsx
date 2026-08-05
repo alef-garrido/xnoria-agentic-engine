@@ -3,7 +3,9 @@
 import React, { createContext, useContext, useMemo, type ReactNode } from "react";
 import type { WheelData } from "@/features/cx-tools/shared/types/wheel";
 import { getAllInterventions, type Intervention } from "@/features/cx-tools/shared/domain/interventionRegistry";
-import { wheelDataEn, uiStringsEn, domainPrefixesEn } from "@/features/cx-tools/shared/data/wheelDataEn";
+import { resolveWheelData } from "@/features/cx-tools/shared/data/wheelStructure";
+import { uiStringsEn, uiStringsEs, domainPrefixesEn } from "@/features/cx-tools/shared/data/wheelDataEn";
+import { getLocale } from "@/i18n/locale";
 
 export interface UiStrings {
     signals: string;
@@ -29,23 +31,25 @@ export type NamedIntervention = Intervention & { name: string };
 const CompassDataContext = createContext<CompassDataContextValue | null>(null);
 
 export function CompassDataProvider({ children }: { children: ReactNode }) {
+    const locale = getLocale() === "es" ? "es" : "en";
+
     const interventionMap = useMemo(() => {
         const map: Record<string, NamedIntervention> = {};
         for (const intervention of getAllInterventions()) {
             map[intervention.id] = {
                 ...intervention,
-                name: intervention.translations.en,
+                name: intervention.translations[locale] || intervention.translations.en,
             };
         }
         return map;
-    }, []);
+    }, [locale]);
 
     const value = useMemo<CompassDataContextValue>(() => ({
-        wheelData: wheelDataEn,
-        uiStrings: uiStringsEn,
+        wheelData: resolveWheelData(locale),
+        uiStrings: locale === "es" ? uiStringsEs : uiStringsEn,
         domainPrefixes: domainPrefixesEn,
         getIntervention: (id: string) => interventionMap[id],
-    }), [interventionMap]);
+    }), [locale, interventionMap]);
 
     return (
         <CompassDataContext.Provider value={value}>

@@ -15,6 +15,9 @@
  * - Clear separation between data and translations
  */
 
+import type { WheelData } from "@/features/cx-tools/shared/types/wheel";
+import { translate, type Language } from "@/features/cx-tools/shared/i18n/translations";
+
 export const WHEEL_STRUCTURE = {
   // Central hub
   center: {
@@ -977,4 +980,56 @@ export function getSignalById(signalId: string): Signal | undefined {
     }
   }
   return undefined;
+}
+
+/**
+ * Resolve the wheel data for a given language.
+ * Replaces wheelDataEn (English-only) with a locale-aware build
+ * sourced from WHEEL_STRUCTURE + translations.ts.
+ */
+export function resolveWheelData(language: Language = "en"): WheelData {
+  type StructDomain = (typeof WHEEL_STRUCTURE)["domains"][number];
+  type StructCause = StructDomain["causes"][number];
+  type StructSignal = StructCause["signals"][number];
+
+  const resolveSignal = (s: StructSignal) => ({
+    id: s.id,
+    name: translate(s.name_key, language),
+    severity: s.severity,
+    level: s.level,
+    indicators: s.indicators.map((i) => ({ id: i.id, name: translate(i.name_key, language) })),
+    interventions: [...s.intervention_ids],
+  });
+
+  const resolveCause = (c: StructCause, domainCode: string) => {
+    const signals = c.signals.map(resolveSignal);
+    const indicators = [...new Map(signals.flatMap((s) => s.indicators ?? []).map((i) => [i.id, i])).values()];
+    const interventions = [...new Set(signals.flatMap((s) => s.interventions ?? []))];
+    return {
+      id: c.id,
+      code: `${domainCode}-${c.code}`,
+      name: translate(c.name_key, language),
+      signals,
+      indicators,
+      interventions,
+    };
+  };
+
+  const resolveDomain = (d: StructDomain) => ({
+    id: d.id,
+    name: translate(d.name_key, language),
+    color: d.color,
+    causes: d.causes.map((c) => resolveCause(c, d.code)),
+  });
+
+  return {
+    wheel_name: "CX Diagnostic Compass",
+    version: "2.0",
+    center: {
+      id: WHEEL_STRUCTURE.center.id,
+      name: translate(WHEEL_STRUCTURE.center.name_key, language),
+      description: translate(WHEEL_STRUCTURE.center.description_key, language),
+    },
+    domains: WHEEL_STRUCTURE.domains.map(resolveDomain),
+  };
 }

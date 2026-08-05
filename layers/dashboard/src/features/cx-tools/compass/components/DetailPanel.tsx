@@ -5,10 +5,12 @@ import { useCompassData } from "@/features/cx-tools/compass/context/CompassDataC
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Activity, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { FunnelGlyph } from "./FunnelGlyph";
+import { useTranslations } from "next-intl";
 
 export default function DetailPanel() {
   const { selectedCause, selectedDomain, selectedSignal, viewState, resetToHome, selectDomain, selectCause } = useWheel();
   const { uiStrings, getIntervention } = useCompassData();
+  const t = useTranslations("cxtools");
 
   const isOpen = (viewState === "cause" || viewState === "signal") && !!selectedCause && !!selectedDomain;
 
@@ -42,7 +44,7 @@ export default function DetailPanel() {
             <button
               onClick={handleClose}
               className="absolute top-4 right-4 p-2 rounded-md hover:bg-white/10 transition-colors"
-              aria-label="Close detail panel"
+              aria-label={t("closeDetail")}
             >
               <X className="w-5 h-5" />
             </button>
@@ -71,15 +73,15 @@ export default function DetailPanel() {
             {/* Signal Context Block */}
             {viewState === "signal" && selectedSignal && (
               <div className="mb-6 p-4 rounded-md bg-[var(--surface)]/30 border border-[var(--border)]/50">
-                <p className="text-xs text-[var(--text-secondary)] mb-3 uppercase tracking-wider font-semibold">This signal belongs to:</p>
+                <p className="text-xs text-[var(--text-secondary)] mb-3 uppercase tracking-wider font-semibold">{t("belongsTo")}</p>
                 <div className="flex flex-col gap-2 text-sm font-medium">
                   <div className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-[var(--text-secondary)]" />
-                    <span><span className="text-[var(--text-secondary)]">Cause:</span> {selectedCause.name}</span>
+                    <span><span className="text-[var(--text-secondary)]">{t("labelCause")}</span> {selectedCause.name}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: selectedDomain.color }} />
-                    <span><span className="text-[var(--text-secondary)]">Domain:</span> {selectedDomain.name}</span>
+                    <span><span className="text-[var(--text-secondary)]">{t("labelDomain")}</span> {selectedDomain.name}</span>
                   </div>
                 </div>
               </div>

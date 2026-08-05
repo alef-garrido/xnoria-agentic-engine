@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { useEditor } from "@/features/cx-tools/editor/EditorContext";
 import { EntityDialog } from "./EntityDialog";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ interface FlatCause {
 }
 
 export function CauseEditor() {
+  const t = useTranslations("cxtools");
   const { domains, addCause, updateCause, deleteCause } = useEditor();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<FlatCause | null>(null);
@@ -95,17 +97,17 @@ export function CauseEditor() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-[var(--text-primary)]">Causes</h3>
-          <p className="text-sm text-[var(--text-muted)]">{flatCauses.length} root causes across {domains.length} domains</p>
+          <h3 className="text-lg font-semibold text-[var(--text-primary)]">{t("causesTitle")}</h3>
+          <p className="text-sm text-[var(--text-muted)]">{t("rootCausesAcross", { count: flatCauses.length, domains: domains.length })}</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-[180px]">
             <Select value={filterDomain} onValueChange={setFilterDomain}>
               <SelectTrigger>
-                <SelectValue placeholder="Filter by domain" />
+                <SelectValue placeholder={t("filterByDomain")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">All Domains</SelectItem>
+                <SelectItem value="ALL">{t("allDomains")}</SelectItem>
                 {domains.map((d) => (
                   <SelectItem key={d.id} value={d.id}>
                     <span className="flex items-center gap-2">
@@ -118,7 +120,7 @@ export function CauseEditor() {
             </Select>
           </div>
           <Button onClick={openCreate} size="sm" className="gap-1.5">
-            <Plus className="h-4 w-4" /> Add Cause
+            <Plus className="h-4 w-4" /> {t("addCause")}
           </Button>
         </div>
       </div>
@@ -127,12 +129,12 @@ export function CauseEditor() {
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-[var(--surface-hover)]">
-              <TableHead>Domain</TableHead>
-              <TableHead>Code</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead className="text-right">Signals</TableHead>
-              <TableHead className="text-right">Interventions</TableHead>
-              <TableHead className="w-24 text-right">Actions</TableHead>
+              <TableHead>{t("colDomain")}</TableHead>
+              <TableHead>{t("colCode")}</TableHead>
+              <TableHead>{t("colName")}</TableHead>
+              <TableHead className="text-right">{t("colSignals")}</TableHead>
+              <TableHead className="text-right">{t("colInterventions")}</TableHead>
+              <TableHead className="w-24 text-right">{t("colActions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -168,13 +170,13 @@ export function CauseEditor() {
       <EntityDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
-        title={editTarget ? "Edit Cause" : "Add Cause"}
-        description={editTarget ? `Editing "${editTarget.cause.name}" in ${editTarget.domainName}` : "Add a new root cause to a domain."}
+        title={editTarget ? t("editCause") : t("addCauseTitle")}
+        description={editTarget ? t("editingIn", { name: editTarget.cause.name, domain: editTarget.domainName }) : t("createCauseDesc")}
         onSave={handleSave}
       >
         <div className="grid gap-3">
           <div>
-            <Label htmlFor="cause-domain" className="mb-1 block">Parent Domain</Label>
+            <Label htmlFor="cause-domain" className="mb-1 block">{t("fieldParentDomain")}</Label>
             <Select value={formDomainId} onValueChange={setFormDomainId} disabled={!!editTarget}>
               <SelectTrigger>
                 <SelectValue />
@@ -187,16 +189,16 @@ export function CauseEditor() {
             </Select>
           </div>
           <div>
-            <Label htmlFor="cause-id" className="mb-1 block">Identifier</Label>
-            <Input id="cause-id" value={formId} onChange={(e) => setFormId(e.target.value)} placeholder="e.g. vis" disabled={!!editTarget} />
+            <Label htmlFor="cause-id" className="mb-1 block">{t("fieldIdentifier")}</Label>
+            <Input id="cause-id" value={formId} onChange={(e) => setFormId(e.target.value)} placeholder={t("placeholderVis")} disabled={!!editTarget} />
           </div>
           <div>
-            <Label htmlFor="cause-code" className="mb-1 block">Code</Label>
-            <Input id="cause-code" value={formCode} onChange={(e) => setFormCode(e.target.value.toUpperCase())} placeholder="e.g. ACQ-VIS" className="font-mono" />
+            <Label htmlFor="cause-code" className="mb-1 block">{t("fieldCode")}</Label>
+            <Input id="cause-code" value={formCode} onChange={(e) => setFormCode(e.target.value.toUpperCase())} placeholder={t("placeholderAcqVis")} className="font-mono" />
           </div>
           <div>
-            <Label htmlFor="cause-name" className="mb-1 block">Name</Label>
-            <Input id="cause-name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. Visibility" />
+            <Label htmlFor="cause-name" className="mb-1 block">{t("fieldName")}</Label>
+            <Input id="cause-name" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder={t("placeholderVisibility")} />
           </div>
         </div>
       </EntityDialog>
@@ -205,14 +207,18 @@ export function CauseEditor() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Cause</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteCause")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will delete <strong className="text-[var(--text-primary)]">{deleteTarget?.cause.code} — {deleteTarget?.cause.name}</strong> and its {deleteTarget?.cause.signals.length ?? 0} signals. This cannot be undone.
+              {t("deleteCauseDesc", {
+                code: deleteTarget?.cause.code ?? "",
+                name: deleteTarget?.cause.name ?? "",
+                count: deleteTarget?.cause.signals.length ?? 0,
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>{t("delete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -5,6 +5,7 @@
 // ==============================================================================
 import axios from 'axios';
 import { createLogger } from '../shared/logging';
+import { t } from '../i18n/strings';
 
 const logger = createLogger('filter-hitl-telegram', 'filter');
 
@@ -44,45 +45,46 @@ export async function notifyOperator(notification: HITLNotification): Promise<vo
     return;
   }
 
+  const s         = t().hitl;
   const triggeredBy = notification.meta?.triggered_by
-    ? `\nTriggered: ${notification.meta.triggered_by}`
+    ? `\n*${s.triggeredBy}:* ${notification.meta.triggered_by}`
     : '';
 
   const contactId = notification.payload?.contact_id ?? 'Unknown';
   const reason    = notification.payload?.reason ?? '';
   const hubspotLink = contactId !== 'Unknown'
-    ? `\n👉 [Open in HubSpot](https://app.hubspot.com/contacts/${process.env.HUBSPORT_PORTAL_ID ?? '51103874'}/contact/${contactId})`
+    ? `\n👉 [${s.hubspotLink}](https://app.hubspot.com/contacts/${process.env.HUBSPORT_PORTAL_ID ?? '51103874'}/contact/${contactId})`
     : '';
 
   let message: string;
   if (notification.manual_action) {
     message = [
-      '🔧 *Manual Action Required*',
+      s.manualTitle,
       '',
-      `*Action:* \`${notification.action_id}\``,
-      `*Stage:* ${notification.stage}`,
-      `*Contact:* ${contactId}`,
-      `*Session:* \`${notification.session_id.substring(0, 12)}…\``,
-      reason ? `*Reason:* ${reason}` : '',
+      `*${s.action}:* \`${notification.action_id}\``,
+      `*${s.stage}:* ${notification.stage}`,
+      `*${s.contact}:* ${contactId}`,
+      `*${s.session}:* \`${notification.session_id.substring(0, 12)}…\``,
+      reason ? `*${s.reason}:* ${reason}` : '',
       triggeredBy,
       '',
-      `*What to do:* This action cannot be automated on your current HubSpot plan.`,
-      `Please complete it manually in HubSpot, then mark as done.`,
+      `*${s.whatToDo}*`,
+      s.completeManually,
       hubspotLink,
-      `👉 [Mark as Done](${DASHBOARD_URL}/hitl)`
+      `👉 [${s.markAsDone}](${DASHBOARD_URL}/hitl)`
     ].filter(Boolean).join('\n');
   } else {
     message = [
-      '⚠️ *HITL Review Required*',
+      s.reviewTitle,
       '',
-      `*Action:* \`${notification.action_id}\``,
-      `*Stage:* ${notification.stage}`,
-      `*Contact:* ${contactId}`,
-      `*Session:* \`${notification.session_id.substring(0, 12)}…\``,
-      reason ? `*Reason:* ${reason}` : '',
+      `*${s.action}:* \`${notification.action_id}\``,
+      `*${s.stage}:* ${notification.stage}`,
+      `*${s.contact}:* ${contactId}`,
+      `*${s.session}:* \`${notification.session_id.substring(0, 12)}…\``,
+      reason ? `*${s.reason}:* ${reason}` : '',
       triggeredBy,
       '',
-      `👉 [Review & Approve](${DASHBOARD_URL}/hitl)`
+      `👉 [${s.reviewApprove}](${DASHBOARD_URL}/hitl)`
     ].filter(Boolean).join('\n');
   }
 

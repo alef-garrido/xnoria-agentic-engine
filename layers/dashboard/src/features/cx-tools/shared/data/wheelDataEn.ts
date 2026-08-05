@@ -114,3 +114,15 @@ export const uiStringsEn = {
   causeCodeSystem: "Cause Code System",
   home: "Home",
 };
+
+export const uiStringsEs = {
+  signals: "Señales",
+  indicators: "Indicadores Clave",
+  interventions: "Intervenciones Sugeridas",
+  backToOverview: "Volver al Resumen",
+  searchPlaceholder: "Buscar dominios, causas, señales...",
+  noResults: "Sin resultados para",
+  legend: "Leyenda",
+  causeCodeSystem: "Sistema de Códigos de Causa",
+  home: "Inicio",
+};

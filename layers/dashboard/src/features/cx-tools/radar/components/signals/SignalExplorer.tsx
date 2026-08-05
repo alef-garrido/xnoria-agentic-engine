@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
+import { getLocale } from "@/i18n/locale";
 import { getCachedSignals } from "@/features/cx-tools/shared/domain/signalBuilder";
 import { CAUSE_REGISTRY } from "@/features/cx-tools/shared/domain/causeRegistry";
 import { SignalFilters } from "./SignalFilters";
@@ -20,6 +22,7 @@ interface Toast {
 }
 
 export default function SignalExplorer() {
+    const t = useTranslations("cxtools");
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedDomain, setSelectedDomain] = useState<string | "ALL">("ALL");
     const [selectedCause, setSelectedCause] = useState<string | "ALL">("ALL");
@@ -34,7 +37,10 @@ export default function SignalExplorer() {
         setTimeout(() => setToast(null), 4000);
     };
 
-    const allSignals = useMemo(() => getCachedSignals("en"), []);
+    const allSignals = useMemo(
+        () => getCachedSignals(getLocale() === "es" ? "es" : "en"),
+        []
+    );
 
     const fullDomains = useMemo(() => {
         const seen = new Map<string, FlatSignal>();
@@ -120,11 +126,12 @@ export default function SignalExplorer() {
                 generateActionPlanPdf({
                     signals: allSignals,
                     selectedIds: selectedSignalIds,
+                    language: getLocale(),
                 });
-                showToast("Action plan downloaded");
+                showToast(t("pdfDownloaded"));
             } catch (err) {
                 clientLogger.error("PDF generation failed", { error: err });
-                showToast("Failed to generate PDF", "error");
+                showToast(t("pdfFailed"), "error");
             } finally {
                 setGenerating(false);
             }
@@ -142,11 +149,10 @@ export default function SignalExplorer() {
                         letterSpacing: "-1.5px",
                     }}
                 >
-                    CX Signal Radar
+                    {t("radarTitle")}
                 </h1>
                 <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
-                    Symptom-first diagnostic visualization — plot the CX Diagnostic
-                    Compass signals by domain and severity.
+                    {t("radarSubtitle")}
                 </p>
             </div>
 
@@ -186,8 +192,7 @@ export default function SignalExplorer() {
                         {selectedSignalIds.length === 0 ? (
                             <div className="text-center p-8 max-w-[300px]">
                                 <p className="mb-4 text-sm" style={{ color: "var(--text-secondary)" }}>
-                                    Select friction points (signals) from the grid to map their
-                                    impact on the radar.
+                                    {t("radarHint")}
                                 </p>
                                 <div
                                     className="w-16 h-16 mx-auto rounded-full border border-dashed animate-pulse"
@@ -213,19 +218,19 @@ export default function SignalExplorer() {
                         style={{ color: "var(--text-muted)", borderColor: "var(--border)" }}
                     >
                         <span className="flex items-center gap-1">
-                            <strong style={{ color: "var(--text-secondary)" }}>1</strong> Entry
+                            <strong style={{ color: "var(--text-secondary)" }}>1</strong> {t("levelEntry")}
                         </span>
                         <span className="flex items-center gap-1">
-                            <strong style={{ color: "var(--text-secondary)" }}>2</strong> Commitment
+                            <strong style={{ color: "var(--text-secondary)" }}>2</strong> {t("levelCommitment")}
                         </span>
                         <span className="flex items-center gap-1">
-                            <strong style={{ color: "var(--text-secondary)" }}>3</strong> Usage
+                            <strong style={{ color: "var(--text-secondary)" }}>3</strong> {t("levelUsage")}
                         </span>
                         <span className="flex items-center gap-1">
-                            <strong style={{ color: "var(--text-secondary)" }}>4</strong> Engagement
+                            <strong style={{ color: "var(--text-secondary)" }}>4</strong> {t("levelEngagement")}
                         </span>
                         <span className="flex items-center gap-1">
-                            <strong style={{ color: "var(--text-secondary)" }}>5</strong> Growth
+                            <strong style={{ color: "var(--text-secondary)" }}>5</strong> {t("levelGrowth")}
                         </span>
                     </div>
 
@@ -244,7 +249,7 @@ export default function SignalExplorer() {
                                         className="font-bold text-sm"
                                         style={{ fontFamily: "var(--font-heading)", color: "var(--text-primary)" }}
                                     >
-                                        Diagnostic Insight
+                                        {t("diagnosticInsight")}
                                     </h4>
                                     <div className="flex items-center gap-4">
                                         <button
@@ -258,7 +263,7 @@ export default function SignalExplorer() {
                                             ) : (
                                                 <FileDown className="w-3.5 h-3.5" />
                                             )}
-                                            {generating ? "Generating…" : "Export Action Plan"}
+                                            {generating ? t("generating") : t("exportActionPlan")}
                                         </button>
                                         <button
                                             onClick={handleClearAll}
@@ -271,19 +276,21 @@ export default function SignalExplorer() {
                                                 e.currentTarget.style.color = "var(--text-muted)";
                                             }}
                                         >
-                                            Clear All
+                                            {t("clearAll")}
                                         </button>
                                         <span
                                             className="text-xs px-2 py-1 rounded-full font-mono"
                                             style={{ backgroundColor: "var(--accent-soft)", color: "var(--accent)" }}
                                         >
-                                            {selectedSignalIds.length} ACTIVE
+                                            {t("activeCount", { count: selectedSignalIds.length })}
                                         </span>
                                     </div>
                                 </div>
                                 <p className="text-sm mb-4" style={{ color: "var(--text-secondary)" }}>
-                                    You have {selectedSignalIds.length} active friction points across{" "}
-                                    {new Set(selectedRadarSignals.map((s) => s.domain)).size} lifecycle stages.
+                                    {t("insightSummary", {
+                                        count: selectedSignalIds.length,
+                                        stages: new Set(selectedRadarSignals.map((s) => s.domain)).size,
+                                    })}
                                 </p>
                                 {toast && (
                                     <div

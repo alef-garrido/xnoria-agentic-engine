@@ -11,6 +11,7 @@ exports.sendReply = sendReply;
 // ==============================================================================
 const node_telegram_bot_api_1 = __importDefault(require("node-telegram-bot-api"));
 const logging_1 = require("../../../shared/logging");
+const strings_1 = require("../i18n/strings");
 const logger = (0, logging_1.createLogger)('telegram', 'cognitive');
 let bot = null;
 // Active chat IDs — maps contact_id to Telegram chat ID for replies
@@ -80,7 +81,7 @@ function initTelegram(onEvent) {
         }
         catch (err) {
             logger.error({ err, contact_id: contactId }, 'Error processing event');
-            await sendReply(contactId, 'Sorry, something went wrong. Please try again.');
+            await sendReply(contactId, (0, strings_1.t)().telegramErrorReply);
         }
     });
     bot.on('polling_error', (err) => {

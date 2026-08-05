@@ -4,6 +4,7 @@ import type { Cause } from "@/features/cx-tools/shared/types/wheel";
 import { getSliceGeometry } from "@/features/cx-tools/compass/utils/geometry";
 import { lightenColor } from "@/features/cx-tools/compass/utils/color";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 interface CauseSliceProps {
   cause: Cause;
@@ -27,6 +28,7 @@ export default function CauseSlice({
   wheelRotation,
 }: CauseSliceProps) {
   const { selectCause, setHoveredLabel } = useWheel();
+  const t = useTranslations("cxtools");
 
   const { pathD, labelX, labelY, rotDeg, flipLabel } = getSliceGeometry({
     startAngle,
@@ -45,7 +47,7 @@ export default function CauseSlice({
       onMouseEnter={() => setHoveredLabel(`${cause.code} — ${cause.name}`)}
       onMouseLeave={() => setHoveredLabel(null)}
       role="button"
-      aria-label={`Cause: ${cause.name} (${cause.code})`}
+      aria-label={t("causeAria", { name: cause.name, code: cause.code })}
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.4, delay: index * 0.06, ease: "easeOut" }}

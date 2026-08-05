@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale";
 import { Activity, Users, Radio, AlertTriangle } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { getLocale } from "@/i18n/locale";
 import { clientLogger } from "@/lib/client-logger";
 
 interface RadarContact {
@@ -38,13 +41,17 @@ function severityColor(severity: number | null): string {
 
 function timeAgo(iso: string): string {
   try {
-    return formatDistanceToNow(new Date(iso), { addSuffix: true });
+    return formatDistanceToNow(new Date(iso), {
+      addSuffix: true,
+      locale: getLocale() === "es" ? es : undefined,
+    });
   } catch {
     return iso;
   }
 }
 
 export default function LiveSignalsPanel() {
+  const t = useTranslations("cxtools");
   const [contacts, setContacts] = useState<RadarContact[]>([]);
   const [selectedContact, setSelectedContact] = useState<string | null>(null);
   const [signals, setSignals] = useState<RadarSignalEvent[]>([]);
@@ -62,11 +69,11 @@ export default function LiveSignalsPanel() {
       setLastUpdated(new Date());
     } catch (err) {
       clientLogger.error("Failed to fetch radar contacts", { err });
-      setError("Could not reach the radar data feed.");
+      setError(t("feedError"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const fetchSignals = useCallback(async (contactId: string) => {
     try {
@@ -117,13 +124,13 @@ export default function LiveSignalsPanel() {
               className="text-sm font-bold"
               style={{ fontFamily: "var(--font-heading)", color: "var(--text-primary)" }}
             >
-              Live Contact Signals
+              {t("liveTitle")}
             </h2>
             <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-              Signal detection streamed from cognitive sessions
+              {t("liveSubtitle")}
               {lastUpdated && (
                 <span className="ml-1">
-                  — updated {timeAgo(lastUpdated.toISOString())}
+                  {t("updated", { time: timeAgo(lastUpdated.toISOString()) })}
                 </span>
               )}
             </p>
@@ -139,7 +146,7 @@ export default function LiveSignalsPanel() {
               backgroundColor: loading ? "var(--text-muted)" : contacts.length > 0 ? "#4ade80" : "#facc15",
             }}
           />
-          {contacts.length} tracked {contacts.length === 1 ? "contact" : "contacts"}
+          {t("trackedContacts", { count: contacts.length })}
         </div>
       </div>
 
@@ -148,11 +155,11 @@ export default function LiveSignalsPanel() {
         {/* Contacts list */}
         <div className="flex flex-col min-h-[220px]">
           <div className="flex items-center gap-2 mb-2 text-[10px] uppercase tracking-widest font-bold" style={{ color: "var(--text-muted)" }}>
-            <Users className="w-3 h-3" /> Contacts
+            <Users className="w-3 h-3" /> {t("contacts")}
           </div>
           {loading ? (
             <div className="flex-1 flex items-center justify-center text-sm" style={{ color: "var(--text-muted)" }}>
-              Loading...
+              {t("loading")}
             </div>
           ) : error ? (
             <div className="flex-1 flex items-center justify-center gap-2 text-sm" style={{ color: "var(--accent)" }}>
@@ -163,12 +170,10 @@ export default function LiveSignalsPanel() {
               <div className="text-center max-w-[320px] p-4">
                 <Activity className="w-8 h-8 mx-auto mb-3 opacity-40" style={{ color: "var(--text-muted)" }} />
                 <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                  No signals detected yet.
+                  {t("noSignalsYet")}
                 </p>
                 <p className="text-xs mt-1 leading-relaxed" style={{ color: "var(--text-muted)" }}>
-                  When the cognitive layer processes Compass-annotated events
-                  (signal_id, severity, cause_code), detected signals appear here in
-                  real time.
+                  {t("noSignalsHint")}
                 </p>
               </div>
             </div>
@@ -197,7 +202,7 @@ export default function LiveSignalsPanel() {
                   </div>
                   <div className="flex items-center justify-between mt-1.5">
                     <span className="text-[10px] font-mono" style={{ color: "var(--text-muted)" }}>
-                      {c.stage ?? "?"} · {c.cause_code ?? "?"} · {c.session_count} sessions
+                      {c.stage ?? "?"} · {c.cause_code ?? "?"} · {t("sessionsCount", { count: c.session_count })}
                     </span>
                     <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
                       {timeAgo(c.last_seen)}
@@ -222,7 +227,7 @@ export default function LiveSignalsPanel() {
         <div className="flex flex-col min-h-[220px] border-t lg:border-t-0 lg:border-l border-[var(--border)] pt-4 lg:pt-0 lg:pl-6">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold" style={{ color: "var(--text-muted)" }}>
-              <Radio className="w-3 h-3" /> Signal History
+              <Radio className="w-3 h-3" /> {t("signalHistory")}
             </div>
             {selected && (
               <span className="font-mono text-[10px]" style={{ color: "var(--text-secondary)" }}>
@@ -232,11 +237,11 @@ export default function LiveSignalsPanel() {
           </div>
           {!selected ? (
             <div className="flex-1 flex items-center justify-center text-sm" style={{ color: "var(--text-muted)" }}>
-              Select a contact to view its detected signals.
+              {t("selectContact")}
             </div>
           ) : signals.length === 0 ? (
             <div className="flex-1 flex items-center justify-center text-sm" style={{ color: "var(--text-muted)" }}>
-              No signal events recorded for this contact.
+              {t("noEvents")}
             </div>
           ) : (
             <div className="flex flex-col gap-1.5 overflow-y-auto max-h-[360px] pr-1">
@@ -257,7 +262,7 @@ export default function LiveSignalsPanel() {
                   <div className="mt-1 text-[10px] font-mono" style={{ color: "var(--text-secondary)" }}>
                     {s.cause_code ?? "?"} · {s.stage ?? "?"} · {s.channel}
                     {s.signal_severity !== null && (
-                      <> · severity {Math.round(s.signal_severity * 100)}%</>
+                      <> · {t("severityLabel", { value: Math.round(s.signal_severity * 100) })}</>
                     )}
                   </div>
                   <p className="mt-1.5 text-xs leading-relaxed line-clamp-2" style={{ color: "var(--text-muted)" }}>

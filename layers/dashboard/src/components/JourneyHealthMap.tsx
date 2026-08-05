@@ -14,7 +14,10 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { STAGE_META, getStageAverageSeverity } from "@/lib/compass";
+import {
+  STAGE_META,
+  getStageAverageSeverity,
+} from "@/features/cx-tools/shared/data/compassSignals";
 import { ACTIVE_STAGES } from "@/lib/constants";
 import {
   HEALTH_THRESHOLDS,

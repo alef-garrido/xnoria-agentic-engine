@@ -1,5 +1,5 @@
 import type { JourneyStage } from "@/lib/constants";
-import { getStageAverageSeverity } from "@/lib/compass";
+import { getStageAverageSeverity } from "@/features/cx-tools/shared/data/compassSignals";
 
 export interface StageHealthMetrics {
   stage: string;

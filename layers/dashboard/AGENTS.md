@@ -49,15 +49,23 @@ src/
 │       ├── matriz/       # Impact/effort matrix
 │       └── editor/       # Wheel editor
 ├── components/           # UI components
-│   ├── TenacitOS/        # Shared design system components
-│   ├── HITLQueue.tsx     # Polling HITL queue component
-│   ├── AllowlistManager.tsx # Allowlist table with toggles + modals
+│   ├── TenacitOS/        # Shared design system components (TopBar, StatusBar)
+│   ├── ui/               # Primitives: Card, PageHeader, Skeleton, ToggleSwitch, Button, Dialog...
+│   ├── hitl/             # HITL queue subcomponents (PendingActionCard, PayloadEditor, ActionButtons)
+│   ├── allowlist/        # Allowlist subcomponents (ActionRow, AddActionModal)
+│   ├── sessions/         # Sessions subcomponents (SessionRow)
+│   ├── HITLQueue.tsx     # HITL queue container (data + state, delegates rendering)
+│   ├── AllowlistManager.tsx # Allowlist container (data + state, delegates rendering)
+│   ├── ActivityFeed.tsx  # Polling activity feed
+│   ├── ToastProvider.tsx # Global toast context (useToast)
 │   └── Sidebar.tsx       # Navigation with HITL + Allowlist links
 ├── config/               # Configuration files
-├── hooks/                # React hooks
+├── hooks/                # React hooks (usePolling — shared data-fetching hook)
 ├── lib/
 │   ├── auth.ts           # Session creation, validation, inactivation
 │   ├── db.ts             # Postgres pool wrapper
+│   ├── constants.ts      # STAGES, ACTIVE_STAGES, JourneyStage, TOAST_DURATION_MS (single source of truth)
+│   ├── healthStatus.ts   # Journey health derivation logic (pure, unit-testable)
 │   ├── logger.ts         # Server-side structured logger (pino)
 │   └── client-logger.ts  # Client-side structured logger wrapper
 └── proxy.ts              # Auth middleware (cookie presence check only)
@@ -197,7 +205,7 @@ docker exec exnoria_postgres psql -U xnoria -d exnoria -c \
 ## Adding a New Dashboard Page
 1. Create page at `src/app/(dashboard)/your-page/page.tsx`
 2. Create API proxy route if needed: `src/app/api/your-api/route.ts`
-3. Use existing TenacitOS components from `src/components/TenacitOS/`
+3. Use UI primitives from `src/components/ui/` and `usePolling` for data fetching (see Component Conventions)
 4. Follow existing auth pattern (protect with proxy.ts middleware)
 
 ## Adding a New CX Tool
@@ -215,12 +223,27 @@ docker exec exnoria_postgres psql -U xnoria -d exnoria -c \
 4. Include auth check via proxy.ts pattern
 
 ## Component Conventions
-- Use TenacitOS design system components when available
 - Server components by default, use `'use client'` only when needed
-- Follow existing patterns for data fetching and state management
+- Use UI primitives from `src/components/ui/` (Card, PageHeader, Skeleton) instead of repeating the card/header/skeleton markup
+- Data fetching and polling: use `usePolling` from `src/hooks/usePolling.ts` — never hand-roll `useEffect + setInterval + mirror-ref`
+  - Pass a stable fetcher (wrap in `useCallback` when it depends on state, e.g. the `days` selector)
+  - Default behavior keeps stale data on fetch errors; pass `keepStaleOnError: false` to override
+  - Use `setData` for optimistic updates (toggles, removals, appends)
+- Toasts: use `useToast()` from `src/components/ToastProvider.tsx` (provider is mounted in the dashboard layout) — never re-implement toast state
+- Stage knowledge: import `STAGES` / `ACTIVE_STAGES` / `JourneyStage` from `src/lib/constants.ts` — never hardcode stage lists
+- Journey health status logic lives in `src/lib/healthStatus.ts` (pure functions) — keep derivation out of components
+- Prefer Tailwind utility classes and CSS variables (`text-[var(--text-secondary)]`, `bg-[var(--card)]`); avoid inline `style={{}}` for static styling
+- Use CSS hover classes (`hover:bg-...`) instead of `onMouseEnter/onMouseLeave` DOM mutation
 - Use Recharts for data visualization
 - Use Lucide React for icons
 - Use date-fns for date formatting
+- Components that fetch + render a large list delegate row/panel rendering to extracted subcomponents (see `components/hitl/`, `components/allowlist/`, `components/sessions/`)
+- Tooling: `npm run typecheck` (tsc --noEmit), `npm run lint`, `npm run format` (Prettier), `npm run test` (Vitest)
+
+## Verification Gate (every change)
+```bash
+npm run build && npm run lint && npm run test && npm run typecheck
+```
 
 ## Logging Patterns
 
@@ -281,7 +304,7 @@ try {
 1. **The dashboard reads — it doesn't execute.** All action execution goes through the filter API.
 2. **Use proxy routes** to communicate with the filter service, don't call filter DB directly for writes.
 3. **Follow existing auth patterns** — all dashboard routes should be protected.
-4. **Use TenacitOS components** for consistency.
+4. **Use UI primitives and shared hooks** (`components/ui/`, `usePolling`, `useToast`) for consistency — see Component Conventions.
 
 ## Key Pages (Phase 3 A3 Complete)
 - **Dashboard home** — overview of signals, actions, system health

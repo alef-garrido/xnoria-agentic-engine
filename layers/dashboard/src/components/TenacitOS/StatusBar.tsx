@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState, type ComponentType, type CSSProperties } from "react";
+import type { ComponentType, CSSProperties } from "react";
 import { Cpu, HardDrive, MemoryStick, Clock } from "lucide-react";
-import { clientLogger } from "@/lib/client-logger";
 import { useTranslations } from "next-intl";
+import { usePolling } from "@/hooks/usePolling";
 
 interface SystemStats {
   cpu: number;
@@ -71,50 +71,48 @@ function StatusMetric({ icon: Icon, label, value, barPercent, color }: StatusMet
   );
 }
 
+const DEFAULT_STATS: SystemStats = {
+  cpu: 0,
+  ram: { used: 0, total: 4 },
+  disk: { used: 0, total: 100 },
+  activeServices: 0,
+  totalServices: 4,
+  uptime: "0d 0h",
+};
+
 export function StatusBar() {
   const t = useTranslations("statusbar");
-  const [stats, setStats] = useState<SystemStats>({
-    cpu: 0,
-    ram: { used: 0, total: 4 },
-    disk: { used: 0, total: 100 },
-    activeServices: 0,
-    totalServices: 4,
-    uptime: "0d 0h",
-  });
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const res = await fetch("/api/system");
-        if (res.ok) {
-          const data = await res.json();
-          const runningServices = data.services.filter((s: { status: string }) => s.status === 'running').length;
-          
-          setStats({
-            cpu: data.host.cpuPercent * 100,
-            ram: { used: data.host.ramUsed / 1e9, total: data.host.ramTotal / 1e9 },
-            disk: { used: data.host.diskUsed, total: data.host.diskTotal || 100 },
-            activeServices: runningServices,
-            totalServices: data.services.length,
-            uptime: data.services[0]?.uptime || "0s",
-          });
-        }
-      } catch (error) {
-        clientLogger.error("Failed to fetch system stats", { error });
-      }
-    };
+  const { data: stats } = usePolling(
+    async () => {
+      const res = await fetch("/api/system");
+      if (!res.ok) throw new Error("Failed to fetch system stats");
+      const data = await res.json();
+      const runningServices = data.services.filter(
+        (s: { status: string }) => s.status === "running"
+      ).length;
 
-    fetchStats();
-    const interval = setInterval(fetchStats, 10000);
+      return {
+        cpu: data.host.cpuPercent * 100,
+        ram: { used: data.host.ramUsed / 1e9, total: data.host.ramTotal / 1e9 },
+        disk: { used: data.host.diskUsed, total: data.host.diskTotal || 100 },
+        activeServices: runningServices,
+        totalServices: data.services.length,
+        uptime: data.services[0]?.uptime || "0s",
+      } satisfies SystemStats;
+    },
+    { intervalMs: 10_000, keepStaleOnError: false }
+  );
 
-    return () => clearInterval(interval);
-  }, []);
-
-  const cpuColor = stats.cpu < 60 ? "var(--positive)" : stats.cpu < 85 ? "var(--warning)" : "var(--negative)";
-  const ramPercent = (stats.ram.used / stats.ram.total) * 100;
-  const ramColor = ramPercent < 60 ? "var(--positive)" : ramPercent < 85 ? "var(--warning)" : "var(--negative)";
-  const diskPercent = (stats.disk.used / stats.disk.total) * 100;
-  const diskColor = diskPercent < 60 ? "var(--positive)" : diskPercent < 85 ? "var(--warning)" : "var(--negative)";
+  const current = stats ?? DEFAULT_STATS;
+  const cpuColor =
+    current.cpu < 60 ? "var(--positive)" : current.cpu < 85 ? "var(--warning)" : "var(--negative)";
+  const ramPercent = (current.ram.used / current.ram.total) * 100;
+  const ramColor =
+    ramPercent < 60 ? "var(--positive)" : ramPercent < 85 ? "var(--warning)" : "var(--negative)";
+  const diskPercent = (current.disk.used / current.disk.total) * 100;
+  const diskColor =
+    diskPercent < 60 ? "var(--positive)" : diskPercent < 85 ? "var(--warning)" : "var(--negative)";
 
   return (
     <div
@@ -129,19 +127,25 @@ export function StatusBar() {
         borderTop: "1px solid var(--border)",
         display: "flex",
         alignItems: "center",
-        padding: "0 16px 0 272px", // 256px sidebar + 16px gap
+        padding: "0 16px 0 calc(var(--layout-sidebar-w) + 16px)",
         gap: "16px",
         zIndex: 40,
       }}
     >
       {/* CPU */}
-      <StatusMetric icon={Cpu} label={t("cpu")} value={`${stats.cpu.toFixed(0)}%`} barPercent={stats.cpu} color={cpuColor} />
+      <StatusMetric
+        icon={Cpu}
+        label={t("cpu")}
+        value={`${current.cpu.toFixed(0)}%`}
+        barPercent={current.cpu}
+        color={cpuColor}
+      />
 
       {/* RAM */}
       <StatusMetric
         icon={MemoryStick}
         label={t("ram")}
-        value={`${stats.ram.used.toFixed(1)}/${stats.ram.total.toFixed(0)}GB`}
+        value={`${current.ram.used.toFixed(1)}/${current.ram.total.toFixed(0)}GB`}
         barPercent={ramPercent}
         color={ramColor}
       />
@@ -168,7 +172,8 @@ export function StatusBar() {
             color: "var(--text-muted)",
           }}
         >
-          SVC: {stats.activeServices}/{stats.totalServices}        </span>
+          {t("services")}: {current.activeServices}/{current.totalServices}
+        </span>
       </div>
 
       {/* Separator */}
@@ -185,7 +190,7 @@ export function StatusBar() {
             color: "var(--text-muted)",
           }}
         >
-          {t("uptime")}: {stats.uptime}
+          {t("uptime")}: {current.uptime}
         </span>
       </div>
     </div>

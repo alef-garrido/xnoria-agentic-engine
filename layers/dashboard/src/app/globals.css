@@ -9,75 +9,68 @@
 
 :root {
   /* Core Colors */
-  --bg: #0C0C0C;
-  --background: #0C0C0C; /* alias for compatibility */
-  --foreground: #FFFFFF;
-  
+  --bg: #0c0c0c;
+  --background: #0c0c0c; /* alias for compatibility */
+  --foreground: #ffffff;
+
   /* Surface Colors */
-  --surface: #1A1A1A;
+  --surface: #1a1a1a;
   --surface-elevated: #242424;
-  --surface-hover: #2E2E2E;
-  --card: #1A1A1A; /* alias */
+  --surface-hover: #2e2e2e;
+  --card: #1a1a1a; /* alias */
   --card-elevated: #242424; /* alias */
-  
+
   /* Borders */
-  --border: #2A2A2A;
-  --border-strong: #3A3A3A;
-  
+  --border: #2a2a2a;
+  --border-strong: #3a3a3a;
+
   /* Accent */
-  --accent: #FF3B30;
+  --accent: #ff3b30;
   --accent-soft: rgba(255, 59, 48, 0.125);
-  --accent-hover: #FF524A;
+  --accent-hover: #ff524a;
   --accent-muted: rgba(255, 59, 48, 0.1); /* legacy */
-  
+
   /* Text Colors */
-  --text-primary: #FFFFFF;
-  --text-secondary: #8A8A8A;
+  --text-primary: #ffffff;
+  --text-secondary: #8a8a8a;
   --text-muted: #525252;
-  
+
   /* Semantic Colors */
-  --positive: #32D74B;
+  --positive: #32d74b;
   --positive-soft: rgba(50, 215, 75, 0.125);
-  --negative: #FF453A;
+  --negative: #ff453a;
   --negative-soft: rgba(255, 69, 58, 0.125);
-  --warning: #FFD60A;
+  --warning: #ffd60a;
   --warning-soft: rgba(255, 214, 10, 0.125);
-  --info: #0A84FF;
+  --info: #0a84ff;
   --info-soft: rgba(10, 132, 255, 0.125);
-  
-  /* Legacy aliases */
-  --success: #32D74B;
-  --success-bg: rgba(50, 215, 75, 0.1);
-  --error: #FF453A;
-  --error-bg: rgba(255, 69, 58, 0.1);
-  --warning-bg: rgba(255, 214, 10, 0.1);
-  
+
   /* Activity Type Colors */
-  --type-file: #64D2FF;
+  --type-file: #64d2ff;
   --type-file-bg: rgba(100, 210, 255, 0.125);
-  --type-search: #FFD60A;
+  --type-search: #ffd60a;
   --type-search-bg: rgba(255, 214, 10, 0.125);
-  --type-message: #32D74B;
+  --type-message: #32d74b;
   --type-message-bg: rgba(50, 215, 75, 0.125);
-  --type-command: #BF5AF2;
+  --type-command: #bf5af2;
   --type-command-bg: rgba(191, 90, 242, 0.125);
-  --type-cron: #FF375F;
+  --type-cron: #ff375f;
   --type-cron-bg: rgba(255, 55, 95, 0.125);
-  --type-security: #FF453A;
+  --type-security: #ff453a;
   --type-security-bg: rgba(255, 69, 58, 0.125);
-  --type-build: #FF9F0A;
+  --type-build: #ff9f0a;
   --type-build-bg: rgba(255, 159, 10, 0.125);
-  
+
   /* Typography - uses Next.js font variables */
   --font-heading: var(--font-sora), system-ui, sans-serif;
   --font-body: var(--font-inter), system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), monospace;
-  
+
   /* Spacing */
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
-  
+
   /* Shadows */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
@@ -87,7 +80,9 @@
   --layout-statusbar-h: 32px;
   --layout-main-pad-y: 24px;
   --layout-sidebar-w: 256px;
-  --layout-main-inset-y: calc(var(--layout-topbar-h) + var(--layout-statusbar-h) + var(--layout-main-pad-y) * 2);
+  --layout-main-inset-y: calc(
+    var(--layout-topbar-h) + var(--layout-statusbar-h) + var(--layout-main-pad-y) * 2
+  );
 }
 
 /* Base Styles */
@@ -118,13 +113,20 @@ body {
 }
 
 /* Heading styles */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-heading);
   letter-spacing: -0.02em;
 }
 
 /* Code/Mono */
-code, pre, .font-mono {
+code,
+pre,
+.font-mono {
   font-family: var(--font-mono);
 }
 
@@ -169,12 +171,14 @@ code, pre, .font-mono {
   text-transform: uppercase;
 }
 
-.badge-success, .badge-positive {
+.badge-success,
+.badge-positive {
   background-color: var(--positive-soft);
   color: var(--positive);
 }
 
-.badge-error, .badge-negative {
+.badge-error,
+.badge-negative {
   background-color: var(--negative-soft);
   color: var(--negative);
 }
@@ -349,6 +353,18 @@ code, pre, .font-mono {
   height: 2px;
   background-color: var(--accent);
   border-radius: 1px;
+}
+
+/* Lifting card for journey stage summaries — accent color set via --stage-accent */
+.stage-card {
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.stage-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--stage-accent) 13%, transparent);
 }
 
 /* File tree item */

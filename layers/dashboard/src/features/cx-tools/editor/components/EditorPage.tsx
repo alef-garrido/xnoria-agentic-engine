@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 import { EditorProvider, useEditor } from "@/features/cx-tools/editor/EditorContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/features/cx-tools/editor/components/ui/button";
 import { DomainEditor } from "@/features/cx-tools/editor/components/DomainEditor";
 import { CauseEditor } from "@/features/cx-tools/editor/components/CauseEditor";
 import { SignalEditor } from "@/features/cx-tools/editor/components/SignalEditor";
@@ -15,22 +15,27 @@ function EditorContent() {
   const { exportJSON, domains, interventions } = useEditor();
 
   const totalCauses = domains.reduce((sum, d) => sum + d.causes.length, 0);
-  const totalSignals = domains.reduce((sum, d) => sum + d.causes.reduce((s2, c) => s2 + c.signals.length, 0), 0);
+  const totalSignals = domains.reduce(
+    (sum, d) => sum + d.causes.reduce((s2, c) => s2 + c.signals.length, 0),
+    0
+  );
   const totalInterventions = Object.keys(interventions).length;
 
   return (
-    <div
-      className="flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)]"
-      style={{ height: "calc(100vh - var(--layout-main-inset-y))" }}
-    >
+    <div className="flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] h-[calc(100vh_-_var(--layout-main-inset-y))]">
       {/* Header */}
       <header className="flex shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--card)] p-4">
         <div>
-          <h1 className="text-xl font-bold tracking-tight" style={{ fontFamily: "var(--font-heading)" }}>
+          <h1 className="text-xl font-bold tracking-tight font-[var(--font-heading)]">
             {t("editorTitle")}
           </h1>
           <p className="text-xs text-[var(--text-muted)]">
-            {t("editorCounts", { domains: domains.length, causes: totalCauses, signals: totalSignals, interventions: totalInterventions })}
+            {t("editorCounts", {
+              domains: domains.length,
+              causes: totalCauses,
+              signals: totalSignals,
+              interventions: totalInterventions,
+            })}
           </p>
         </div>
         <Button onClick={exportJSON} variant="outline" size="sm" className="gap-1.5">

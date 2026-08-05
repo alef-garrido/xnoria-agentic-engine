@@ -32,31 +32,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div
-        style={{
-          position: "fixed",
-          top: "64px",
-          right: "24px",
-          zIndex: 100,
-          display: "flex",
-          flexDirection: "column",
-          gap: "8px",
-        }}
-      >
+      <div className="fixed top-[64px] right-6 z-[100] flex flex-col gap-2">
         {toasts.map((t) => (
           <div
             key={t.id}
+            className="px-5 py-3 rounded-[var(--radius-md)] text-[13px] font-medium border animate-[fadeIn_0.2s_ease] shadow-[var(--shadow-md)]"
             style={{
-              padding: "12px 20px",
-              borderRadius: "var(--radius-md)",
               backgroundColor:
                 t.type === "success" ? "var(--positive-soft)" : "var(--negative-soft)",
               color: t.type === "success" ? "var(--positive)" : "var(--negative)",
-              fontSize: "13px",
-              fontWeight: 500,
-              border: `1px solid ${t.type === "success" ? "var(--positive)" : "var(--negative)"}`,
-              animation: "fadeIn 0.2s ease",
-              boxShadow: "var(--shadow-md)",
+              borderColor: t.type === "success" ? "var(--positive)" : "var(--negative)",
             }}
           >
             {t.message}

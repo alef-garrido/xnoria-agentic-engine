@@ -36,9 +36,9 @@ const POLL_MS = 10_000;
 
 function severityColor(severity: number | null): string {
   if (severity === null) return "var(--text-muted)";
-  if (severity >= 0.8) return "#f87171";
-  if (severity >= 0.5) return "#facc15";
-  return "#4ade80";
+  if (severity >= 0.8) return "var(--severity-high)";
+  if (severity >= 0.5) return "var(--severity-mid)";
+  return "var(--severity-low)";
 }
 
 function timeAgo(iso: string): string {
@@ -96,27 +96,18 @@ export default function LiveSignalsPanel() {
   const selected = contacts.find((c) => c.contact_id === selectedContact) ?? null;
 
   return (
-    <section
-      className="rounded-2xl"
-      style={{ backgroundColor: "var(--card)", border: "1px solid var(--border)" }}
-    >
+    <section className="rounded-2xl bg-[var(--card)] border border-[var(--border)]">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-5 pb-4">
         <div className="flex items-center gap-3">
-          <div
-            className="flex items-center justify-center w-9 h-9 rounded-lg"
-            style={{ backgroundColor: "var(--accent-soft)" }}
-          >
-            <Radio className="w-4 h-4" style={{ color: "var(--accent)" }} />
+          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-[var(--accent-soft)]">
+            <Radio className="w-4 h-4 text-[var(--accent)]" />
           </div>
           <div>
-            <h2
-              className="text-sm font-bold"
-              style={{ fontFamily: "var(--font-heading)", color: "var(--text-primary)" }}
-            >
+            <h2 className="text-sm font-bold font-[var(--font-heading)] text-[var(--text-primary)]">
               {t("liveTitle")}
             </h2>
-            <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+            <p className="text-xs text-[var(--text-muted)]">
               {t("liveSubtitle")}
               {lastUpdated && (
                 <span className="ml-1">
@@ -126,14 +117,7 @@ export default function LiveSignalsPanel() {
             </p>
           </div>
         </div>
-        <div
-          className="flex items-center gap-2 text-xs font-mono px-2.5 py-1 rounded-full"
-          style={{
-            backgroundColor: "var(--card-elevated)",
-            border: "1px solid var(--border)",
-            color: "var(--text-secondary)",
-          }}
-        >
+        <div className="flex items-center gap-2 text-xs font-mono px-2.5 py-1 rounded-full bg-[var(--card-elevated)] border border-[var(--border)] text-[var(--text-secondary)]">
           <span
             className="w-2 h-2 rounded-full animate-pulse"
             style={{
@@ -152,37 +136,23 @@ export default function LiveSignalsPanel() {
       <div className="grid lg:grid-cols-2 gap-0 lg:gap-6 p-5 pt-0">
         {/* Contacts list */}
         <div className="flex flex-col min-h-[220px]">
-          <div
-            className="flex items-center gap-2 mb-2 text-[10px] uppercase tracking-widest font-bold"
-            style={{ color: "var(--text-muted)" }}
-          >
+          <div className="flex items-center gap-2 mb-2 text-[10px] uppercase tracking-widest font-bold text-[var(--text-muted)]">
             <Users className="w-3 h-3" /> {t("contacts")}
           </div>
           {loading ? (
-            <div
-              className="flex-1 flex items-center justify-center text-sm"
-              style={{ color: "var(--text-muted)" }}
-            >
+            <div className="flex-1 flex items-center justify-center text-sm text-[var(--text-muted)]">
               {t("loading")}
             </div>
           ) : error ? (
-            <div
-              className="flex-1 flex items-center justify-center gap-2 text-sm"
-              style={{ color: "var(--accent)" }}
-            >
+            <div className="flex-1 flex items-center justify-center gap-2 text-sm text-[var(--accent)]">
               <AlertTriangle className="w-4 h-4" /> {error}
             </div>
           ) : contacts.length === 0 ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center max-w-[320px] p-4">
-                <Activity
-                  className="w-8 h-8 mx-auto mb-3 opacity-40"
-                  style={{ color: "var(--text-muted)" }}
-                />
-                <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                  {t("noSignalsYet")}
-                </p>
-                <p className="text-xs mt-1 leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                <Activity className="w-8 h-8 mx-auto mb-3 opacity-40 text-[var(--text-muted)]" />
+                <p className="text-sm text-[var(--text-secondary)]">{t("noSignalsYet")}</p>
+                <p className="text-xs mt-1 leading-relaxed text-[var(--text-muted)]">
                   {t("noSignalsHint")}
                 </p>
               </div>
@@ -201,32 +171,23 @@ export default function LiveSignalsPanel() {
                   }}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span
-                      className="font-mono text-xs font-semibold truncate"
-                      style={{ color: "var(--text-primary)" }}
-                    >
+                    <span className="font-mono text-xs font-semibold truncate text-[var(--text-primary)]">
                       {c.contact_id}
                     </span>
-                    <span
-                      className="text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded"
-                      style={{ backgroundColor: "var(--accent-soft)", color: "var(--accent)" }}
-                    >
+                    <span className="text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-[var(--accent-soft)] text-[var(--accent)]">
                       {c.signal_id ?? "—"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between mt-1.5">
-                    <span className="text-[10px] font-mono" style={{ color: "var(--text-muted)" }}>
+                    <span className="text-[10px] font-mono text-[var(--text-muted)]">
                       {c.stage ?? "?"} · {c.cause_code ?? "?"} ·{" "}
                       {t("sessionsCount", { count: c.session_count })}
                     </span>
-                    <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+                    <span className="text-[10px] text-[var(--text-muted)]">
                       {timeAgo(c.last_seen)}
                     </span>
                   </div>
-                  <div
-                    className="mt-1.5 h-1 rounded-full overflow-hidden"
-                    style={{ backgroundColor: "var(--border)" }}
-                  >
+                  <div className="mt-1.5 h-1 rounded-full overflow-hidden bg-[var(--border)]">
                     <div
                       className="h-full rounded-full"
                       style={{
@@ -244,30 +205,21 @@ export default function LiveSignalsPanel() {
         {/* Signal history */}
         <div className="flex flex-col min-h-[220px] border-t lg:border-t-0 lg:border-l border-[var(--border)] pt-4 lg:pt-0 lg:pl-6">
           <div className="flex items-center justify-between mb-2">
-            <div
-              className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold"
-              style={{ color: "var(--text-muted)" }}
-            >
+            <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-[var(--text-muted)]">
               <Radio className="w-3 h-3" /> {t("signalHistory")}
             </div>
             {selected && (
-              <span className="font-mono text-[10px]" style={{ color: "var(--text-secondary)" }}>
+              <span className="font-mono text-[10px] text-[var(--text-secondary)]">
                 {selected.contact_id}
               </span>
             )}
           </div>
           {!selected ? (
-            <div
-              className="flex-1 flex items-center justify-center text-sm"
-              style={{ color: "var(--text-muted)" }}
-            >
+            <div className="flex-1 flex items-center justify-center text-sm text-[var(--text-muted)]">
               {t("selectContact")}
             </div>
           ) : signals.length === 0 ? (
-            <div
-              className="flex-1 flex items-center justify-center text-sm"
-              style={{ color: "var(--text-muted)" }}
-            >
+            <div className="flex-1 flex items-center justify-center text-sm text-[var(--text-muted)]">
               {t("noEvents")}
             </div>
           ) : (
@@ -275,11 +227,7 @@ export default function LiveSignalsPanel() {
               {signals.map((s) => (
                 <div
                   key={s.session_id}
-                  className="rounded-xl p-3"
-                  style={{
-                    backgroundColor: "var(--card-elevated)",
-                    border: "1px solid var(--border)",
-                  }}
+                  className="rounded-xl p-3 bg-[var(--card-elevated)] border border-[var(--border)]"
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span
@@ -288,23 +236,17 @@ export default function LiveSignalsPanel() {
                     >
                       {s.signal_id}
                     </span>
-                    <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
+                    <span className="text-[10px] text-[var(--text-muted)]">
                       {timeAgo(s.created_at)}
                     </span>
                   </div>
-                  <div
-                    className="mt-1 text-[10px] font-mono"
-                    style={{ color: "var(--text-secondary)" }}
-                  >
+                  <div className="mt-1 text-[10px] font-mono text-[var(--text-secondary)]">
                     {s.cause_code ?? "?"} · {s.stage ?? "?"} · {s.channel}
                     {s.signal_severity !== null && (
                       <> · {t("severityLabel", { value: Math.round(s.signal_severity * 100) })}</>
                     )}
                   </div>
-                  <p
-                    className="mt-1.5 text-xs leading-relaxed line-clamp-2"
-                    style={{ color: "var(--text-muted)" }}
-                  >
+                  <p className="mt-1.5 text-xs leading-relaxed line-clamp-2 text-[var(--text-muted)]">
                     {s.input}
                   </p>
                 </div>

@@ -16,28 +16,17 @@ export function ToggleSwitch({
       onClick={() => onChange(!checked)}
       role="switch"
       aria-checked={checked}
+      className="relative w-[36px] h-[20px] rounded-[10px] cursor-pointer transition-all duration-200 shrink-0"
       style={{
-        width: "36px",
-        height: "20px",
-        borderRadius: "10px",
         backgroundColor: checked ? activeColor : "var(--surface-elevated)",
         border: `1px solid ${checked ? activeColor : "var(--border-strong)"}`,
-        position: "relative",
-        cursor: "pointer",
-        transition: "all 0.2s ease",
-        flexShrink: 0,
       }}
     >
       <span
+        className="absolute top-[2px] w-[14px] h-[14px] rounded-full transition-all duration-200"
         style={{
-          position: "absolute",
-          top: "2px",
           left: checked ? "18px" : "2px",
-          width: "14px",
-          height: "14px",
-          borderRadius: "50%",
           backgroundColor: checked ? "white" : "var(--text-muted)",
-          transition: "all 0.2s ease",
         }}
       />
     </button>

@@ -6,6 +6,7 @@ import { Clock, ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { getLocale } from "@/i18n/locale";
 import { ActionButtons } from "./ActionButtons";
+import { Badge } from "@/components/ui/Badge";
 import { PayloadEditor } from "./PayloadEditor";
 
 export interface PendingAction {
@@ -49,11 +50,9 @@ export function PendingActionCard({
 
   return (
     <div
-      className="rounded-xl overflow-hidden bg-[var(--surface)] border border-[var(--border)]"
+      className="rounded-xl overflow-hidden bg-[var(--surface)] border border-[var(--border)] border-l-[3px] border-l-[var(--warning)] transition-opacity duration-200"
       style={{
-        borderLeft: "3px solid var(--warning)",
         opacity: isProcessing ? 0.6 : 1,
-        transition: "opacity 0.2s ease",
       }}
     >
       <div className="px-4 py-3">
@@ -61,19 +60,19 @@ export function PendingActionCard({
           <div className="flex-1 min-w-0">
             {/* Action ID + Stage badges */}
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <span className="badge bg-[var(--warning-soft)] text-[var(--warning)]">
+              <Badge className="bg-[var(--warning-soft)] text-[var(--warning)]">
                 <Clock className="w-3 h-3 mr-1 inline-block align-text-bottom" />
                 {t("pending")}
-              </span>
+              </Badge>
               {action.manual_action && (
-                <span className="badge bg-[var(--info-soft)] text-[var(--info)]">
+                <Badge className="bg-[var(--info-soft)] text-[var(--info)]">
                   {t("manual")}
-                </span>
+                </Badge>
               )}
               <span className="text-sm font-semibold font-mono text-[var(--text-primary)]">
                 {action.action_id}
               </span>
-              <span className="badge bg-[var(--info-soft)] text-[var(--info)]">{action.stage}</span>
+              <Badge className="bg-[var(--info-soft)] text-[var(--info)]">{action.stage}</Badge>
             </div>
 
             {/* Contact / Key payload info */}

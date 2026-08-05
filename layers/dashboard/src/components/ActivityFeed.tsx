@@ -8,6 +8,7 @@ import type { LucideIcon } from "lucide-react";
 import { getLocale } from "@/i18n/locale";
 import { usePolling } from "@/hooks/usePolling";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { Badge } from "@/components/ui/Badge";
 import { apiFetch } from "@/lib/client-api";
 
 interface Activity {
@@ -103,18 +104,12 @@ export function ActivityFeed() {
                 <span className="text-[10px] md:text-xs font-semibold uppercase text-[var(--text-primary)]">
                   {activity.action_id}
                 </span>
-                <span
-                  className="badge text-[10px] md:text-xs py-0.5 px-1.5 md:px-2 hidden sm:inline-block outline outline-1 text-[var(--text-secondary)]"
-                  style={{ outlineColor: "var(--border)" }}
-                >
+                <Badge className="hidden sm:inline-block outline outline-1 text-[var(--text-secondary)] outline-[var(--border)]">
                   {activity.stage}
-                </span>
-                <span
-                  className="badge text-[10px] md:text-xs py-0.5 px-1.5 md:px-2"
-                  style={{ backgroundColor: status.bgColor, color: status.color }}
-                >
+                </Badge>
+                <Badge style={{ backgroundColor: status.bgColor, color: status.color }}>
                   {activity.status}
-                </span>
+                </Badge>
               </div>
               <div className="text-xs md:text-sm truncate text-[var(--text-secondary)]">
                 {t("session")}: {activity.session_id.substring(0, 8)}...

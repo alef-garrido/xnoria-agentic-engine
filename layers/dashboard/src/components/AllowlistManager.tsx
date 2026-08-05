@@ -6,11 +6,14 @@ import { useTranslations } from "next-intl";
 import { usePolling } from "@/hooks/usePolling";
 import { useToast } from "@/components/ToastProvider";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { Button } from "@/components/ui/Button";
+import { Input, inputClass } from "@/components/ui/Input";
 import { STAGES } from "@/lib/constants";
 import { getLocale } from "@/i18n/locale";
 import { ApiError, apiFetch } from "@/lib/client-api";
 import { ActionRow, type FilterAction, type ToggleField } from "./allowlist/ActionRow";
 import { AddActionModal, type NewActionInput } from "./allowlist/AddActionModal";
+import { cn } from "@/lib/utils";
 
 export function AllowlistManager() {
   const t = useTranslations("allowlist");
@@ -135,12 +138,12 @@ export function AllowlistManager() {
         {/* Search */}
         <div className="relative flex-1 min-w-[180px]">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-          <input
+          <Input
             type="text"
             placeholder={t("searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="input w-full text-[13px] pl-9 pr-3 py-2"
+            className="w-full"
           />
         </div>
 
@@ -148,7 +151,7 @@ export function AllowlistManager() {
         <select
           value={stageFilter}
           onChange={(e) => setStageFilter(e.target.value)}
-          className="input text-[13px] px-3 py-2 min-w-[100px] cursor-pointer"
+          className={cn(inputClass, "min-w-[100px] cursor-pointer")}
         >
           <option value="">{t("allStages")}</option>
           {STAGES.map((s) => (
@@ -159,15 +162,15 @@ export function AllowlistManager() {
         </select>
 
         {/* Refresh */}
-        <button onClick={refresh} className="btn-outline px-3 py-2 text-[12px]">
+        <Button onClick={refresh} variant="outline" className="text-[12px]">
           <RefreshCw className="w-3.5 h-3.5" />
-        </button>
+        </Button>
 
         {/* Add */}
-        <button onClick={() => setShowAddModal(true)} className="btn-primary px-4 py-2 text-[12px]">
+        <Button onClick={() => setShowAddModal(true)} className="text-[12px]">
           <Plus className="w-4 h-4" />
           {t("addAction")}
-        </button>
+        </Button>
       </div>
 
       {/* Table */}

@@ -48,10 +48,7 @@ export function SessionRow({ session }: { session: Session }) {
   };
 
   return (
-    <div
-      className="border-b transition-colors last:border-0"
-      style={{ borderColor: "var(--border)" }}
-    >
+    <div className="border-b transition-colors last:border-0 border-[var(--border)]">
       <div
         className="flex items-center justify-between p-4 cursor-pointer hover:bg-opacity-50"
         style={{ backgroundColor: expanded ? "var(--card-elevated)" : "transparent" }}
@@ -59,16 +56,10 @@ export function SessionRow({ session }: { session: Session }) {
       >
         <div className="flex-1 min-w-0 pr-4 flex flex-col gap-1.5 md:flex-row md:items-center md:gap-4">
           <div className="flex items-center gap-2">
-            <span
-              className="text-xs font-semibold px-2 py-0.5 rounded"
-              style={{ backgroundColor: "var(--accent-soft)", color: "var(--accent)" }}
-            >
+            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-[var(--accent-soft)] text-[var(--accent)]">
               {session.channel}
             </span>
-            <span
-              className="text-xs px-2 py-0.5 rounded outline outline-1 text-[var(--text-secondary)]"
-              style={{ outlineColor: "var(--border)" }}
-            >
+            <span className="text-xs px-2 py-0.5 rounded outline outline-1 text-[var(--text-secondary)] outline-[var(--border)]">
               {session.stage}
             </span>
             <span className="text-xs text-[var(--text-muted)]">{session.contact_id}</span>
@@ -103,7 +94,7 @@ export function SessionRow({ session }: { session: Session }) {
       </div>
 
       {expanded && (
-        <div className="p-4" style={{ backgroundColor: "var(--background)" }}>
+        <div className="p-4 bg-[var(--background)]">
           {loading && (
             <div className="flex items-center justify-center p-4">
               <Loader2 className="w-5 h-5 animate-spin text-[var(--accent)]" />

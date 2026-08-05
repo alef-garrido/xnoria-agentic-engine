@@ -44,42 +44,31 @@ export default function MemoryPage() {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold mb-2" style={{ fontFamily: "var(--font-heading)" }}>
+        <h1 className="text-2xl font-bold mb-2 font-[var(--font-heading)] text-[var(--text-primary)]">
           {t("title")}
         </h1>
-        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-          {t("subtitle")}
-        </p>
+        <p className="text-sm text-[var(--text-muted)]">{t("subtitle")}</p>
       </div>
 
       {/* Search Form */}
       <form onSubmit={handleSearch} className="mb-8">
         <div className="flex gap-3">
           <div className="flex-1 relative">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5"
-              style={{ color: "var(--text-muted)" }}
-            />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--text-muted)]" />
             <input
               type="text"
               value={contactId}
               onChange={(e) => setContactId(e.target.value)}
               placeholder={t("placeholder")}
-              className="w-full pl-10 pr-4 py-3 rounded-lg border"
-              style={{
-                backgroundColor: "var(--card)",
-                borderColor: "var(--border)",
-                color: "var(--text-primary)",
-              }}
+              className="w-full pl-10 pr-4 py-3 rounded-lg border bg-[var(--card)] border-[var(--border)] text-[var(--text-primary)]"
             />
           </div>
           <button
             type="submit"
             disabled={loading || !contactId.trim()}
-            className="px-6 py-3 rounded-lg font-medium transition-colors"
+            className="px-6 py-3 rounded-lg font-medium transition-colors text-[var(--text-primary)]"
             style={{
               backgroundColor: loading ? "var(--border)" : "var(--accent)",
-              color: "var(--text-primary)",
               cursor: loading || !contactId.trim() ? "not-allowed" : "pointer",
             }}
           >
@@ -90,14 +79,7 @@ export default function MemoryPage() {
 
       {/* Error Display */}
       {error && (
-        <div
-          className="p-4 rounded-lg mb-6"
-          style={{
-            backgroundColor: "var(--negative-soft)",
-            border: "1px solid var(--negative)",
-            color: "var(--negative)",
-          }}
-        >
+        <div className="p-4 rounded-lg mb-6 bg-[var(--negative-soft)] border border-[var(--negative)] text-[var(--negative)]">
           <strong>{t("error")}:</strong> {error}
         </div>
       )}
@@ -106,23 +88,15 @@ export default function MemoryPage() {
       {searched && !loading && (
         <div>
           {memories.length === 0 ? (
-            <div
-              className="p-8 rounded-lg text-center"
-              style={{
-                backgroundColor: "var(--card-elevated)",
-                border: "1px solid var(--border)",
-              }}
-            >
-              <p className="text-lg mb-2" style={{ color: "var(--text-secondary)" }}>
-                {t("noMemory")}
-              </p>
-              <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            <div className="p-8 rounded-lg text-center bg-[var(--card-elevated)] border border-[var(--border)]">
+              <p className="text-lg mb-2 text-[var(--text-secondary)]">{t("noMemory")}</p>
+              <p className="text-sm text-[var(--text-muted)]">
                 {t("noMemoryDetail", { contactId })}
               </p>
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+              <p className="text-sm text-[var(--text-muted)]">
                 {t("found", { count: memories.length })}
               </p>
 
@@ -144,29 +118,14 @@ export default function MemoryPage() {
                   return (
                     <div
                       key={index}
-                      className="p-4 rounded-lg border-l-4"
-                      style={{
-                        backgroundColor: "var(--card-elevated)",
-                        borderColor: "var(--accent)",
-                        borderLeftWidth: "4px",
-                      }}
+                      className="p-4 rounded-lg border-l-4 bg-[var(--card-elevated)] border-l-[var(--accent)]"
                     >
                       <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-medium" style={{ color: "var(--text-primary)" }}>
-                          {memory.title}
-                        </h3>
-                        <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-                          {formattedDate}
-                        </span>
+                        <h3 className="font-medium text-[var(--text-primary)]">{memory.title}</h3>
+                        <span className="text-xs text-[var(--text-muted)]">{formattedDate}</span>
                       </div>
                       {memory.content && (
-                        <pre
-                          className="text-sm whitespace-pre-wrap"
-                          style={{
-                            color: "var(--text-secondary)",
-                            fontFamily: "var(--font-mono, monospace)",
-                          }}
-                        >
+                        <pre className="text-sm whitespace-pre-wrap text-[var(--text-secondary)] font-[var(--font-mono)]">
                           {memory.content}
                         </pre>
                       )}
@@ -181,20 +140,10 @@ export default function MemoryPage() {
 
       {/* Initial State */}
       {!searched && !loading && (
-        <div
-          className="p-12 rounded-lg text-center"
-          style={{
-            backgroundColor: "var(--card-elevated)",
-            border: "1px solid var(--border)",
-          }}
-        >
-          <BrainCog className="w-12 h-12 mx-auto mb-4" style={{ color: "var(--text-muted)" }} />
-          <p className="text-lg mb-2" style={{ color: "var(--text-secondary)" }}>
-            {t("searchForContact")}
-          </p>
-          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-            {t("initialHint")}
-          </p>
+        <div className="p-12 rounded-lg text-center bg-[var(--card-elevated)] border border-[var(--border)]">
+          <BrainCog className="w-12 h-12 mx-auto mb-4 text-[var(--text-muted)]" />
+          <p className="text-lg mb-2 text-[var(--text-secondary)]">{t("searchForContact")}</p>
+          <p className="text-sm text-[var(--text-muted)]">{t("initialHint")}</p>
         </div>
       )}
     </div>

@@ -134,16 +134,10 @@ export function JourneyHealthMap() {
             <button
               key={d}
               onClick={() => setDays(d)}
+              className="px-[14px] py-[6px] rounded-[8px] text-[13px] font-semibold cursor-pointer border border-[var(--border)] transition-all duration-200"
               style={{
-                padding: "6px 14px",
-                borderRadius: "8px",
-                fontSize: "13px",
-                fontWeight: 600,
-                cursor: "pointer",
-                border: "1px solid var(--border)",
                 backgroundColor: days === d ? "var(--accent)" : "var(--card)",
                 color: days === d ? "var(--text-primary)" : "var(--text-secondary)",
-                transition: "all 0.2s ease",
               }}
             >
               {d}d
@@ -207,13 +201,7 @@ export function JourneyHealthMap() {
               {loading ? (
                 <Skeleton className="h-12 rounded-lg" />
               ) : (
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr 1fr",
-                    gap: "8px",
-                  }}
-                >
+                <div className="grid grid-cols-3 gap-2">
                   <StageStat label={t("actions")} value={m?.total_actions ?? 0} />
                   <StageStat
                     label={t("execRate")}
@@ -277,31 +265,14 @@ export function JourneyHealthMap() {
                     <div className="flex-1 h-7 rounded-md overflow-hidden relative bg-[var(--card-elevated)]">
                       {/* Executed bar */}
                       <div
+                        className="absolute left-0 top-0 h-full rounded-[6px] opacity-80 transition-[width] duration-500"
                         style={{
-                          position: "absolute",
-                          left: 0,
-                          top: 0,
-                          height: "100%",
                           width: `${total > 0 ? (total / maxTotal) * 100 : 0}%`,
                           backgroundColor: meta.color,
-                          borderRadius: "6px",
-                          opacity: 0.8,
-                          transition: "width 0.5s ease",
                         }}
                       />
                       {total > 0 && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            left: "8px",
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            fontSize: "11px",
-                            fontWeight: 700,
-                            color: "#fff",
-                            textShadow: "0 1px 2px rgba(0,0,0,0.3)",
-                          }}
-                        >
+                        <div className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] font-bold text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.3)]">
                           {m?.executed ?? 0} {t("exec")} / {m?.rejected ?? 0} {t("rej")} /{" "}
                           {m?.pending_hitl ?? 0} {t("hitl")}
                         </div>

@@ -7,21 +7,13 @@ import { ToastProvider } from "@/components/ToastProvider";
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <ToastProvider>
-      <div style={{ minHeight: "100vh", display: "flex" }}>
+      <div className="flex min-h-screen">
         <Sidebar />
 
-        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        <div className="flex flex-1 flex-col">
           <TopBar />
 
-          <main
-            style={{
-              marginLeft: "var(--layout-sidebar-w)", // Width of sidebar (16rem = 256px)
-              marginTop: "var(--layout-topbar-h)", // Height of top bar
-              marginBottom: "var(--layout-statusbar-h)", // Height of status bar
-              minHeight: "calc(100vh - var(--layout-topbar-h) - var(--layout-statusbar-h))",
-              padding: "var(--layout-main-pad-y)",
-            }}
-          >
+          <main className="ml-[var(--layout-sidebar-w)] mt-[var(--layout-topbar-h)] mb-[var(--layout-statusbar-h)] min-h-[calc(100vh_-_var(--layout-topbar-h)_-_var(--layout-statusbar-h))] p-[var(--layout-main-pad-y)]">
             {children}
           </main>
 

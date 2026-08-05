@@ -52,53 +52,30 @@ function LoginForm() {
   };
 
   return (
-    <div
-      className="rounded-xl p-10"
-      style={{
-        backgroundColor: "var(--card)",
-        border: "1px solid var(--border)",
-      }}
-    >
+    <div className="rounded-xl p-10 bg-[var(--card)] border border-[var(--border)]">
       {/* Header */}
       <div className="text-center mb-8 flex flex-col items-center gap-2">
         <div className="flex items-center gap-2.5">
-          <Terminal className="w-7 h-7" style={{ color: "var(--accent)" }} />
+          <Terminal className="w-7 h-7 text-[var(--accent)]" />
           <span className="text-2xl">🧠</span>
-          <h1
-            className="text-xl font-bold"
-            style={{
-              fontFamily: "var(--font-heading)",
-              color: "var(--text-primary)",
-              letterSpacing: "-0.5px",
-            }}
-          >
+          <h1 className="text-xl font-bold font-[var(--font-heading)] text-[var(--text-primary)] -tracking-[0.5px]">
             {BRANDING.agentName}
           </h1>
         </div>
-        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-          {t("subtitle")}
-        </p>{" "}
+        <p className="text-sm text-[var(--text-secondary)]">{t("subtitle")}</p>{" "}
       </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Handle */}
         <div className="relative">
-          <User
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px]"
-            style={{ color: "var(--text-muted)" }}
-          />
+          <User className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[var(--text-muted)]" />
           <input
             type="text"
             id="handle"
             value={handle}
             onChange={(e) => setHandle(e.target.value.toLowerCase().trim())}
-            className="w-full pl-11 pr-4 py-3 rounded-lg text-sm"
-            style={{
-              backgroundColor: "var(--card-elevated)",
-              border: "1px solid var(--border)",
-              color: "var(--text-primary)",
-            }}
+            className="w-full pl-11 pr-4 py-3 rounded-lg text-sm bg-[var(--card-elevated)] border border-[var(--border)] text-[var(--text-primary)]"
             placeholder={t("username")}
             autoComplete="username"
             required
@@ -107,21 +84,13 @@ function LoginForm() {
 
         {/* Password */}
         <div className="relative">
-          <Lock
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px]"
-            style={{ color: "var(--text-muted)" }}
-          />
+          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[var(--text-muted)]" />
           <input
             type="password"
             id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 rounded-lg text-sm"
-            style={{
-              backgroundColor: "var(--card-elevated)",
-              border: "1px solid var(--border)",
-              color: "var(--text-primary)",
-            }}
+            className="w-full pl-11 pr-4 py-3 rounded-lg text-sm bg-[var(--card-elevated)] border border-[var(--border)] text-[var(--text-primary)]"
             placeholder={t("password")}
             autoComplete="current-password"
             required
@@ -129,13 +98,7 @@ function LoginForm() {
         </div>
 
         {error && (
-          <div
-            className="flex items-center gap-2 text-sm px-4 py-3 rounded-lg"
-            style={{
-              backgroundColor: "var(--negative-soft)",
-              color: "var(--negative)",
-            }}
-          >
+          <div className="flex items-center gap-2 text-sm px-4 py-3 rounded-lg bg-[var(--negative-soft)] text-[var(--negative)]">
             <AlertCircle className="w-4 h-4 shrink-0" />
             {error}
           </div>
@@ -144,11 +107,7 @@ function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full font-semibold py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-          style={{
-            backgroundColor: "var(--accent)",
-            color: "white",
-          }}
+          className="w-full font-semibold py-2.5 px-4 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 bg-[var(--accent)] text-white"
         >
           <KeyRound className="w-4 h-4" />
           {loading ? t("checking") : t("signIn")}
@@ -156,7 +115,7 @@ function LoginForm() {
       </form>
 
       {/* Footer */}
-      <p className="text-center text-xs mt-6" style={{ color: "var(--text-muted)" }}>
+      <p className="text-center text-xs mt-6 text-[var(--text-muted)]">
         {BRANDING.agentName} CX Intelligence Engine
       </p>
     </div>
@@ -165,20 +124,11 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-4 -ml-64"
-      style={{ backgroundColor: "var(--background)" }}
-    >
+    <div className="min-h-screen flex items-center justify-center p-4 -ml-[var(--layout-sidebar-w)] bg-[var(--background)]">
       <div className="w-full max-w-md">
         <Suspense
           fallback={
-            <div
-              className="rounded-xl p-10 animate-pulse"
-              style={{
-                backgroundColor: "var(--card)",
-                border: "1px solid var(--border)",
-              }}
-            >
+            <div className="rounded-xl p-10 animate-pulse bg-[var(--card)] border border-[var(--border)]">
               <div className="h-8 bg-gray-700 rounded mb-6" />
               <div className="h-12 bg-gray-700 rounded mb-4" />
               <div className="h-12 bg-gray-700 rounded mb-4" />

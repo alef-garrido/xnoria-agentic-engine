@@ -34,7 +34,7 @@ export default function WheelChart() {
     }
 
     const midAngleDeg = ((domainIndex + 0.5) * sliceAngle * 180) / Math.PI;
-    // We reverse the old behavior to zoom IN (e.g. 1.25x) 
+    // We reverse the old behavior to zoom IN (e.g. 1.25x)
     // and translate it substantially down (ty: 180) to keep the expanded top-slice fully visible in the viewport
     return { rotation: -midAngleDeg, scale: 1.25, ty: 180 };
   }, [viewState, selectedDomain, domains, sliceAngle]);
@@ -51,15 +51,14 @@ export default function WheelChart() {
       >
         <svg
           viewBox="-500 -500 1000 1000"
-          className="w-full h-full max-w-[1000px] max-h-[1000px]"
-          style={{ overflow: "visible" }}
+          className="w-full h-full max-w-[1000px] max-h-[1000px] overflow-visible"
         >
           {/* Wheel Rotation Group using Native CSS */}
           <g
             style={{
               transform: `rotate(${rotation}deg)`,
               transformOrigin: "0 0",
-              transition: "transform 0.6s ease-in-out"
+              transition: "transform 0.6s ease-in-out",
             }}
           >
             {/* The absolute boundary of the Chart is 530, the outermost Compass layer wraps this perfectly */}
@@ -89,64 +88,69 @@ export default function WheelChart() {
 
             {/* Cause slices (outer ring) */}
             <AnimatePresence>
-              {viewState !== "home" && selectedDomain && (() => {
-                const domainIndex = domains.findIndex(d => d.id === selectedDomain.id);
-                const domainStartAngle = domainIndex * sliceAngle;
-                const causeCount = selectedDomain.causes.length;
-                const causeSliceAngle = sliceAngle / causeCount;
+              {viewState !== "home" &&
+                selectedDomain &&
+                (() => {
+                  const domainIndex = domains.findIndex((d) => d.id === selectedDomain.id);
+                  const domainStartAngle = domainIndex * sliceAngle;
+                  const causeCount = selectedDomain.causes.length;
+                  const causeSliceAngle = sliceAngle / causeCount;
 
-                return (
-                  <>
-                    {/* Render Causes */}
-                    {selectedDomain.causes.map((cause, ci) => {
-                      const isNotSelectedWhenSignalActive = viewState === "signal" && selectedCause?.id !== cause.id;
+                  return (
+                    <>
+                      {/* Render Causes */}
+                      {selectedDomain.causes.map((cause, ci) => {
+                        const isNotSelectedWhenSignalActive =
+                          viewState === "signal" && selectedCause?.id !== cause.id;
 
-                      const cStart = domainStartAngle + ci * causeSliceAngle;
-                      const cEnd = domainStartAngle + (ci + 1) * causeSliceAngle;
+                        const cStart = domainStartAngle + ci * causeSliceAngle;
+                        const cEnd = domainStartAngle + (ci + 1) * causeSliceAngle;
 
-                      return (
-                        <AnimatePresence key={`cause-${cause.id}`}>
-                          {!isNotSelectedWhenSignalActive && (
-                            <CauseSlice
-                              cause={cause}
+                        return (
+                          <AnimatePresence key={`cause-${cause.id}`}>
+                            {!isNotSelectedWhenSignalActive && (
+                              <CauseSlice
+                                cause={cause}
+                                domainColor={selectedDomain.color}
+                                startAngle={cStart}
+                                endAngle={cEnd}
+                                innerRadius={CAUSE_INNER}
+                                outerRadius={CAUSE_OUTER}
+                                index={ci}
+                                wheelRotation={rotation}
+                              />
+                            )}
+                          </AnimatePresence>
+                        );
+                      })}
+
+                      {/* Render Signals when a cause is selected */}
+                      {(viewState === "cause" || viewState === "signal") &&
+                        selectedCause &&
+                        (() => {
+                          const signalCount = selectedCause.signals.length;
+                          if (signalCount === 0) return null;
+
+                          // HYBRID EXPANSION: Signals take the FULL domain width
+                          const signalSliceAngle = sliceAngle / signalCount;
+
+                          return selectedCause.signals.map((signal, si) => (
+                            <SignalSlice
+                              key={`signal-${signal.id}`}
+                              signal={signal}
                               domainColor={selectedDomain.color}
-                              startAngle={cStart}
-                              endAngle={cEnd}
-                              innerRadius={CAUSE_INNER}
-                              outerRadius={CAUSE_OUTER}
-                              index={ci}
+                              startAngle={domainStartAngle + si * signalSliceAngle}
+                              endAngle={domainStartAngle + (si + 1) * signalSliceAngle}
+                              innerRadius={SIGNAL_INNER}
+                              outerRadius={SIGNAL_OUTER}
+                              index={si}
                               wheelRotation={rotation}
                             />
-                          )}
-                        </AnimatePresence>
-                      );
-                    })}
-
-                    {/* Render Signals when a cause is selected */}
-                    {(viewState === "cause" || viewState === "signal") && selectedCause && (() => {
-                      const signalCount = selectedCause.signals.length;
-                      if (signalCount === 0) return null;
-
-                      // HYBRID EXPANSION: Signals take the FULL domain width
-                      const signalSliceAngle = sliceAngle / signalCount;
-
-                      return selectedCause.signals.map((signal, si) => (
-                        <SignalSlice
-                          key={`signal-${signal.id}`}
-                          signal={signal}
-                          domainColor={selectedDomain.color}
-                          startAngle={domainStartAngle + si * signalSliceAngle}
-                          endAngle={domainStartAngle + (si + 1) * signalSliceAngle}
-                          innerRadius={SIGNAL_INNER}
-                          outerRadius={SIGNAL_OUTER}
-                          index={si}
-                          wheelRotation={rotation}
-                        />
-                      ));
-                    })()}
-                  </>
-                );
-              })()}
+                          ));
+                        })()}
+                    </>
+                  );
+                })()}
             </AnimatePresence>
           </g>
 

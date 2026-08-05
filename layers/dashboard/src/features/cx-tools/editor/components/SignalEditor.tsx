@@ -4,13 +4,35 @@ import { useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { useEditor } from "@/features/cx-tools/editor/EditorContext";
 import { EntityDialog } from "./EntityDialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/features/cx-tools/editor/components/ui/button";
+import { Input } from "@/features/cx-tools/editor/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import type { Signal } from "@/features/cx-tools/shared/types/wheel";
 
@@ -65,7 +87,8 @@ export function SignalEditor() {
     );
   }, [domains]);
 
-  const filtered = filterDomain === "ALL" ? flatSignals : flatSignals.filter((fs) => fs.domainId === filterDomain);
+  const filtered =
+    filterDomain === "ALL" ? flatSignals : flatSignals.filter((fs) => fs.domainId === filterDomain);
 
   const selectedDomainCauses = useMemo(() => {
     const d = domains.find((dm) => dm.id === formDomainId);
@@ -150,7 +173,9 @@ export function SignalEditor() {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold text-[var(--text-primary)]">{t("signalsTitle")}</h3>
-          <p className="text-sm text-[var(--text-muted)]">{t("diagnosticSignals", { count: flatSignals.length })}</p>
+          <p className="text-sm text-[var(--text-muted)]">
+            {t("diagnosticSignals", { count: flatSignals.length })}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-[180px]">
@@ -163,7 +188,10 @@ export function SignalEditor() {
                 {domains.map((d) => (
                   <SelectItem key={d.id} value={d.id}>
                     <span className="flex items-center gap-2">
-                      <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: d.color }} />
+                      <span
+                        className="inline-block h-2 w-2 rounded-full"
+                        style={{ backgroundColor: d.color }}
+                      />
                       {d.name}
                     </span>
                   </SelectItem>
@@ -191,27 +219,53 @@ export function SignalEditor() {
           </TableHeader>
           <TableBody>
             {filtered.map((fs) => (
-              <TableRow key={fs.signal.id} className="cursor-pointer hover:bg-[var(--surface-hover)]" onClick={() => openEdit(fs)}>
+              <TableRow
+                key={fs.signal.id}
+                className="cursor-pointer hover:bg-[var(--surface-hover)]"
+                onClick={() => openEdit(fs)}
+              >
                 <TableCell className="font-mono text-xs">{fs.signal.id}</TableCell>
                 <TableCell className="font-medium">{fs.signal.name}</TableCell>
                 <TableCell>
                   <span className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: fs.domainColor }} />
-                    <span className="font-mono text-xs text-[var(--text-secondary)]">{fs.causeCode}</span>
+                    <span
+                      className="h-2 w-2 rounded-full"
+                      style={{ backgroundColor: fs.domainColor }}
+                    />
+                    <span className="font-mono text-xs text-[var(--text-secondary)]">
+                      {fs.causeCode}
+                    </span>
                   </span>
                 </TableCell>
-                <TableCell className={`text-center font-mono text-sm ${severityColor(fs.signal.severity ?? 0)}`}>
+                <TableCell
+                  className={`text-center font-mono text-sm ${severityColor(fs.signal.severity ?? 0)}`}
+                >
                   {((fs.signal.severity ?? 0) * 100).toFixed(0)}%
                 </TableCell>
                 <TableCell className="text-center text-xs text-[var(--text-secondary)]">
-                  {LEVELS.find((l) => l.value === fs.signal.level) ? t(LEVELS.find((l) => l.value === fs.signal.level)!.label) : fs.signal.level}
+                  {LEVELS.find((l) => l.value === fs.signal.level)
+                    ? t(LEVELS.find((l) => l.value === fs.signal.level)!.label)
+                    : fs.signal.level}
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-[var(--text-secondary)] hover:text-[var(--text-primary)]" onClick={() => openEdit(fs)}>
+                  <div
+                    className="flex items-center justify-end gap-1"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                      onClick={() => openEdit(fs)}
+                    >
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-red-400/60 hover:text-red-400" onClick={() => setDeleteTarget(fs)}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-red-400/60 hover:text-red-400"
+                      onClick={() => setDeleteTarget(fs)}
+                    >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
@@ -227,20 +281,31 @@ export function SignalEditor() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         title={editTarget ? t("editSignal") : t("addSignalTitle")}
-        description={editTarget ? t("editingEntity", { name: editTarget.signal.id }) : t("createSignalDesc")}
+        description={
+          editTarget ? t("editingEntity", { name: editTarget.signal.id }) : t("createSignalDesc")
+        }
         onSave={handleSave}
       >
         <div className="grid max-h-[400px] gap-3 overflow-y-auto pr-2">
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="mb-1 block">{t("colDomain")}</Label>
-              <Select value={formDomainId} onValueChange={(v) => { setFormDomainId(v); setFormCauseId(""); }} disabled={!!editTarget}>
+              <Select
+                value={formDomainId}
+                onValueChange={(v) => {
+                  setFormDomainId(v);
+                  setFormCauseId("");
+                }}
+                disabled={!!editTarget}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {domains.map((d) => (
-                    <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                    <SelectItem key={d.id} value={d.id}>
+                      {d.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -253,7 +318,9 @@ export function SignalEditor() {
                 </SelectTrigger>
                 <SelectContent>
                   {selectedDomainCauses.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.code} — {c.name}</SelectItem>
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.code} — {c.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -261,15 +328,34 @@ export function SignalEditor() {
           </div>
           <div>
             <Label className="mb-1 block">{t("fieldSignalId")}</Label>
-            <Input value={formId} onChange={(e) => setFormId(e.target.value.toUpperCase())} placeholder={t("placeholderSignalId")} className="font-mono" disabled={!!editTarget} />
+            <Input
+              value={formId}
+              onChange={(e) => setFormId(e.target.value.toUpperCase())}
+              placeholder={t("placeholderSignalId")}
+              className="font-mono"
+              disabled={!!editTarget}
+            />
           </div>
           <div>
             <Label className="mb-1 block">{t("fieldName")}</Label>
-            <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder={t("placeholderSignalName")} />
+            <Input
+              value={formName}
+              onChange={(e) => setFormName(e.target.value)}
+              placeholder={t("placeholderSignalName")}
+            />
           </div>
           <div>
-            <Label className="mb-1 block">{t("severityValue", { value: (formSeverity * 100).toFixed(0) })}</Label>
-            <Slider value={[formSeverity]} onValueChange={([v]) => setFormSeverity(v)} min={0} max={1} step={0.05} className="mt-2" />
+            <Label className="mb-1 block">
+              {t("severityValue", { value: (formSeverity * 100).toFixed(0) })}
+            </Label>
+            <Slider
+              value={[formSeverity]}
+              onValueChange={([v]) => setFormSeverity(v)}
+              min={0}
+              max={1}
+              step={0.05}
+              className="mt-2"
+            />
           </div>
           <div>
             <Label className="mb-1 block">{t("fieldLevel")}</Label>
@@ -279,18 +365,36 @@ export function SignalEditor() {
               </SelectTrigger>
               <SelectContent>
                 {LEVELS.map((l) => (
-                  <SelectItem key={l.value} value={String(l.value)}>{l.value} — {t(l.label)}</SelectItem>
+                  <SelectItem key={l.value} value={String(l.value)}>
+                    {l.value} — {t(l.label)}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label className="mb-1 block">{t("fieldIndicators")} <span className="text-[var(--text-muted)]">{t("fieldIndicatorHint")}</span></Label>
-            <Input value={formIndicators} onChange={(e) => setFormIndicators(e.target.value)} placeholder={t("placeholderIndicator")} className="font-mono text-xs" />
+            <Label className="mb-1 block">
+              {t("fieldIndicators")}{" "}
+              <span className="text-[var(--text-muted)]">{t("fieldIndicatorHint")}</span>
+            </Label>
+            <Input
+              value={formIndicators}
+              onChange={(e) => setFormIndicators(e.target.value)}
+              placeholder={t("placeholderIndicator")}
+              className="font-mono text-xs"
+            />
           </div>
           <div>
-            <Label className="mb-1 block">{t("fieldInterventionIds")} <span className="text-[var(--text-muted)]">{t("fieldInterventionHint")}</span></Label>
-            <Input value={formInterventions} onChange={(e) => setFormInterventions(e.target.value)} placeholder={t("placeholderInterventionIds")} className="font-mono text-xs" />
+            <Label className="mb-1 block">
+              {t("fieldInterventionIds")}{" "}
+              <span className="text-[var(--text-muted)]">{t("fieldInterventionHint")}</span>
+            </Label>
+            <Input
+              value={formInterventions}
+              onChange={(e) => setFormInterventions(e.target.value)}
+              placeholder={t("placeholderInterventionIds")}
+              className="font-mono text-xs"
+            />
           </div>
         </div>
       </EntityDialog>
@@ -301,7 +405,10 @@ export function SignalEditor() {
           <AlertDialogHeader>
             <AlertDialogTitle>{t("deleteSignal")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("deleteSignalDesc", { id: deleteTarget?.signal.id ?? "", name: deleteTarget?.signal.name ?? "" })}
+              {t("deleteSignalDesc", {
+                id: deleteTarget?.signal.id ?? "",
+                name: deleteTarget?.signal.name ?? "",
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

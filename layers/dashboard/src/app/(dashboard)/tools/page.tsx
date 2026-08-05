@@ -36,51 +36,30 @@ export default async function ToolsLanding() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1
-          className="text-2xl font-bold tracking-tight"
-          style={{ fontFamily: "var(--font-heading)", color: "var(--text-primary)" }}
-        >
+        <h1 className="text-2xl font-bold tracking-tight font-[var(--font-heading)] text-[var(--text-primary)]">
           {t("title")}
         </h1>
-        <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
-          {t("subtitle")}
-        </p>
+        <p className="mt-1 text-sm text-[var(--text-secondary)]">{t("subtitle")}</p>
       </div>
 
-      <div
-        className="grid gap-4"
-        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))" }}
-      >
+      <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(240px,1fr))]">
         {TOOLS.map((tool) => {
           const Icon = tool.icon;
           return (
             <Link
               key={tool.href}
               href={tool.href}
-              className="group flex flex-col gap-3 rounded-xl border p-5 transition-colors"
-              style={{
-                backgroundColor: "var(--card)",
-                borderColor: "var(--border)",
-              }}
+              className="group flex flex-col gap-3 rounded-xl border p-5 transition-colors bg-[var(--card)] border-[var(--border)]"
             >
               <div className="flex items-center justify-between">
-                <Icon
-                  className="w-6 h-6"
-                  style={{ color: "var(--accent)" }}
-                />
-                <ChevronRight
-                  className="w-5 h-5 transition-transform group-hover:translate-x-1"
-                  style={{ color: "var(--text-muted)" }}
-                />
+                <Icon className="w-6 h-6 text-[var(--accent)]" />
+                <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1 text-[var(--text-muted)]" />
               </div>
               <div>
-                <div
-                  className="font-semibold"
-                  style={{ fontFamily: "var(--font-heading)", color: "var(--text-primary)" }}
-                >
+                <div className="font-semibold font-[var(--font-heading)] text-[var(--text-primary)]">
                   {tool.label}
                 </div>
-                <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--text-secondary)" }}>
+                <p className="mt-1 text-sm leading-relaxed text-[var(--text-secondary)]">
                   {tool.description}
                 </p>
               </div>

@@ -1,6 +1,9 @@
 "use client";
 
-import { CompassDataProvider, useCompassData } from "@/features/cx-tools/compass/context/CompassDataContext";
+import {
+  CompassDataProvider,
+  useCompassData,
+} from "@/features/cx-tools/compass/context/CompassDataContext";
 import { WheelProvider, useWheel } from "@/features/cx-tools/compass/context/WheelContext";
 import { cxTokens } from "@/features/cx-tools/shared/theme/cxTokens";
 import WheelChart from "./WheelChart";
@@ -36,7 +39,6 @@ function ViewToggle({ compact = false }: { compact?: boolean }) {
               layoutId={compact ? "active-view-pill-mobile" : "active-view-pill"}
               className="absolute inset-0 bg-[var(--accent)] rounded-full shadow-sm"
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              style={{ zIndex: -1 }}
             />
           )}
           {mode.label}
@@ -51,19 +53,12 @@ function CompassContent() {
   const { viewMode } = useWheel();
 
   return (
-    <div
-      className="relative flex flex-col overflow-hidden"
-      style={{
-        height: "calc(100vh - var(--layout-main-inset-y))",
-        backgroundColor: "var(--bg)",
-        color: "var(--text-primary)",
-      }}
-    >
+    <div className="relative flex flex-col overflow-hidden h-[calc(100vh_-_var(--layout-main-inset-y))] bg-[var(--bg)] text-[var(--text-primary)]">
       {/* Top Nav Bar */}
       <header className="flex items-center justify-between p-4 border-b border-white/5 bg-black/20 backdrop-blur-sm z-10 gap-4">
         {/* Left: App Title */}
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-bold tracking-tight text-white m-0 leading-none" style={{ fontFamily: "var(--font-heading)" }}>
+          <h1 className="text-xl font-bold tracking-tight text-white m-0 leading-none font-[var(--font-heading)]">
             {wheelData.wheel_name}
           </h1>
         </div>
@@ -83,7 +78,9 @@ function CompassContent() {
       </header>
 
       {/* Sub Header for Breadcrumbs */}
-      <div className={`flex items-center justify-between px-4 z-10 w-full ${viewMode === "wheel" ? "p-4 min-h-[56px]" : "hidden"}`}>
+      <div
+        className={`flex items-center justify-between px-4 z-10 w-full ${viewMode === "wheel" ? "p-4 min-h-[56px]" : "hidden"}`}
+      >
         <Breadcrumbs />
       </div>
 

@@ -1,8 +1,15 @@
 "use client";
 
-import React, { createContext, useContext, useCallback, useEffect, useState, type ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useCallback,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import type { Domain, Cause, Signal, WheelData } from "@/features/cx-tools/shared/types/wheel";
-import { wheelDataEn } from "@/features/cx-tools/shared/data/wheelDataEn";
+import { resolveWheelData } from "@/features/cx-tools/shared/data/wheelStructure";
 import { getAllInterventions } from "@/features/cx-tools/shared/domain/interventionRegistry";
 
 const STORAGE_WHEEL_KEY = "xnoria:editor:wheelData";
@@ -33,7 +40,12 @@ export interface EditorContextValue {
 
   /* Signal CRUD */
   addSignal: (domainId: string, causeId: string, s: Signal) => void;
-  updateSignal: (domainId: string, causeId: string, signalId: string, patch: Partial<Signal>) => void;
+  updateSignal: (
+    domainId: string,
+    causeId: string,
+    signalId: string,
+    patch: Partial<Signal>
+  ) => void;
   deleteSignal: (domainId: string, causeId: string, signalId: string) => void;
 
   /* Intervention CRUD */
@@ -58,7 +70,7 @@ function loadWheelData(): WheelData {
   } catch {
     /* corrupted storage — fall through to defaults */
   }
-  return JSON.parse(JSON.stringify(wheelDataEn)) as WheelData;
+  return resolveWheelData("en");
 }
 
 function loadInterventions(): InterventionMap {
@@ -87,7 +99,7 @@ function mapCauses(causes: Cause[], causeId: string, fn: (c: Cause) => Cause): C
 
 /* ─── Provider ─── */
 export function EditorProvider({ children }: { children: ReactNode }) {
-  const [liveData, setLiveData] = useState<WheelData>(() => JSON.parse(JSON.stringify(wheelDataEn)) as WheelData);
+  const [liveData, setLiveData] = useState<WheelData>(() => resolveWheelData("en"));
   const [interventionMap, setInterventionMap] = useState<InterventionMap>(() =>
     Object.fromEntries(
       getAllInterventions().map((i) => [i.id, { id: i.id, name: { en: i.translations.en } }])
@@ -127,58 +139,79 @@ export function EditorProvider({ children }: { children: ReactNode }) {
   }, []);
 
   /* ── Domain CRUD ── */
-  const addDomain = useCallback((d: Domain) => {
-    commitDomains((prev) => [...prev, d]);
-  }, [commitDomains]);
+  const addDomain = useCallback(
+    (d: Domain) => {
+      commitDomains((prev) => [...prev, d]);
+    },
+    [commitDomains]
+  );
 
-  const updateDomain = useCallback((id: string, patch: Partial<Domain>) => {
-    commitDomains((prev) => mapDomains(prev, id, (d) => ({ ...d, ...patch })));
-  }, [commitDomains]);
+  const updateDomain = useCallback(
+    (id: string, patch: Partial<Domain>) => {
+      commitDomains((prev) => mapDomains(prev, id, (d) => ({ ...d, ...patch })));
+    },
+    [commitDomains]
+  );
 
-  const deleteDomain = useCallback((id: string) => {
-    commitDomains((prev) => prev.filter((d) => d.id !== id));
-  }, [commitDomains]);
+  const deleteDomain = useCallback(
+    (id: string) => {
+      commitDomains((prev) => prev.filter((d) => d.id !== id));
+    },
+    [commitDomains]
+  );
 
   /* ── Cause CRUD ── */
-  const addCause = useCallback((domainId: string, c: Cause) => {
-    commitDomains((prev) =>
-      mapDomains(prev, domainId, (d) => ({
-        ...d,
-        causes: [...d.causes, c],
-      }))
-    );
-  }, [commitDomains]);
+  const addCause = useCallback(
+    (domainId: string, c: Cause) => {
+      commitDomains((prev) =>
+        mapDomains(prev, domainId, (d) => ({
+          ...d,
+          causes: [...d.causes, c],
+        }))
+      );
+    },
+    [commitDomains]
+  );
 
-  const updateCause = useCallback((domainId: string, causeId: string, patch: Partial<Cause>) => {
-    commitDomains((prev) =>
-      mapDomains(prev, domainId, (d) => ({
-        ...d,
-        causes: mapCauses(d.causes, causeId, (c) => ({ ...c, ...patch })),
-      }))
-    );
-  }, [commitDomains]);
+  const updateCause = useCallback(
+    (domainId: string, causeId: string, patch: Partial<Cause>) => {
+      commitDomains((prev) =>
+        mapDomains(prev, domainId, (d) => ({
+          ...d,
+          causes: mapCauses(d.causes, causeId, (c) => ({ ...c, ...patch })),
+        }))
+      );
+    },
+    [commitDomains]
+  );
 
-  const deleteCause = useCallback((domainId: string, causeId: string) => {
-    commitDomains((prev) =>
-      mapDomains(prev, domainId, (d) => ({
-        ...d,
-        causes: d.causes.filter((c) => c.id !== causeId),
-      }))
-    );
-  }, [commitDomains]);
+  const deleteCause = useCallback(
+    (domainId: string, causeId: string) => {
+      commitDomains((prev) =>
+        mapDomains(prev, domainId, (d) => ({
+          ...d,
+          causes: d.causes.filter((c) => c.id !== causeId),
+        }))
+      );
+    },
+    [commitDomains]
+  );
 
   /* ── Signal CRUD ── */
-  const addSignal = useCallback((domainId: string, causeId: string, s: Signal) => {
-    commitDomains((prev) =>
-      mapDomains(prev, domainId, (d) => ({
-        ...d,
-        causes: mapCauses(d.causes, causeId, (c) => ({
-          ...c,
-          signals: [...c.signals, s],
-        })),
-      }))
-    );
-  }, [commitDomains]);
+  const addSignal = useCallback(
+    (domainId: string, causeId: string, s: Signal) => {
+      commitDomains((prev) =>
+        mapDomains(prev, domainId, (d) => ({
+          ...d,
+          causes: mapCauses(d.causes, causeId, (c) => ({
+            ...c,
+            signals: [...c.signals, s],
+          })),
+        }))
+      );
+    },
+    [commitDomains]
+  );
 
   const updateSignal = useCallback(
     (domainId: string, causeId: string, signalId: string, patch: Partial<Signal>) => {
@@ -195,17 +228,20 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     [commitDomains]
   );
 
-  const deleteSignal = useCallback((domainId: string, causeId: string, signalId: string) => {
-    commitDomains((prev) =>
-      mapDomains(prev, domainId, (d) => ({
-        ...d,
-        causes: mapCauses(d.causes, causeId, (c) => ({
-          ...c,
-          signals: c.signals.filter((s) => s.id !== signalId),
-        })),
-      }))
-    );
-  }, [commitDomains]);
+  const deleteSignal = useCallback(
+    (domainId: string, causeId: string, signalId: string) => {
+      commitDomains((prev) =>
+        mapDomains(prev, domainId, (d) => ({
+          ...d,
+          causes: mapCauses(d.causes, causeId, (c) => ({
+            ...c,
+            signals: c.signals.filter((s) => s.id !== signalId),
+          })),
+        }))
+      );
+    },
+    [commitDomains]
+  );
 
   /* ── Intervention CRUD ── */
   const addIntervention = useCallback((intervention: EditorIntervention) => {
@@ -252,10 +288,18 @@ export function EditorProvider({ children }: { children: ReactNode }) {
       value={{
         domains,
         interventions,
-        addDomain, updateDomain, deleteDomain,
-        addCause, updateCause, deleteCause,
-        addSignal, updateSignal, deleteSignal,
-        addIntervention, updateIntervention, deleteIntervention,
+        addDomain,
+        updateDomain,
+        deleteDomain,
+        addCause,
+        updateCause,
+        deleteCause,
+        addSignal,
+        updateSignal,
+        deleteSignal,
+        addIntervention,
+        updateIntervention,
+        deleteIntervention,
         exportJSON,
       }}
     >

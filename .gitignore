@@ -422,6 +422,10 @@ FodyWeavers.xsd
 # Next.js build output
 layers/dashboard/.next/
 
+# TypeScript incremental build artifacts
+*.tsbuildinfo
+layers/dashboard/tsconfig.tsbuildinfo
+
 #workspace specific
 .next/
 .plan/

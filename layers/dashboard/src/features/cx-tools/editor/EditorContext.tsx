@@ -55,6 +55,20 @@ export interface EditorContextValue {
 
   /* Utility */
   exportJSON: () => void;
+  importJSON: (text: string) => void;
+  resetToCanonical: () => void;
+}
+
+type ImportErrorCode = "not_json" | "invalid_wheel_data" | "invalid_interventions";
+
+class EditorImportError extends Error {
+  code: ImportErrorCode;
+
+  constructor(code: ImportErrorCode, message: string) {
+    super(message);
+    this.name = "EditorImportError";
+    this.code = code;
+  }
 }
 
 const EditorContext = createContext<EditorContextValue | null>(null);
@@ -95,6 +109,52 @@ function mapDomains(domains: Domain[], domainId: string, fn: (d: Domain) => Doma
 
 function mapCauses(causes: Cause[], causeId: string, fn: (c: Cause) => Cause): Cause[] {
   return causes.map((c) => (c.id === causeId ? fn(c) : c));
+}
+
+/* Validate a JSON export payload and normalize it into editor state. */
+function parseImport(text: string): { wheelData: WheelData; interventionMap: InterventionMap } {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    throw new EditorImportError("not_json", "File is not valid JSON");
+  }
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    throw new EditorImportError("not_json", "Expected a JSON object");
+  }
+
+  const payload = raw as { wheelData?: unknown; interventionRegistry?: unknown };
+  const wheelData = payload.wheelData;
+  if (
+    !wheelData ||
+    typeof wheelData !== "object" ||
+    !Array.isArray((wheelData as { domains?: unknown }).domains)
+  ) {
+    throw new EditorImportError("invalid_wheel_data", "Missing wheelData.domains array");
+  }
+  const domains = (wheelData as { domains: Domain[] }).domains;
+  for (const domain of domains) {
+    if (!domain || typeof domain.id !== "string" || !Array.isArray(domain.causes)) {
+      throw new EditorImportError(
+        "invalid_wheel_data",
+        `Invalid domain entry: ${domain?.id ?? "unknown"}`
+      );
+    }
+  }
+
+  let interventionMap: InterventionMap = {};
+  const registry = payload.interventionRegistry;
+  if (registry !== undefined) {
+    if (!registry || typeof registry !== "object" || Array.isArray(registry)) {
+      throw new EditorImportError(
+        "invalid_interventions",
+        "interventionRegistry must be an object"
+      );
+    }
+    interventionMap = registry as InterventionMap;
+  }
+
+  return { wheelData: { ...(wheelData as WheelData) }, interventionMap };
 }
 
 /* ─── Provider ─── */
@@ -283,6 +343,22 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     URL.revokeObjectURL(url);
   }, [liveData, interventionMap]);
 
+  /* ── Import / Reset round-trip ── */
+  const importJSON = useCallback((text: string) => {
+    const { wheelData, interventionMap } = parseImport(text);
+    setLiveData(wheelData);
+    setInterventionMap(interventionMap);
+  }, []);
+
+  const resetToCanonical = useCallback(() => {
+    setLiveData(resolveWheelData("en"));
+    setInterventionMap(
+      Object.fromEntries(
+        getAllInterventions().map((i) => [i.id, { id: i.id, name: { en: i.translations.en } }])
+      )
+    );
+  }, []);
+
   return (
     <EditorContext.Provider
       value={{
@@ -301,6 +377,8 @@ export function EditorProvider({ children }: { children: ReactNode }) {
         updateIntervention,
         deleteIntervention,
         exportJSON,
+        importJSON,
+        resetToCanonical,
       }}
     >
       {children}

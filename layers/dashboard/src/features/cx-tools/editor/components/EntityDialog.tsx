@@ -1,6 +1,13 @@
 "use client";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Button } from "@/features/cx-tools/editor/components/ui/button";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -15,7 +22,15 @@ interface EntityDialogProps {
   saveLabel?: string;
 }
 
-export function EntityDialog({ open, onOpenChange, title, description, children, onSave, saveLabel }: EntityDialogProps) {
+export function EntityDialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  children,
+  onSave,
+  saveLabel,
+}: EntityDialogProps) {
   const t = useTranslations("cxtools");
   const resolvedSaveLabel = saveLabel ?? t("save");
   return (
@@ -25,11 +40,11 @@ export function EntityDialog({ open, onOpenChange, title, description, children,
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        <div className="grid gap-4 py-2">
-          {children}
-        </div>
+        <div className="grid gap-4 py-2">{children}</div>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>{t("cancel")}</Button>
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            {t("cancel")}
+          </Button>
           <Button onClick={onSave}>{resolvedSaveLabel}</Button>
         </DialogFooter>
       </DialogContent>

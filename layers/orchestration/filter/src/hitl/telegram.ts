@@ -3,22 +3,22 @@
 // Sends HITL alerts to the operator's Telegram chat
 // Fire-and-forget: never blocks the filter response
 // ==============================================================================
-import axios from 'axios';
-import { createLogger } from '../shared/logging';
-import { t } from '../i18n/strings';
+import axios from "axios";
+import { createLogger } from "../shared/logging";
+import { t } from "../i18n/strings";
 
-const logger = createLogger('filter-hitl-telegram', 'filter');
+const logger = createLogger("filter-hitl-telegram", "filter");
 
-const TELEGRAM_BOT_TOKEN    = process.env.TELEGRAM_BOT_TOKEN;
-const OPERATOR_CHAT_ID      = process.env.TELEGRAM_OPERATOR_CHAT_ID;
-const DASHBOARD_URL         = process.env.DASHBOARD_URL ?? 'http://localhost:4000';
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const OPERATOR_CHAT_ID = process.env.TELEGRAM_OPERATOR_CHAT_ID;
+const DASHBOARD_URL = process.env.DASHBOARD_URL ?? "http://localhost:4000";
 
 interface HITLNotification {
-  action_id:     string;
-  stage:         string;
-  session_id:    string;
-  payload:       Record<string, unknown>;
-  meta?:         Record<string, unknown>;
+  action_id: string;
+  stage: string;
+  session_id: string;
+  payload: Record<string, unknown>;
+  meta?: Record<string, unknown>;
   manual_action?: boolean;
 }
 
@@ -41,51 +41,58 @@ interface HITLNotification {
  */
 export async function notifyOperator(notification: HITLNotification): Promise<void> {
   if (!TELEGRAM_BOT_TOKEN || !OPERATOR_CHAT_ID) {
-    logger.warn('TELEGRAM_BOT_TOKEN or TELEGRAM_OPERATOR_CHAT_ID not set — skipping HITL notification');
+    logger.warn(
+      "TELEGRAM_BOT_TOKEN or TELEGRAM_OPERATOR_CHAT_ID not set — skipping HITL notification"
+    );
     return;
   }
 
-  const s         = t().hitl;
+  const s = t().hitl;
   const triggeredBy = notification.meta?.triggered_by
     ? `\n*${s.triggeredBy}:* ${notification.meta.triggered_by}`
-    : '';
+    : "";
 
-  const contactId = notification.payload?.contact_id ?? 'Unknown';
-  const reason    = notification.payload?.reason ?? '';
-  const hubspotLink = contactId !== 'Unknown'
-    ? `\n👉 [${s.hubspotLink}](https://app.hubspot.com/contacts/${process.env.HUBSPORT_PORTAL_ID ?? '51103874'}/contact/${contactId})`
-    : '';
+  const contactId = notification.payload?.contact_id ?? "Unknown";
+  const reason = notification.payload?.reason ?? "";
+  const hubspotLink =
+    contactId !== "Unknown"
+      ? `\n👉 [${s.hubspotLink}](https://app.hubspot.com/contacts/${process.env.HUBSPORT_PORTAL_ID ?? "51103874"}/contact/${contactId})`
+      : "";
 
   let message: string;
   if (notification.manual_action) {
     message = [
       s.manualTitle,
-      '',
+      "",
       `*${s.action}:* \`${notification.action_id}\``,
       `*${s.stage}:* ${notification.stage}`,
       `*${s.contact}:* ${contactId}`,
       `*${s.session}:* \`${notification.session_id.substring(0, 12)}…\``,
-      reason ? `*${s.reason}:* ${reason}` : '',
+      reason ? `*${s.reason}:* ${reason}` : "",
       triggeredBy,
-      '',
+      "",
       `*${s.whatToDo}*`,
       s.completeManually,
       hubspotLink,
-      `👉 [${s.markAsDone}](${DASHBOARD_URL}/hitl)`
-    ].filter(Boolean).join('\n');
+      `👉 [${s.markAsDone}](${DASHBOARD_URL}/hitl)`,
+    ]
+      .filter(Boolean)
+      .join("\n");
   } else {
     message = [
       s.reviewTitle,
-      '',
+      "",
       `*${s.action}:* \`${notification.action_id}\``,
       `*${s.stage}:* ${notification.stage}`,
       `*${s.contact}:* ${contactId}`,
       `*${s.session}:* \`${notification.session_id.substring(0, 12)}…\``,
-      reason ? `*${s.reason}:* ${reason}` : '',
+      reason ? `*${s.reason}:* ${reason}` : "",
       triggeredBy,
-      '',
-      `👉 [${s.reviewApprove}](${DASHBOARD_URL}/hitl)`
-    ].filter(Boolean).join('\n');
+      "",
+      `👉 [${s.reviewApprove}](${DASHBOARD_URL}/hitl)`,
+    ]
+      .filter(Boolean)
+      .join("\n");
   }
 
   try {
@@ -94,15 +101,15 @@ export async function notifyOperator(notification: HITLNotification): Promise<vo
       {
         chat_id: OPERATOR_CHAT_ID,
         text: message,
-        parse_mode: 'Markdown',
-        disable_web_page_preview: true
+        parse_mode: "Markdown",
+        disable_web_page_preview: true,
       },
       { timeout: 10_000 }
     );
-    logger.info({ action_id: notification.action_id }, 'HITL notification sent');
+    logger.info({ action_id: notification.action_id }, "HITL notification sent");
   } catch (err: unknown) {
-    const errMsg = err instanceof Error ? err.message : 'Unknown error';
-    logger.error({ err: errMsg, action_id: notification.action_id }, 'HITL notification failed');
+    const errMsg = err instanceof Error ? err.message : "Unknown error";
+    logger.error({ err: errMsg, action_id: notification.action_id }, "HITL notification failed");
     // Never throw — notification is best-effort
   }
 }

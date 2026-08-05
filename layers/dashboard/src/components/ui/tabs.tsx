@@ -25,15 +25,34 @@ export function Tabs({ defaultValue, className, children }: TabsProps) {
   );
 }
 
-export function TabsList({ className, children }: { className?: string; children: React.ReactNode }) {
+export function TabsList({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className={cn("inline-flex gap-1 rounded-lg border border-[var(--border)] bg-[var(--card)] p-1", className)}>
+    <div
+      className={cn(
+        "inline-flex gap-1 rounded-lg border border-[var(--border)] bg-[var(--card)] p-1",
+        className
+      )}
+    >
       {children}
     </div>
   );
 }
 
-export function TabsTrigger({ value, className, children }: { value: string; className?: string; children: React.ReactNode }) {
+export function TabsTrigger({
+  value,
+  className,
+  children,
+}: {
+  value: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
   const ctx = useContext(Ctx);
   if (!ctx) throw new Error("TabsTrigger must be used within Tabs");
   const isActive = ctx.value === value;
@@ -54,7 +73,15 @@ export function TabsTrigger({ value, className, children }: { value: string; cla
   );
 }
 
-export function TabsContent({ value, className, children }: { value: string; className?: string; children: React.ReactNode }) {
+export function TabsContent({
+  value,
+  className,
+  children,
+}: {
+  value: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
   const ctx = useContext(Ctx);
   if (!ctx) throw new Error("TabsContent must be used within Tabs");
   if (ctx.value !== value) return null;

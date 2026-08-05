@@ -12,7 +12,14 @@ interface SliderProps {
   className?: string;
 }
 
-export function Slider({ value, onValueChange, min = 0, max = 100, step = 1, className }: SliderProps) {
+export function Slider({
+  value,
+  onValueChange,
+  min = 0,
+  max = 100,
+  step = 1,
+  className,
+}: SliderProps) {
   const current = value[0] ?? min;
   const pct = max > min ? ((current - min) / (max - min)) * 100 : 0;
 

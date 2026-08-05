@@ -5,16 +5,16 @@ import CompassLabels from "./CompassLabels";
 import CompassNeedle from "./CompassNeedle";
 
 interface CompassFrameProps {
-    radius: number;
+  radius: number;
 }
 
 export default function CompassFrame({ radius }: CompassFrameProps) {
-    return (
-        <>
-            <CompassRing radius={radius} />
-            <CompassTicks radius={radius} />
-            <CompassLabels radius={radius} />
-            <CompassNeedle radius={radius} />
-        </>
-    );
+  return (
+    <>
+      <CompassRing radius={radius} />
+      <CompassTicks radius={radius} />
+      <CompassLabels radius={radius} />
+      <CompassNeedle radius={radius} />
+    </>
+  );
 }

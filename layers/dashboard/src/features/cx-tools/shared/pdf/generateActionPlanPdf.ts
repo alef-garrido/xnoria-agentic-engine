@@ -12,7 +12,10 @@ import type { FlatSignal } from "@/features/cx-tools/shared/types/signal";
 
 /* ─── Localized strings ──────────────────────────────────────────── */
 
-const PDF_STRINGS: Record<string, { title: string; generated: string; indicators: string; interventions: string; bullet: string }> = {
+const PDF_STRINGS: Record<
+  string,
+  { title: string; generated: string; indicators: string; interventions: string; bullet: string }
+> = {
   en: {
     title: "CX Action Plan",
     generated: "Generated {date}  •  {count} signals  •  {domains} domains",
@@ -77,9 +80,9 @@ export function generateActionPlanPdf({
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pw = doc.internal.pageSize.getWidth();
   const ph = doc.internal.pageSize.getHeight();
-  const mx = 16;                    // horizontal margin
-  const cw = pw - mx * 2;          // content width
-  const bottomSafe = ph - 18;      // footer safe zone
+  const mx = 16; // horizontal margin
+  const cw = pw - mx * 2; // content width
+  const bottomSafe = ph - 18; // footer safe zone
   let y = 0;
 
   const today = new Date().toISOString().split("T")[0];
@@ -91,12 +94,17 @@ export function generateActionPlanPdf({
     doc.rect(0, 0, pw, ph, "F");
   };
 
-  const newPage = () => { doc.addPage(); fillPage(); y = 16; };
+  const newPage = () => {
+    doc.addPage();
+    fillPage();
+    y = 16;
+  };
 
-  const ensure = (h: number) => { if (y + h > bottomSafe) newPage(); };
+  const ensure = (h: number) => {
+    if (y + h > bottomSafe) newPage();
+  };
 
-  const wrap = (text: string, maxW: number) =>
-    doc.splitTextToSize(text, maxW) as string[];
+  const wrap = (text: string, maxW: number) => doc.splitTextToSize(text, maxW) as string[];
 
   /* ── First page background ────────────────────────────────────── */
   fillPage();

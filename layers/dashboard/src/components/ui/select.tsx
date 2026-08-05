@@ -44,7 +44,9 @@ export function Select({ value, onValueChange, disabled, children }: SelectProps
   const getLabel = (v?: string) => (v !== undefined ? labelsRef.current[v] : undefined);
 
   return (
-    <Ctx.Provider value={{ value, onValueChange, disabled, open, setOpen, registerLabel, getLabel }}>
+    <Ctx.Provider
+      value={{ value, onValueChange, disabled, open, setOpen, registerLabel, getLabel }}
+    >
       <div ref={ref} className="relative inline-block w-full">
         {children}
       </div>
@@ -52,7 +54,13 @@ export function Select({ value, onValueChange, disabled, children }: SelectProps
   );
 }
 
-export function SelectTrigger({ className, children }: { className?: string; children: React.ReactNode }) {
+export function SelectTrigger({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
   const ctx = useContext(Ctx);
   if (!ctx) throw new Error("SelectTrigger must be used within Select");
   return (
@@ -78,7 +86,13 @@ export function SelectValue({ placeholder }: { placeholder?: string }) {
   return <span className="truncate text-left">{label ?? (ctx.value || placeholder)}</span>;
 }
 
-export function SelectContent({ className, children }: { className?: string; children: React.ReactNode }) {
+export function SelectContent({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
   const ctx = useContext(Ctx);
   if (!ctx) throw new Error("SelectContent must be used within Select");
   if (!ctx.open) return null;
@@ -94,7 +108,15 @@ export function SelectContent({ className, children }: { className?: string; chi
   );
 }
 
-export function SelectItem({ value, className, children }: { value: string; className?: string; children: React.ReactNode }) {
+export function SelectItem({
+  value,
+  className,
+  children,
+}: {
+  value: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
   const ctx = useContext(Ctx);
   if (!ctx) throw new Error("SelectItem must be used within Select");
   const isSelected = ctx.value === value;

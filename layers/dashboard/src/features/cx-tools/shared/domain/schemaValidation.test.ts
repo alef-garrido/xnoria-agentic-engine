@@ -79,9 +79,7 @@ describe("SchemaValidation", () => {
 
   it("should verify all referenced interventions have translations", () => {
     const result = validateWheelStructure();
-    const translationErrors = result.errors.filter((e) =>
-      e.message.includes("translation")
-    );
+    const translationErrors = result.errors.filter((e) => e.message.includes("translation"));
     expect(translationErrors.length).toBe(0);
   });
 
@@ -91,25 +89,19 @@ describe("SchemaValidation", () => {
 
   it("should not have duplicate signal IDs", () => {
     const result = validateWheelStructure();
-    const duplicateErrors = result.errors.filter((e) =>
-      e.message.includes("Duplicate signal ID")
-    );
+    const duplicateErrors = result.errors.filter((e) => e.message.includes("Duplicate signal ID"));
     expect(duplicateErrors.length).toBe(0);
   });
 
   it("should verify signal severity is in valid range [0-1]", () => {
     const result = validateWheelStructure();
-    const severityErrors = result.errors.filter((e) =>
-      e.message.includes("severity")
-    );
+    const severityErrors = result.errors.filter((e) => e.message.includes("severity"));
     expect(severityErrors.length).toBe(0);
   });
 
   it("should verify signal level is in valid range [0-3]", () => {
     const result = validateWheelStructure();
-    const levelErrors = result.errors.filter((e) =>
-      e.message.includes("level")
-    );
+    const levelErrors = result.errors.filter((e) => e.message.includes("level"));
     expect(levelErrors.length).toBe(0);
   });
 
@@ -155,17 +147,13 @@ describe("SchemaValidation", () => {
 
   it("should verify all domains have required fields", () => {
     const result = validateWheelStructure();
-    const domainErrors = result.errors.filter((e) =>
-      e.message.includes("Domain")
-    );
+    const domainErrors = result.errors.filter((e) => e.message.includes("Domain"));
     expect(domainErrors.length).toBe(0);
   });
 
   it("should verify all causes have required fields", () => {
     const result = validateWheelStructure();
-    const causeErrors = result.errors.filter((e) =>
-      e.message.includes("Cause")
-    );
+    const causeErrors = result.errors.filter((e) => e.message.includes("Cause"));
     expect(causeErrors.length).toBe(0);
   });
 
@@ -302,7 +290,8 @@ describe("SchemaValidation", () => {
     const result = validateWheelStructure();
     // Each signal should reference at least 1 intervention
     // Total signals should be around 50
-    const interventionRefsPerSignal = result.summary.totalInterventions / result.summary.totalSignals;
+    const interventionRefsPerSignal =
+      result.summary.totalInterventions / result.summary.totalSignals;
     expect(interventionRefsPerSignal).toBeLessThan(10); // Sanity check
   });
 

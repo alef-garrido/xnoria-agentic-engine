@@ -13,14 +13,14 @@ Mission Control now tracks real usage costs by reading OpenClaw session data and
 
 Current pricing (as of Feb 2026):
 
-| Model | Input ($/M tokens) | Output ($/M tokens) |
-|-------|-------------------|---------------------|
-| Opus 4.6 | $15.00 | $75.00 |
-| Sonnet 4.5 | $3.00 | $15.00 |
-| Haiku 3.5 | $0.80 | $4.00 |
-| Gemini Flash | $0.15 | $0.60 |
-| Gemini Pro | $1.25 | $5.00 |
-| Grok 4.1 Fast | $2.00 | $10.00 |
+| Model         | Input ($/M tokens) | Output ($/M tokens) |
+| ------------- | ------------------ | ------------------- |
+| Opus 4.6      | $15.00             | $75.00              |
+| Sonnet 4.5    | $3.00              | $15.00              |
+| Haiku 3.5     | $0.80              | $4.00               |
+| Gemini Flash  | $0.15              | $0.60               |
+| Gemini Pro    | $1.25              | $5.00               |
+| Grok 4.1 Fast | $2.00              | $10.00              |
 
 Pricing is defined in `src/lib/pricing.ts`.
 
@@ -34,6 +34,7 @@ npx tsx scripts/collect-usage.ts
 ```
 
 This will:
+
 - Read current OpenClaw session data
 - Calculate costs for each agent + model combination
 - Save a snapshot to the database (replacing any existing data for the same hour)
@@ -50,16 +51,19 @@ cd /root/.openclaw/workspace/mission-control
 This adds a cron job that runs every hour at minute 0.
 
 **View cron jobs:**
+
 ```bash
 crontab -l
 ```
 
 **View logs:**
+
 ```bash
 tail -f /var/log/mission-control-usage.log
 ```
 
 **Remove cron job:**
+
 ```bash
 crontab -e
 # Delete the line containing 'collect-usage.ts'
@@ -86,38 +90,42 @@ CREATE TABLE usage_snapshots (
 ## Querying the Database
 
 **Total cost today:**
+
 ```bash
 sqlite3 data/usage-tracking.db \
   "SELECT SUM(cost) FROM usage_snapshots WHERE date = date('now');"
 ```
 
 **Cost by agent (last 30 days):**
+
 ```bash
 sqlite3 data/usage-tracking.db \
-  "SELECT agent_id, ROUND(SUM(cost), 2) as cost 
-   FROM usage_snapshots 
+  "SELECT agent_id, ROUND(SUM(cost), 2) as cost
+   FROM usage_snapshots
    WHERE date >= date('now', '-30 days')
-   GROUP BY agent_id 
+   GROUP BY agent_id
    ORDER BY cost DESC;"
 ```
 
 **Cost by model:**
+
 ```bash
 sqlite3 data/usage-tracking.db \
-  "SELECT model, ROUND(SUM(cost), 2) as cost 
-   FROM usage_snapshots 
+  "SELECT model, ROUND(SUM(cost), 2) as cost
+   FROM usage_snapshots
    WHERE date >= date('now', '-30 days')
-   GROUP BY model 
+   GROUP BY model
    ORDER BY cost DESC;"
 ```
 
 **Daily trend (last 7 days):**
+
 ```bash
 sqlite3 data/usage-tracking.db \
-  "SELECT date, ROUND(SUM(cost), 2) as cost 
-   FROM usage_snapshots 
+  "SELECT date, ROUND(SUM(cost), 2) as cost
+   FROM usage_snapshots
    WHERE date >= date('now', '-7 days')
-   GROUP BY date 
+   GROUP BY date
    ORDER BY date DESC;"
 ```
 
@@ -128,45 +136,44 @@ sqlite3 data/usage-tracking.db \
 Returns cost summary, breakdowns, and trends.
 
 **Query params:**
+
 - `timeframe` (default: `30d`) - Number of days to include in aggregations
 
 **Response:**
+
 ```json
 {
-  "today": 0.80,
+  "today": 0.8,
   "yesterday": 1.25,
-  "thisMonth": 12.50,
-  "lastMonth": 38.90,
-  "projected": 52.30,
-  "budget": 100.00,
-  "byAgent": [
-    { "agent": "main", "cost": 5.50, "tokens": 450000, "percentOfTotal": 44 }
-  ],
+  "thisMonth": 12.5,
+  "lastMonth": 38.9,
+  "projected": 52.3,
+  "budget": 100.0,
+  "byAgent": [{ "agent": "main", "cost": 5.5, "tokens": 450000, "percentOfTotal": 44 }],
   "byModel": [
-    { "model": "anthropic/claude-sonnet-4-5", "cost": 8.30, "tokens": 890000, "percentOfTotal": 66 }
+    { "model": "anthropic/claude-sonnet-4-5", "cost": 8.3, "tokens": 890000, "percentOfTotal": 66 }
   ],
-  "daily": [
-    { "date": "02-20", "cost": 0.80, "input": 12000, "output": 8000 }
-  ],
-  "hourly": [
-    { "hour": "14:00", "cost": 0.12 }
-  ]
+  "daily": [{ "date": "02-20", "cost": 0.8, "input": 12000, "output": 8000 }],
+  "hourly": [{ "hour": "14:00", "cost": 0.12 }]
 }
 ```
 
 ## Troubleshooting
 
 **No data showing up:**
+
 - Run `npx tsx scripts/collect-usage.ts` to collect initial data
 - Check database exists: `ls -lh data/usage-tracking.db`
 - Query database: `sqlite3 data/usage-tracking.db "SELECT COUNT(*) FROM usage_snapshots;"`
 
 **Unknown model warnings:**
+
 - Update `src/lib/pricing.ts` with new model pricing
 - Rebuild: `npm run build`
 - Restart: `systemctl restart mission-control`
 
 **Costs seem wrong:**
+
 - Verify pricing in `src/lib/pricing.ts`
 - Check token counts: `openclaw status --json | jq '.sessions.byAgent[].recent[].totalTokens'`
 - Recalculate: delete database and re-collect

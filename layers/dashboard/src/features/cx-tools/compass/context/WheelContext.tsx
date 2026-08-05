@@ -62,7 +62,23 @@ export function WheelProvider({ children }: { children: ReactNode }) {
 
   return (
     <WheelContext.Provider
-      value={{ viewMode, viewState, selectedDomain, selectedCause, selectedSignal, hoveredLabel, hoveredDomainId, setViewMode, selectDomain, selectCause, selectSignal, resetToHome, setViewState, setHoveredLabel, setHoveredDomainId }}
+      value={{
+        viewMode,
+        viewState,
+        selectedDomain,
+        selectedCause,
+        selectedSignal,
+        hoveredLabel,
+        hoveredDomainId,
+        setViewMode,
+        selectDomain,
+        selectCause,
+        selectSignal,
+        resetToHome,
+        setViewState,
+        setHoveredLabel,
+        setHoveredDomainId,
+      }}
     >
       {children}
     </WheelContext.Provider>

@@ -65,9 +65,7 @@ export function PendingActionCard({
                 {t("pending")}
               </Badge>
               {action.manual_action && (
-                <Badge className="bg-[var(--info-soft)] text-[var(--info)]">
-                  {t("manual")}
-                </Badge>
+                <Badge className="bg-[var(--info-soft)] text-[var(--info)]">{t("manual")}</Badge>
               )}
               <span className="text-sm font-semibold font-mono text-[var(--text-primary)]">
                 {action.action_id}

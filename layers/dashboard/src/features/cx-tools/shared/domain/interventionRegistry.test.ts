@@ -97,9 +97,7 @@ describe("InterventionRegistry", () => {
   it("should have signal reference matching intervention ID prefix", () => {
     const interventions = getAllInterventions();
     for (const intervention of interventions) {
-      const idWithoutOption = intervention.id
-        .replace(/^INT_/, "")
-        .replace(/_[A-C]$/, "");
+      const idWithoutOption = intervention.id.replace(/^INT_/, "").replace(/_[A-C]$/, "");
       expect(idWithoutOption).toBe(intervention.signal);
     }
   });

@@ -1,12 +1,12 @@
 /**
  * wheelStructure.ts - Pure Data Structure (Phase 2)
- * 
+ *
  * RFC: CX Diagnostic Compass Architecture Refactoring
- * 
+ *
  * This file contains the data structure without any hardcoded strings.
  * All text (domain names, cause names, signal names, indicators) are replaced
  * with translation keys that map to actual translations in translations.ts
- * 
+ *
  * Benefits:
  * - Single source of truth for data structure
  * - Easy to add new languages (only add to translations.ts)
@@ -47,9 +47,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.acq_vis_01",
               severity: 0.8,
               level: 2,
-              indicators: [
-                { id: "ACQ_VIS_01_SV", name_key: "indicator.acq_vis_01_sv" },
-              ],
+              indicators: [{ id: "ACQ_VIS_01_SV", name_key: "indicator.acq_vis_01_sv" }],
               intervention_ids: [
                 "INT_ACQ_VIS_01_A",
                 "INT_ACQ_VIS_01_B",
@@ -61,9 +59,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.acq_vis_02",
               severity: 0.9,
               level: 3,
-              indicators: [
-                { id: "ACQ_VIS_02_SV", name_key: "indicator.acq_vis_02_sv" },
-              ],
+              indicators: [{ id: "ACQ_VIS_02_SV", name_key: "indicator.acq_vis_02_sv" }],
               intervention_ids: [
                 "INT_ACQ_VIS_02_A",
                 "INT_ACQ_VIS_02_B",
@@ -82,9 +78,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.acq_clr_01",
               severity: 0.9,
               level: 1,
-              indicators: [
-                { id: "ACQ_CLR_01_BR", name_key: "indicator.acq_clr_01_br" },
-              ],
+              indicators: [{ id: "ACQ_CLR_01_BR", name_key: "indicator.acq_clr_01_br" }],
               intervention_ids: [
                 "INT_ACQ_CLR_01_A",
                 "INT_ACQ_CLR_01_B",
@@ -96,9 +90,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.acq_clr_02",
               severity: 0.4,
               level: 2,
-              indicators: [
-                { id: "ACQ_CLR_02_TS", name_key: "indicator.acq_clr_02_ts" },
-              ],
+              indicators: [{ id: "ACQ_CLR_02_TS", name_key: "indicator.acq_clr_02_ts" }],
               intervention_ids: [
                 "INT_ACQ_CLR_02_A",
                 "INT_ACQ_CLR_02_B",
@@ -117,9 +109,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.acq_tru_01",
               severity: 0.5,
               level: 3,
-              indicators: [
-                { id: "ACQ_TRU_01_CR", name_key: "indicator.acq_tru_01_cr" },
-              ],
+              indicators: [{ id: "ACQ_TRU_01_CR", name_key: "indicator.acq_tru_01_cr" }],
               intervention_ids: [
                 "INT_ACQ_TRU_01_A",
                 "INT_ACQ_TRU_01_B",
@@ -131,9 +121,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.acq_tru_02",
               severity: 0.6,
               level: 0,
-              indicators: [
-                { id: "ACQ_TRU_02_SC", name_key: "indicator.acq_tru_02_sc" },
-              ],
+              indicators: [{ id: "ACQ_TRU_02_SC", name_key: "indicator.acq_tru_02_sc" }],
               intervention_ids: [
                 "INT_ACQ_TRU_02_A",
                 "INT_ACQ_TRU_02_B",
@@ -164,9 +152,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.sal_clr_01",
               severity: 0.8,
               level: 0,
-              indicators: [
-                { id: "SAL_CLR_01_DR", name_key: "indicator.sal_clr_01_dr" },
-              ],
+              indicators: [{ id: "SAL_CLR_01_DR", name_key: "indicator.sal_clr_01_dr" }],
               intervention_ids: [
                 "INT_SAL_CLR_01_A",
                 "INT_SAL_CLR_01_B",
@@ -178,9 +164,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.sal_clr_02",
               severity: 0.9,
               level: 1,
-              indicators: [
-                { id: "SAL_CLR_02_DR", name_key: "indicator.sal_clr_02_dr" },
-              ],
+              indicators: [{ id: "SAL_CLR_02_DR", name_key: "indicator.sal_clr_02_dr" }],
               intervention_ids: [
                 "INT_SAL_CLR_02_A",
                 "INT_SAL_CLR_02_B",
@@ -199,9 +183,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.sal_val_01",
               severity: 0.4,
               level: 2,
-              indicators: [
-                { id: "SAL_VAL_01_WR", name_key: "indicator.sal_val_01_wr" },
-              ],
+              indicators: [{ id: "SAL_VAL_01_WR", name_key: "indicator.sal_val_01_wr" }],
               intervention_ids: [
                 "INT_SAL_VAL_01_A",
                 "INT_SAL_VAL_01_B",
@@ -213,9 +195,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.sal_val_02",
               severity: 0.5,
               level: 3,
-              indicators: [
-                { id: "SAL_VAL_02_WR", name_key: "indicator.sal_val_02_wr" },
-              ],
+              indicators: [{ id: "SAL_VAL_02_WR", name_key: "indicator.sal_val_02_wr" }],
               intervention_ids: [
                 "INT_SAL_VAL_02_A",
                 "INT_SAL_VAL_02_B",
@@ -234,9 +214,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.sal_tru_01",
               severity: 0.4,
               level: 2,
-              indicators: [
-                { id: "SAL_TRU_01_CW", name_key: "indicator.sal_tru_01_cw" },
-              ],
+              indicators: [{ id: "SAL_TRU_01_CW", name_key: "indicator.sal_tru_01_cw" }],
               intervention_ids: [
                 "INT_SAL_TRU_01_A",
                 "INT_SAL_TRU_01_B",
@@ -248,9 +226,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.sal_tru_02",
               severity: 0.5,
               level: 3,
-              indicators: [
-                { id: "SAL_TRU_02_CW", name_key: "indicator.sal_tru_02_cw" },
-              ],
+              indicators: [{ id: "SAL_TRU_02_CW", name_key: "indicator.sal_tru_02_cw" }],
               intervention_ids: [
                 "INT_SAL_TRU_02_A",
                 "INT_SAL_TRU_02_B",
@@ -281,9 +257,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.onb_frc_01",
               severity: 0.7,
               level: 1,
-              indicators: [
-                { id: "ONB_FRC_01_TV", name_key: "indicator.onb_frc_01_tv" },
-              ],
+              indicators: [{ id: "ONB_FRC_01_TV", name_key: "indicator.onb_frc_01_tv" }],
               intervention_ids: [
                 "INT_ONB_FRC_01_A",
                 "INT_ONB_FRC_01_B",
@@ -295,9 +269,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.onb_frc_02",
               severity: 0.8,
               level: 2,
-              indicators: [
-                { id: "ONB_FRC_02_DR", name_key: "indicator.onb_frc_02_dr" },
-              ],
+              indicators: [{ id: "ONB_FRC_02_DR", name_key: "indicator.onb_frc_02_dr" }],
               intervention_ids: [
                 "INT_ONB_FRC_02_A",
                 "INT_ONB_FRC_02_B",
@@ -316,9 +288,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.onb_clr_01",
               severity: 0.7,
               level: 3,
-              indicators: [
-                { id: "ONB_CLR_01_HV", name_key: "indicator.onb_clr_01_hv" },
-              ],
+              indicators: [{ id: "ONB_CLR_01_HV", name_key: "indicator.onb_clr_01_hv" }],
               intervention_ids: [
                 "INT_ONB_CLR_01_A",
                 "INT_ONB_CLR_01_B",
@@ -337,9 +307,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.onb_cap_01",
               severity: 0.6,
               level: 2,
-              indicators: [
-                { id: "ONB_CAP_01_CR", name_key: "indicator.onb_cap_01_cr" },
-              ],
+              indicators: [{ id: "ONB_CAP_01_CR", name_key: "indicator.onb_cap_01_cr" }],
               intervention_ids: [
                 "INT_ONB_CAP_01_A",
                 "INT_ONB_CAP_01_B",
@@ -351,9 +319,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.onb_cap_02",
               severity: 0.7,
               level: 3,
-              indicators: [
-                { id: "ONB_CAP_02_CR", name_key: "indicator.onb_cap_02_cr" },
-              ],
+              indicators: [{ id: "ONB_CAP_02_CR", name_key: "indicator.onb_cap_02_cr" }],
               intervention_ids: [] as const,
             },
           ],
@@ -380,9 +346,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.prd_frc_01",
               severity: 0.8,
               level: 0,
-              indicators: [
-                { id: "PRD_FRC_01_FA", name_key: "indicator.prd_frc_01_fa" },
-              ],
+              indicators: [{ id: "PRD_FRC_01_FA", name_key: "indicator.prd_frc_01_fa" }],
               intervention_ids: [
                 "INT_PRD_FRC_01_A",
                 "INT_PRD_FRC_01_B",
@@ -394,9 +358,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.prd_frc_02",
               severity: 0.9,
               level: 1,
-              indicators: [
-                { id: "PRD_FRC_02_FA", name_key: "indicator.prd_frc_02_fa" },
-              ],
+              indicators: [{ id: "PRD_FRC_02_FA", name_key: "indicator.prd_frc_02_fa" }],
               intervention_ids: [
                 "INT_PRD_FRC_02_A",
                 "INT_PRD_FRC_02_B",
@@ -415,9 +377,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.prd_cap_01",
               severity: 0.7,
               level: 1,
-              indicators: [
-                { id: "PRD_CAP_01_FR", name_key: "indicator.prd_cap_01_fr" },
-              ],
+              indicators: [{ id: "PRD_CAP_01_FR", name_key: "indicator.prd_cap_01_fr" }],
               intervention_ids: [
                 "INT_PRD_CAP_01_A",
                 "INT_PRD_CAP_01_B",
@@ -429,9 +389,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.prd_cap_02",
               severity: 0.8,
               level: 2,
-              indicators: [
-                { id: "PRD_CAP_02_FR", name_key: "indicator.prd_cap_02_fr" },
-              ],
+              indicators: [{ id: "PRD_CAP_02_FR", name_key: "indicator.prd_cap_02_fr" }],
               intervention_ids: [
                 "INT_PRD_CAP_02_A",
                 "INT_PRD_CAP_02_B",
@@ -450,9 +408,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.prd_cst_01",
               severity: 0.5,
               level: 3,
-              indicators: [
-                { id: "PRD_CST_01_UT", name_key: "indicator.prd_cst_01_ut" },
-              ],
+              indicators: [{ id: "PRD_CST_01_UT", name_key: "indicator.prd_cst_01_ut" }],
               intervention_ids: [
                 "INT_PRD_CST_01_A",
                 "INT_PRD_CST_01_B",
@@ -464,9 +420,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.prd_cst_02",
               severity: 0.6,
               level: 0,
-              indicators: [
-                { id: "PRD_CST_02_BR", name_key: "indicator.prd_cst_02_br" },
-              ],
+              indicators: [{ id: "PRD_CST_02_BR", name_key: "indicator.prd_cst_02_br" }],
               intervention_ids: [
                 "INT_PRD_CST_02_A",
                 "INT_PRD_CST_02_B",
@@ -497,9 +451,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.sup_res_01",
               severity: 0.5,
               level: 1,
-              indicators: [
-                { id: "SUP_RES_01_FR", name_key: "indicator.sup_res_01_fr" },
-              ],
+              indicators: [{ id: "SUP_RES_01_FR", name_key: "indicator.sup_res_01_fr" }],
               intervention_ids: [
                 "INT_SUP_RES_01_A",
                 "INT_SUP_RES_01_B",
@@ -511,9 +463,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.sup_res_02",
               severity: 0.6,
               level: 2,
-              indicators: [
-                { id: "SUP_RES_02_RT", name_key: "indicator.sup_res_02_rt" },
-              ],
+              indicators: [{ id: "SUP_RES_02_RT", name_key: "indicator.sup_res_02_rt" }],
               intervention_ids: [
                 "INT_SUP_RES_02_A",
                 "INT_SUP_RES_02_B",
@@ -532,9 +482,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.sup_cap_01",
               severity: 0.7,
               level: 3,
-              indicators: [
-                { id: "SUP_CAP_01_FC", name_key: "indicator.sup_cap_01_fc" },
-              ],
+              indicators: [{ id: "SUP_CAP_01_FC", name_key: "indicator.sup_cap_01_fc" }],
               intervention_ids: [
                 "INT_SUP_CAP_01_A",
                 "INT_SUP_CAP_01_B",
@@ -546,9 +494,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.sup_cap_02",
               severity: 0.8,
               level: 0,
-              indicators: [
-                { id: "SUP_CAP_02_FC", name_key: "indicator.sup_cap_02_fc" },
-              ],
+              indicators: [{ id: "SUP_CAP_02_FC", name_key: "indicator.sup_cap_02_fc" }],
               intervention_ids: [
                 "INT_SUP_CAP_02_A",
                 "INT_SUP_CAP_02_B",
@@ -567,9 +513,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.sup_cst_01",
               severity: 0.5,
               level: 1,
-              indicators: [
-                { id: "SUP_CST_01_CV", name_key: "indicator.sup_cst_01_cv" },
-              ],
+              indicators: [{ id: "SUP_CST_01_CV", name_key: "indicator.sup_cst_01_cv" }],
               intervention_ids: [
                 "INT_SUP_CST_01_A",
                 "INT_SUP_CST_01_B",
@@ -581,9 +525,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.sup_cst_02",
               severity: 0.6,
               level: 2,
-              indicators: [
-                { id: "SUP_CST_02_CV", name_key: "indicator.sup_cst_02_cv" },
-              ],
+              indicators: [{ id: "SUP_CST_02_CV", name_key: "indicator.sup_cst_02_cv" }],
               intervention_ids: [
                 "INT_SUP_CST_02_A",
                 "INT_SUP_CST_02_B",
@@ -614,9 +556,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.com_rel_01",
               severity: 0.9,
               level: 1,
-              indicators: [
-                { id: "COM_REL_01_EO", name_key: "indicator.com_rel_01_eo" },
-              ],
+              indicators: [{ id: "COM_REL_01_EO", name_key: "indicator.com_rel_01_eo" }],
               intervention_ids: [
                 "INT_COM_REL_01_A",
                 "INT_COM_REL_01_B",
@@ -628,9 +568,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.com_rel_02",
               severity: 0.4,
               level: 2,
-              indicators: [
-                { id: "COM_REL_02_CA", name_key: "indicator.com_rel_02_ca" },
-              ],
+              indicators: [{ id: "COM_REL_02_CA", name_key: "indicator.com_rel_02_ca" }],
               intervention_ids: [
                 "INT_COM_REL_02_A",
                 "INT_COM_REL_02_B",
@@ -649,9 +587,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.com_res_01",
               severity: 0.4,
               level: 0,
-              indicators: [
-                { id: "COM_RES_01_SR", name_key: "indicator.com_res_01_sr" },
-              ],
+              indicators: [{ id: "COM_RES_01_SR", name_key: "indicator.com_res_01_sr" }],
               intervention_ids: [
                 "INT_COM_RES_01_A",
                 "INT_COM_RES_01_B",
@@ -663,9 +599,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.com_res_02",
               severity: 0.5,
               level: 1,
-              indicators: [
-                { id: "COM_RES_02_SR", name_key: "indicator.com_res_02_sr" },
-              ],
+              indicators: [{ id: "COM_RES_02_SR", name_key: "indicator.com_res_02_sr" }],
               intervention_ids: [
                 "INT_COM_RES_02_A",
                 "INT_COM_RES_02_B",
@@ -684,9 +618,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.com_cst_01",
               severity: 0.4,
               level: 0,
-              indicators: [
-                { id: "COM_CST_01_BS", name_key: "indicator.com_cst_01_bs" },
-              ],
+              indicators: [{ id: "COM_CST_01_BS", name_key: "indicator.com_cst_01_bs" }],
               intervention_ids: [
                 "INT_COM_CST_01_A",
                 "INT_COM_CST_01_B",
@@ -698,9 +630,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.com_cst_02",
               severity: 0.5,
               level: 1,
-              indicators: [
-                { id: "COM_CST_02_BS", name_key: "indicator.com_cst_02_bs" },
-              ],
+              indicators: [{ id: "COM_CST_02_BS", name_key: "indicator.com_cst_02_bs" }],
               intervention_ids: [
                 "INT_COM_CST_02_A",
                 "INT_COM_CST_02_B",
@@ -731,9 +661,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.ret_val_01",
               severity: 0.9,
               level: 1,
-              indicators: [
-                { id: "RET_VAL_01_NR", name_key: "indicator.ret_val_01_nr" },
-              ],
+              indicators: [{ id: "RET_VAL_01_NR", name_key: "indicator.ret_val_01_nr" }],
               intervention_ids: [
                 "INT_RET_VAL_01_A",
                 "INT_RET_VAL_01_B",
@@ -745,9 +673,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.ret_val_02",
               severity: 0.4,
               level: 2,
-              indicators: [
-                { id: "RET_VAL_02_DR", name_key: "indicator.ret_val_02_dr" },
-              ],
+              indicators: [{ id: "RET_VAL_02_DR", name_key: "indicator.ret_val_02_dr" }],
               intervention_ids: [
                 "INT_RET_VAL_02_A",
                 "INT_RET_VAL_02_B",
@@ -766,9 +692,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.ret_rel_01",
               severity: 0.9,
               level: 1,
-              indicators: [
-                { id: "RET_REL_01_HS", name_key: "indicator.ret_rel_01_hs" },
-              ],
+              indicators: [{ id: "RET_REL_01_HS", name_key: "indicator.ret_rel_01_hs" }],
               intervention_ids: [
                 "INT_RET_REL_01_A",
                 "INT_RET_REL_01_B",
@@ -780,9 +704,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.ret_rel_02",
               severity: 0.4,
               level: 2,
-              indicators: [
-                { id: "RET_REL_02_NP", name_key: "indicator.ret_rel_02_np" },
-              ],
+              indicators: [{ id: "RET_REL_02_NP", name_key: "indicator.ret_rel_02_np" }],
               intervention_ids: [
                 "INT_RET_REL_02_A",
                 "INT_RET_REL_02_B",
@@ -801,9 +723,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.ret_tru_01",
               severity: 0.9,
               level: 1,
-              indicators: [
-                { id: "RET_TRU_01_RR", name_key: "indicator.ret_tru_01_rr" },
-              ],
+              indicators: [{ id: "RET_TRU_01_RR", name_key: "indicator.ret_tru_01_rr" }],
               intervention_ids: [
                 "INT_RET_TRU_01_A",
                 "INT_RET_TRU_01_B",
@@ -815,9 +735,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.ret_tru_02",
               severity: 0.4,
               level: 2,
-              indicators: [
-                { id: "RET_TRU_02_RR", name_key: "indicator.ret_tru_02_rr" },
-              ],
+              indicators: [{ id: "RET_TRU_02_RR", name_key: "indicator.ret_tru_02_rr" }],
               intervention_ids: [
                 "INT_RET_TRU_02_A",
                 "INT_RET_TRU_02_B",
@@ -848,9 +766,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.exp_grw_01",
               severity: 0.6,
               level: 0,
-              indicators: [
-                { id: "EXP_GRW_01_CS", name_key: "indicator.exp_grw_01_cs" },
-              ],
+              indicators: [{ id: "EXP_GRW_01_CS", name_key: "indicator.exp_grw_01_cs" }],
               intervention_ids: [
                 "INT_EXP_GRW_01_A",
                 "INT_EXP_GRW_01_B",
@@ -862,9 +778,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.exp_grw_02",
               severity: 0.7,
               level: 1,
-              indicators: [
-                { id: "EXP_GRW_02_UA", name_key: "indicator.exp_grw_02_ua" },
-              ],
+              indicators: [{ id: "EXP_GRW_02_UA", name_key: "indicator.exp_grw_02_ua" }],
               intervention_ids: [
                 "INT_EXP_GRW_02_A",
                 "INT_EXP_GRW_02_B",
@@ -883,9 +797,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.exp_val_01",
               severity: 0.5,
               level: 3,
-              indicators: [
-                { id: "EXP_VAL_01_ER", name_key: "indicator.exp_val_01_er" },
-              ],
+              indicators: [{ id: "EXP_VAL_01_ER", name_key: "indicator.exp_val_01_er" }],
               intervention_ids: [
                 "INT_EXP_VAL_01_A",
                 "INT_EXP_VAL_01_B",
@@ -897,9 +809,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.exp_val_02",
               severity: 0.6,
               level: 0,
-              indicators: [
-                { id: "EXP_VAL_02_ER", name_key: "indicator.exp_val_02_er" },
-              ],
+              indicators: [{ id: "EXP_VAL_02_ER", name_key: "indicator.exp_val_02_er" }],
               intervention_ids: [
                 "INT_EXP_VAL_02_A",
                 "INT_EXP_VAL_02_B",
@@ -918,9 +828,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.exp_rel_01",
               severity: 0.5,
               level: 3,
-              indicators: [
-                { id: "EXP_REL_01_NA", name_key: "indicator.exp_rel_01_na" },
-              ],
+              indicators: [{ id: "EXP_REL_01_NA", name_key: "indicator.exp_rel_01_na" }],
               intervention_ids: [
                 "INT_EXP_REL_01_A",
                 "INT_EXP_REL_01_B",
@@ -932,9 +840,7 @@ export const WHEEL_STRUCTURE = {
               name_key: "signal.exp_rel_02",
               severity: 0.6,
               level: 0,
-              indicators: [
-                { id: "EXP_REL_02_NA", name_key: "indicator.exp_rel_02_na" },
-              ],
+              indicators: [{ id: "EXP_REL_02_NA", name_key: "indicator.exp_rel_02_na" }],
               intervention_ids: [
                 "INT_EXP_REL_02_A",
                 "INT_EXP_REL_02_B",
@@ -1003,7 +909,9 @@ export function resolveWheelData(language: Language = "en"): WheelData {
 
   const resolveCause = (c: StructCause, domainCode: string) => {
     const signals = c.signals.map(resolveSignal);
-    const indicators = [...new Map(signals.flatMap((s) => s.indicators ?? []).map((i) => [i.id, i])).values()];
+    const indicators = [
+      ...new Map(signals.flatMap((s) => s.indicators ?? []).map((i) => [i.id, i])).values(),
+    ];
     const interventions = [...new Set(signals.flatMap((s) => s.interventions ?? []))];
     return {
       id: c.id,

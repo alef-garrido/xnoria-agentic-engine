@@ -59,10 +59,9 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 export default function SystemMonitorPage() {
   const t = useTranslations("system");
-  const { data, error } = usePolling(
-    async () => apiFetch<SystemData>("/api/system"),
-    { intervalMs: 10_000 }
-  );
+  const { data, error } = usePolling(async () => apiFetch<SystemData>("/api/system"), {
+    intervalMs: 10_000,
+  });
 
   return (
     <div className="flex flex-col gap-8">

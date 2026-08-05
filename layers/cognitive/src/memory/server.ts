@@ -2,32 +2,32 @@
 // Exnoria · Cognitive layer · Memory search HTTP endpoint
 // Minimal Express server for dashboard API proxy
 // ==============================================================================
-import express, { Request, Response } from 'express';
-import { Pool } from 'pg';
-import { exec } from 'child_process';
-import { createLogger } from '../../../shared/logging';
+import express, { Request, Response } from "express";
+import { Pool } from "pg";
+import { exec } from "child_process";
+import { createLogger } from "../../../shared/logging";
 
-const logger = createLogger('memory-server', 'cognitive');
+const logger = createLogger("memory-server", "cognitive");
 
-const app  = express();
-const port = parseInt(process.env.COGNITIVE_MEMORY_PORT ?? '0', 10);
+const app = express();
+const port = parseInt(process.env.COGNITIVE_MEMORY_PORT ?? "0", 10);
 
 app.use(express.json());
 
 // DB connection pool (shared with main)
 const db = new Pool({
   connectionString: process.env.POSTGRES_URL,
-  max: 5
+  max: 5,
 });
 
 // Memory search endpoint
-app.get('/memory/search', (req: Request, res: Response) => {
+app.get("/memory/search", (req: Request, res: Response) => {
   const { contact_id, stage } = req.query;
 
   if (!contact_id) {
     return res.status(400).json({
-      error: 'MISSING_CONTACT_ID',
-      message: 'Missing required parameter: contact_id'
+      error: "MISSING_CONTACT_ID",
+      message: "Missing required parameter: contact_id",
     });
   }
 
@@ -35,31 +35,37 @@ app.get('/memory/search', (req: Request, res: Response) => {
   const searchQuery = stage ? `${contact_id} | ${stage}` : contact_id;
   const engramSearch = `engram search "${searchQuery}"`;
 
-  exec(engramSearch, { maxBuffer: 1024 * 1024 }, (error, stdout: string | Buffer, stderr: string | Buffer) => {
-    if (error) {
-      logger.error({ err: error.message }, 'Engram CLI search failed');
-      return res.status(500).json({
-        error: 'MEMORY_UNAVAILABLE',
-        message: `Memory search failed: ${error.message}`
-      });
+  exec(
+    engramSearch,
+    { maxBuffer: 1024 * 1024 },
+    (error, stdout: string | Buffer, stderr: string | Buffer) => {
+      if (error) {
+        logger.error({ err: error.message }, "Engram CLI search failed");
+        return res.status(500).json({
+          error: "MEMORY_UNAVAILABLE",
+          message: `Memory search failed: ${error.message}`,
+        });
+      }
+
+      // Convert stdout to string (exec may return Buffer)
+      const output = typeof stdout === "string" ? stdout : stdout.toString();
+
+      // Parse engram CLI output
+      // Output format: "Found X memories:" followed by entries
+      // Extract memory entries from stdout
+      const memories = parseEngramOutput(output);
+
+      res.json({ memories });
     }
-
-    // Convert stdout to string (exec may return Buffer)
-    const output = typeof stdout === 'string' ? stdout : stdout.toString();
-    
-    // Parse engram CLI output
-    // Output format: "Found X memories:" followed by entries
-    // Extract memory entries from stdout
-    const memories = parseEngramOutput(output);
-
-    res.json({ memories });
-  });
+  );
 });
 
 // Parse Engram CLI output into structured memory objects
-function parseEngramOutput(output: string): Array<{ title: string; content: string; created_at: string }> {
+function parseEngramOutput(
+  output: string
+): Array<{ title: string; content: string; created_at: string }> {
   const memories: Array<{ title: string; content: string; created_at: string }> = [];
-  const lines = output.split('\n');
+  const lines = output.split("\n");
 
   // Engram output format:
   // 1. Header: "Found X memories:"
@@ -68,8 +74,8 @@ function parseEngramOutput(output: string): Array<{ title: string; content: stri
   // 4. Subsequent content lines: "stage: ONB" (NO indent!)
   // 5. Timestamp line: "    2026-04-10 21:07:41 | scope: project" (4 spaces, but should skip)
 
-  let currentTitle = '';
-  let currentContent = '';
+  let currentTitle = "";
+  let currentContent = "";
   let inContentBlock = false;
 
   for (const line of lines) {
@@ -82,12 +88,12 @@ function parseEngramOutput(output: string): Array<{ title: string; content: stri
         memories.push({
           title: currentTitle,
           content: currentContent.trim(),
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
         });
       }
       // Start new entry
       currentTitle = arrayMatch[2];
-      currentContent = '';
+      currentContent = "";
       inContentBlock = true;
       continue;
     }
@@ -99,15 +105,15 @@ function parseEngramOutput(output: string): Array<{ title: string; content: stri
       // - "key: value" (subsequent lines, NO indent)
       // Skip timestamp lines
       const trimmed = line.trim();
-      
+
       // Check if this is a timestamp line: "    YYYY-MM-DD HH:MM:SS | scope: project"
       if (trimmed.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/)) {
         continue;
       }
-      
+
       // Not a timestamp, add to content
       if (trimmed) {
-        currentContent += trimmed + '\n';
+        currentContent += trimmed + "\n";
       }
     }
   }
@@ -117,7 +123,7 @@ function parseEngramOutput(output: string): Array<{ title: string; content: stri
     memories.push({
       title: currentTitle,
       content: currentContent.trim(),
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     });
   }
 
@@ -125,39 +131,41 @@ function parseEngramOutput(output: string): Array<{ title: string; content: stri
 }
 
 // Health check
-app.get('/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok', service: `${process.env.PROJECT_ID || 'xnoria'}-cognitive-memory` });
+app.get("/health", (_req: Request, res: Response) => {
+  res.json({ status: "ok", service: `${process.env.PROJECT_ID || "xnoria"}-cognitive-memory` });
 });
 
 // Export start function for integration with main server
 export function startServer(db: Pool) {
   if (port <= 0) {
-    logger.info('Memory search endpoint disabled (COGNITIVE_MEMORY_PORT not set)');
+    logger.info("Memory search endpoint disabled (COGNITIVE_MEMORY_PORT not set)");
     return;
   }
 
-  logger.info({ port, service: 'memory-search' }, 'Starting memory search endpoint');
+  logger.info({ port, service: "memory-search" }, "Starting memory search endpoint");
 
   // Connect to Postgres
-  db.connect().then(() => {
-    logger.info('Connected to Postgres');
+  db.connect()
+    .then(() => {
+      logger.info("Connected to Postgres");
 
-    // Start HTTP server
-    app.listen(port, () => {
-      logger.info({ port }, 'Memory search endpoint running');
+      // Start HTTP server
+      app.listen(port, () => {
+        logger.info({ port }, "Memory search endpoint running");
+      });
+    })
+    .catch((err) => {
+      logger.error({ err }, "Failed to initialize memory server");
+      process.exit(1);
     });
-  }).catch((err) => {
-    logger.error({ err }, 'Failed to initialize memory server');
-    process.exit(1);
-  });
 
   // Graceful shutdown
   const cleanup = async () => {
-    logger.info('Shutting down memory server');
+    logger.info("Shutting down memory server");
     await db.end();
     process.exit(0);
   };
 
-  process.on('SIGTERM', cleanup);
-  process.on('SIGINT', cleanup);
+  process.on("SIGTERM", cleanup);
+  process.on("SIGINT", cleanup);
 }

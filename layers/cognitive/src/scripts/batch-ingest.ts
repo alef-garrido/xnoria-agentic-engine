@@ -17,17 +17,17 @@ Cada lead en el batch debe generar un session_id único (ej: batch-outreach-2024
 Los metadatos del lead (LinkedIn, Company) deben persistirse en el payload inicial para que la IA los use en la personalización del mensaje.
 */
 
-import { Pool } from 'pg';
-import { parse } from 'csv-parse/sync';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import { createLogger } from '../../../shared/logging';
-import { CXEvent } from '../shared/types';
-import { createEventLoop } from '../events/loop';
+import { Pool } from "pg";
+import { parse } from "csv-parse/sync";
+import { readFileSync } from "fs";
+import { join } from "path";
+import { createLogger } from "../../../shared/logging";
+import { CXEvent } from "../shared/types";
+import { createEventLoop } from "../events/loop";
 
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 
-const logger = createLogger('batch-ingest', 'cognitive');
+const logger = createLogger("batch-ingest", "cognitive");
 const db = new Pool({
   connectionString: process.env.POSTGRES_URL,
 });
@@ -54,7 +54,7 @@ async function checkRecentOutreach(email: string): Promise<boolean> {
     );
     return res.rows.length > 0;
   } catch (err) {
-    logger.error({ error: err }, 'Error checking recent outreach');
+    logger.error({ error: err }, "Error checking recent outreach");
     return false;
   }
 }
@@ -66,9 +66,9 @@ function generateSessionId(): string {
 function mapLeadToCXEvent(lead: Lead): CXEvent {
   return {
     contact_id: lead.email,
-    channel: 'internal',
+    channel: "internal",
     input: `Lead from batch ingestion: ${lead.name}, ${lead.company}, ${lead.email}`,
-    stage: 'ACQ',
+    stage: "ACQ",
     meta: {
       linkedin: lead.linkedin,
       company: lead.company,
@@ -77,56 +77,58 @@ function mapLeadToCXEvent(lead: Lead): CXEvent {
   };
 }
 
-async function processLead(lead: Lead, processEvent: (event: CXEvent) => Promise<void>): Promise<void> {
+async function processLead(
+  lead: Lead,
+  processEvent: (event: CXEvent) => Promise<void>
+): Promise<void> {
   // Check for recent outreach
   const hasRecentOutreach = await checkRecentOutreach(lead.email);
   if (hasRecentOutreach) {
-    logger.info({ email: lead.email }, 'Skipping lead - recent outreach detected');
+    logger.info({ email: lead.email }, "Skipping lead - recent outreach detected");
     return;
   }
 
   // Create CXEvent
   const event = mapLeadToCXEvent(lead);
-  
+
   // Generate session ID
   const sessionId = generateSessionId();
-  
+
   // Add session ID to event metadata
   event.meta = {
     ...event.meta,
     session_id: sessionId,
   };
 
-  logger.info({ email: lead.email, sessionId }, 'Processing lead');
-  
+  logger.info({ email: lead.email, sessionId }, "Processing lead");
+
   try {
     await processEvent(event);
-    logger.info({ email: lead.email, sessionId }, 'Lead processed successfully');
+    logger.info({ email: lead.email, sessionId }, "Lead processed successfully");
   } catch (err) {
-    logger.error({ error: err, email: lead.email, sessionId }, 'Error processing lead');
+    logger.error({ error: err, email: lead.email, sessionId }, "Error processing lead");
   }
 }
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   if (args.length === 0) {
-    logger.error('Please provide a CSV file path');
+    logger.error("Please provide a CSV file path");
     process.exit(1);
   }
 
   const csvPath = args[0];
   const delayMs = args[1] ? parseInt(args[1], 10) : 1000; // Default 1 second delay
 
-
   try {
     // Read and parse CSV
-    const csvContent = readFileSync(csvPath, 'utf-8');
+    const csvContent = readFileSync(csvPath, "utf-8");
     const records: Lead[] = parse(csvContent, {
       columns: true,
       skip_empty_lines: true,
     });
 
-    logger.info({ count: records.length, csvPath }, 'Starting batch ingestion');
+    logger.info({ count: records.length, csvPath }, "Starting batch ingestion");
 
     // Create event loop processor
     const { processEvent } = createEventLoop(db);
@@ -134,17 +136,17 @@ async function main(): Promise<void> {
     // Process each lead with delay
     for (const [index, lead] of records.entries()) {
       await processLead(lead, processEvent);
-      
+
       // Add delay between leads
       if (index < records.length - 1) {
-        logger.info({ delayMs }, 'Waiting before processing next lead');
-        await new Promise(resolve => setTimeout(resolve, delayMs));
+        logger.info({ delayMs }, "Waiting before processing next lead");
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
     }
 
-    logger.info({ count: records.length }, 'Batch ingestion completed');
+    logger.info({ count: records.length }, "Batch ingestion completed");
   } catch (err) {
-    logger.error({ error: err }, 'Error during batch ingestion');
+    logger.error({ error: err }, "Error during batch ingestion");
     process.exit(1);
   } finally {
     await db.end();

@@ -1,17 +1,17 @@
 /**
  * translations.ts - Bilingual Translation Mapping (Phase 2)
- * 
+ *
  * RFC: CX Diagnostic Compass Architecture Refactoring
- * 
+ *
  * This file contains all translations for both English and Spanish.
  * Keys are organized hierarchically for easy navigation and maintenance:
- * 
+ *
  * - center.* - Central hub labels
  * - domain.* - Domain (stage) names
  * - cause.* - Cause structure (domain.cause format)
  * - signal.* - Signal/pain point names
  * - indicator.* - Key metric indicator names
- * 
+ *
  * Adding a new language is as simple as adding a new language object.
  * No data structure changes needed.
  */
@@ -20,7 +20,7 @@ export const TRANSLATIONS = {
   // ========================================================================
   // CENTER (CX HEALTH)
   // ========================================================================
-  "en": {
+  en: {
     "center.cx_health": "CX Health",
     "center.cx_health_description": "Overall health of the customer experience.",
 
@@ -254,7 +254,7 @@ export const TRANSLATIONS = {
   // ========================================================================
   // SPANISH TRANSLATIONS
   // ========================================================================
-  "es": {
+  es: {
     "center.cx_health": "Salud CX",
     "center.cx_health_description": "Salud general de la experiencia del cliente.",
 
@@ -494,10 +494,7 @@ export type TranslationKey = keyof (typeof TRANSLATIONS)["en"];
  * Get translation for a given key and language
  * Returns the key itself if translation not found (fallback)
  */
-export function translate(
-  key: TranslationKey,
-  language: Language = "en"
-): string {
+export function translate(key: TranslationKey, language: Language = "en"): string {
   return (
     (TRANSLATIONS[language][key] as string | undefined) ||
     (TRANSLATIONS.en[key] as string | undefined) ||
@@ -546,9 +543,7 @@ export function validateTranslationCompleteness(): {
     if (lang === "en") continue; // Skip English source
 
     const langKeys = new Set(Object.keys(translations));
-    const missing = Array.from(enKeys).filter(
-      (key) => !langKeys.has(key as string)
-    );
+    const missing = Array.from(enKeys).filter((key) => !langKeys.has(key as string));
 
     if (missing.length > 0) {
       missingTranslations.push({

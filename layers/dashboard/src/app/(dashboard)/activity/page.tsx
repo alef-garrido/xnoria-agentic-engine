@@ -1,11 +1,13 @@
 import { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
 import { ActivityFeed } from '@/components/ActivityFeed';
 
 export const metadata: Metadata = {
   title: `Activity Feed | ${process.env.NEXT_PUBLIC_APP_TITLE || 'Exnoria'}`,
 };
 
-export default function ActivityPage() {
+export default async function ActivityPage() {
+  const t = await getTranslations('activity');
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-2">
@@ -16,7 +18,7 @@ export default function ActivityPage() {
             color: 'var(--text-primary)'
           }}
         >
-          Activity Feed
+          {t('title')}
         </h1>
       </div>
       

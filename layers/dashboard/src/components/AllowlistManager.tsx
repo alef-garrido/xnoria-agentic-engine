@@ -9,6 +9,8 @@ import {
   X,
   Search,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { getLocale } from "@/i18n/locale";
 
 interface FilterAction {
   id: string;
@@ -19,6 +21,7 @@ interface FilterAction {
   manual_action: boolean;
   enabled: boolean;
   description: string | null;
+  description_es?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -32,6 +35,7 @@ interface Toast {
 const STAGES = ["ACQ", "SAL", "ONB", "PRD", "SUP", "COM", "RET", "EXP"];
 
 export function AllowlistManager() {
+  const t = useTranslations("allowlist");
   const [actions, setActions] = useState<FilterAction[] | null>(null);
   const [error, setError] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -94,7 +98,7 @@ export function AllowlistManager() {
               a.id === id ? { ...a, [field]: !value } : a
             ) ?? null
         );
-        addToast("Failed to update", "error");
+        addToast(t("failedToUpdate"), "error");
       }
     } catch {
       // Revert
@@ -104,7 +108,7 @@ export function AllowlistManager() {
             a.id === id ? { ...a, [field]: !value } : a
           ) ?? null
       );
-      addToast("Network error", "error");
+      addToast(t("networkError"), "error");
     }
   };
 
@@ -116,12 +120,12 @@ export function AllowlistManager() {
 
       if (res.ok) {
         setActions((prev) => prev?.filter((a) => a.id !== id) ?? null);
-        addToast("Action deleted", "success");
+        addToast(t("actionDeleted"), "success");
       } else {
-        addToast("Failed to delete", "error");
+        addToast(t("failedToDelete"), "error");
       }
     } catch {
-      addToast("Network error", "error");
+      addToast(t("networkError"), "error");
     } finally {
       setDeleteConfirmId(null);
     }
@@ -145,23 +149,28 @@ export function AllowlistManager() {
       if (res.ok) {
         const result = await res.json();
         setActions((prev) => [...(prev ?? []), result.action]);
-        addToast("Action created", "success");
+        addToast(t("actionCreated"), "success");
         setShowAddModal(false);
       } else {
         const err = await res.json();
-        addToast(err.error ?? "Failed to create", "error");
+        addToast(err.error ?? t("failedToCreate"), "error");
       }
     } catch {
-      addToast("Network error", "error");
+      addToast(t("networkError"), "error");
     }
   };
 
   // Filter logic
+  const locale = getLocale();
+  const searchText = (a: FilterAction) =>
+    locale === "es" && a.description_es
+      ? `${a.description} ${a.description_es}`
+      : (a.description ?? "");
   const filtered = actions?.filter((a) => {
     const matchesSearch =
       !searchQuery ||
       a.action_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (a.description ?? "").toLowerCase().includes(searchQuery.toLowerCase());
+      searchText(a).toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStage = !stageFilter || a.stage === stageFilter;
     return matchesSearch && matchesStage;
   });
@@ -171,9 +180,9 @@ export function AllowlistManager() {
     return (
       <div className="text-center py-16" style={{ color: "var(--error)" }}>
         <AlertTriangle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-        <p className="text-sm">Failed to load allowlist</p>
+        <p className="text-sm">{t("failedToLoad")}</p>
         <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-          Ensure the filter service is running
+          {t("filterNotRunning")}
         </p>
       </div>
     );
@@ -246,7 +255,7 @@ export function AllowlistManager() {
           />
           <input
             type="text"
-            placeholder="Search actions…"
+            placeholder={t("searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="input w-full"
@@ -266,7 +275,7 @@ export function AllowlistManager() {
             cursor: "pointer",
           }}
         >
-          <option value="">All stages</option>
+          <option value="">{t("allStages")}</option>
           {STAGES.map((s) => (
             <option key={s} value={s}>
               {s}
@@ -290,7 +299,7 @@ export function AllowlistManager() {
           style={{ padding: "8px 16px", fontSize: "12px" }}
         >
           <Plus className="w-4 h-4" />
-          Add Action
+          {t("addAction")}
         </button>
       </div>
 
@@ -304,7 +313,16 @@ export function AllowlistManager() {
                 textAlign: "left",
               }}
             >
-              {["Action ID", "Stage", "n8n Workflow", "HITL", "Manual", "Enabled", "Description", ""].map(
+              {[
+                t("colActionId"),
+                t("colStage"),
+                t("colWorkflow"),
+                t("colHitl"),
+                t("colManual"),
+                t("colEnabled"),
+                t("colDescription"),
+                "",
+              ].map(
                 (header) => (
                   <th
                     key={header}
@@ -332,10 +350,9 @@ export function AllowlistManager() {
                   className="text-center py-12"
                   style={{ color: "var(--text-muted)", fontSize: "13px" }}
                 >
-                  No actions match your filters
+                  {t("noMatch")}
                 </td>
-              </tr>
-            ) : (
+              </tr>            ) : (
               filtered?.map((action) => (
                 <tr
                   key={action.id}
@@ -432,7 +449,9 @@ export function AllowlistManager() {
                     }}
                   >
                     <span className="line-clamp-2">
-                      {action.description ?? "—"}
+                      {locale === "es"
+                        ? (action.description_es ?? action.description ?? "—")
+                        : (action.description ?? "—")}
                     </span>
                   </td>
 
@@ -445,7 +464,7 @@ export function AllowlistManager() {
                           className="btn-danger"
                           style={{ padding: "4px 10px", fontSize: "11px" }}
                         >
-                          Confirm
+                          {t("confirm")}
                         </button>
                         <button
                           onClick={() => setDeleteConfirmId(null)}
@@ -457,7 +476,7 @@ export function AllowlistManager() {
                             border: "none",
                           }}
                         >
-                          Cancel
+                          {t("cancel")}
                         </button>
                       </div>
                     ) : (
@@ -566,6 +585,7 @@ function AddActionModal({
     description: string;
   }) => Promise<void>;
 }) {
+  const t = useTranslations("allowlist");
   const [actionId, setActionId] = useState("");
   const [stage, setStage] = useState("ACQ");
   const [workflowId, setWorkflowId] = useState("");
@@ -628,7 +648,7 @@ function AddActionModal({
               color: "var(--text-primary)",
             }}
           >
-            Add New Action
+            {t("addNewAction")}
           </h3>
           <button
             onClick={onClose}
@@ -651,12 +671,12 @@ function AddActionModal({
               className="block text-xs font-medium mb-1.5"
               style={{ color: "var(--text-secondary)" }}
             >
-              Action ID *
+              {t("actionId")}
             </label>
             <input
               type="text"
               className="input w-full"
-              placeholder="stage.resource.verb"
+              placeholder={t("actionIdPlaceholder")}
               value={actionId}
               onChange={(e) => setActionId(e.target.value)}
               required
@@ -666,7 +686,7 @@ function AddActionModal({
               className="text-xs mt-1"
               style={{ color: "var(--text-muted)" }}
             >
-              Format: stage.resource.verb (e.g. sup.ticket.escalate)
+              {t("actionIdHint")}
             </p>
           </div>
 
@@ -676,7 +696,7 @@ function AddActionModal({
               className="block text-xs font-medium mb-1.5"
               style={{ color: "var(--text-secondary)" }}
             >
-              Stage *
+              {t("stage")}
             </label>
             <select
               className="input w-full"
@@ -698,12 +718,12 @@ function AddActionModal({
               className="block text-xs font-medium mb-1.5"
               style={{ color: "var(--text-secondary)" }}
             >
-              n8n Workflow ID *
+              {t("workflowId")}
             </label>
             <input
               type="text"
               className="input w-full"
-              placeholder="webhook-path-slug"
+              placeholder={t("workflowPlaceholder")}
               value={workflowId}
               onChange={(e) => setWorkflowId(e.target.value)}
               required
@@ -713,7 +733,7 @@ function AddActionModal({
               className="text-xs mt-1"
               style={{ color: "var(--text-muted)" }}
             >
-              The n8n webhook path for this workflow
+              {t("workflowHint")}
             </p>
           </div>
 
@@ -724,10 +744,10 @@ function AddActionModal({
                 className="block text-sm font-medium"
                 style={{ color: "var(--text-secondary)" }}
               >
-                Requires HITL
+                {t("requiresHitl")}
               </label>
               <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                Require human approval before execution
+                {t("requiresHitlHint")}
               </p>
             </div>
             <ToggleSwitch
@@ -744,10 +764,10 @@ function AddActionModal({
                 className="block text-sm font-medium"
                 style={{ color: "var(--text-secondary)" }}
               >
-                Manual Action
+                {t("manualAction")}
               </label>
               <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                Skip n8n dispatch — operator completes manually
+                {t("manualActionHint")}
               </p>
             </div>
             <ToggleSwitch
@@ -763,12 +783,12 @@ function AddActionModal({
               className="block text-xs font-medium mb-1.5"
               style={{ color: "var(--text-secondary)" }}
             >
-              Description
+              {t("description")}
             </label>
             <textarea
               className="input w-full"
               rows={2}
-              placeholder="What this action does…"
+              placeholder={t("descriptionPlaceholder")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               style={{ fontSize: "13px", resize: "vertical" }}
@@ -786,7 +806,7 @@ function AddActionModal({
               className="btn-outline"
               style={{ padding: "8px 16px", fontSize: "13px" }}
             >
-              Cancel
+              {t("cancel")}
             </button>
             <button
               type="submit"
@@ -798,7 +818,7 @@ function AddActionModal({
                 opacity: submitting || !actionId || !workflowId ? 0.5 : 1,
               }}
             >
-              {submitting ? "Creating…" : "Create Action"}
+              {submitting ? t("creating") : t("createAction")}
             </button>
           </div>
         </form>

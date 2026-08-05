@@ -22,39 +22,41 @@ import {
   Pencil,
 } from "lucide-react";
 import { BRANDING } from "@/config/branding";
-
-const navSections = [
-  {
-    items: [{ href: "/", label: "Dashboard", icon: LayoutDashboard }],
-  },
-  {
-    label: "CX Tools",
-    items: [
-      { href: "/tools/compass", label: "Compass", icon: Compass },
-      { href: "/tools/radar", label: "Radar", icon: Radar },
-      { href: "/tools/matriz", label: "Matriz", icon: LayoutGrid },
-      { href: "/tools/editor", label: "Editor", icon: Pencil },
-    ],
-  },
-  {
-    label: "Operations",
-    items: [
-      { href: "/health", label: "Health", icon: HeartPulse },
-      { href: "/hitl", label: "Approvals", icon: ShieldCheck },
-      { href: "/allowlist", label: "Allowlist", icon: ListChecks },
-      { href: "/memory", label: "Memory", icon: BrainCog },
-      { href: "/activity", label: "Activity", icon: Activity },
-      { href: "/sessions", label: "Sessions", icon: History },
-      { href: "/system", label: "System", icon: Server },
-    ],
-  },
-];
+import { useTranslations } from "next-intl";
 
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const t = useTranslations("sidebar");
+
+  const navSections = [
+    {
+      items: [{ href: "/", label: t("dashboard"), icon: LayoutDashboard }],
+    },
+    {
+      label: t("cxTools"),
+      items: [
+        { href: "/tools/compass", label: "Compass", icon: Compass },
+        { href: "/tools/radar", label: "Radar", icon: Radar },
+        { href: "/tools/matriz", label: "Matriz", icon: LayoutGrid },
+        { href: "/tools/editor", label: "Editor", icon: Pencil },
+      ],
+    },
+    {
+      label: t("operations"),
+      items: [
+        { href: "/health", label: t("health"), icon: HeartPulse },
+        { href: "/hitl", label: t("approvals"), icon: ShieldCheck },
+        { href: "/allowlist", label: t("allowlist"), icon: ListChecks },
+        { href: "/memory", label: t("memory"), icon: BrainCog },
+        { href: "/activity", label: t("activity"), icon: Activity },
+        { href: "/sessions", label: t("sessions"), icon: History },
+        { href: "/system", label: t("system"), icon: Server },
+      ],
+    },
+  ];
 
   // Check if mobile on mount and resize
   useEffect(() => {
@@ -104,7 +106,7 @@ export function Sidebar() {
       <button
         onClick={toggleSidebar}
         className="mobile-menu-button"
-        aria-label="Toggle menu"
+        aria-label={t("toggleMenu")}
         style={{
           position: "fixed",
           top: "1rem",
@@ -164,7 +166,7 @@ export function Sidebar() {
         {isMobile && (
           <button
             onClick={closeSidebar}
-            aria-label="Close menu"
+            aria-label={t("closeMenu")}
             style={{
               position: "absolute",
               top: "1rem",
@@ -288,7 +290,7 @@ export function Sidebar() {
             }}
           >
             <LogOut className="w-4 h-4" />
-            <span className="text-sm">Cerrar sesión</span>
+            <span className="text-sm">{t("logout")}</span>
           </button>
         </div>
       </aside>

@@ -4,6 +4,7 @@ import type { Domain } from "@/features/cx-tools/shared/types/wheel";
 import { useCompassData } from "@/features/cx-tools/compass/context/CompassDataContext";
 import { getSliceGeometry } from "@/features/cx-tools/compass/utils/geometry";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 interface DomainSliceProps {
   domain: Domain;
@@ -29,6 +30,7 @@ export default function DomainSlice({
   // Get the wheel rotation context
   const { selectDomain, setHoveredLabel, setHoveredDomainId } = useWheel();
   const { domainPrefixes } = useCompassData();
+  const t = useTranslations("cxtools");
 
   const { pathD, labelX, labelY, rotDeg, flipLabel, showLabel } = getSliceGeometry({
     startAngle,
@@ -47,7 +49,7 @@ export default function DomainSlice({
       onMouseEnter={() => { setHoveredLabel(domain.name); setHoveredDomainId(prefix); }}
       onMouseLeave={() => { setHoveredLabel(null); setHoveredDomainId(null); }}
       role="button"
-      aria-label={`Domain: ${domain.name}`}
+      aria-label={t("domainAria", { name: domain.name })}
       initial={false}
       animate={{ opacity: isFaded ? 0.15 : 1 }}
       transition={{ duration: 0.5, ease: "easeInOut" }}

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale";
 import {
   Check,
   X,
@@ -14,6 +15,8 @@ import {
   Pencil,
   RotateCcw,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { getLocale } from "@/i18n/locale";
 
 interface PendingAction {
   log_id: string;
@@ -33,6 +36,7 @@ interface Toast {
 }
 
 export function HITLQueue() {
+  const t = useTranslations("hitl");
   const [pending, setPending] = useState<PendingAction[] | null>(null);
   const [error, setError] = useState(false);
   const pendingRef = useRef(pending);
@@ -100,17 +104,17 @@ export function HITLQueue() {
         const isManual = action?.manual_action;
         addToast(
           isManual
-            ? "Marked as complete (manual action)"
+            ? t("markedComplete")
             : edited
-              ? "Action approved with edits and dispatched"
-              : "Action approved and dispatched",
+              ? t("approvedWithEdits")
+              : t("approvedDispatched"),
           "success"
         );
       } else {
-        addToast(data.error ?? "Failed to approve", "error");
+        addToast(data.error ?? t("failedToApprove"), "error");
       }
     } catch {
-      addToast("Network error — could not approve", "error");
+      addToast(t("approveNetworkError"), "error");
     } finally {
       setActionInProgress(null);
     }
@@ -124,12 +128,12 @@ export function HITLQueue() {
 
       if (data.success) {
         setPending((prev) => prev?.filter((a) => a.log_id !== logId) ?? null);
-        addToast("Action rejected", "success");
+        addToast(t("actionRejected"), "success");
       } else {
-        addToast(data.error ?? "Failed to reject", "error");
+        addToast(data.error ?? t("failedToReject"), "error");
       }
     } catch {
-      addToast("Network error — could not reject", "error");
+      addToast(t("rejectNetworkError"), "error");
     } finally {
       setActionInProgress(null);
     }
@@ -140,9 +144,9 @@ export function HITLQueue() {
     return (
       <div className="text-center py-16" style={{ color: "var(--error)" }}>
         <AlertTriangle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-        <p className="text-sm">Failed to load approval queue</p>
+        <p className="text-sm">{t("failedToLoad")}</p>
         <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-          Ensure the filter service is running
+          {t("filterNotRunning")}
         </p>
       </div>
     );
@@ -172,10 +176,10 @@ export function HITLQueue() {
           style={{ color: "var(--text-muted)", opacity: 0.4 }}
         />
         <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-          No pending actions
+          {t("noPending")}
         </p>
         <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-          Actions requiring human approval will appear here
+          {t("noPendingDetail")}
         </p>
         <button
           onClick={fetchPending}
@@ -187,7 +191,7 @@ export function HITLQueue() {
           }}
         >
           <RefreshCw className="w-3.5 h-3.5" />
-          Refresh
+          {t("refresh")}
         </button>
       </div>
     );
@@ -239,7 +243,7 @@ export function HITLQueue() {
         style={{ color: "var(--text-secondary)" }}
       >
         <span className="text-xs font-medium">
-          {pending.length} action{pending.length !== 1 ? "s" : ""} awaiting review
+          {t("awaitingReview", { count: pending.length })}
         </span>
         <button
           onClick={fetchPending}
@@ -247,7 +251,7 @@ export function HITLQueue() {
           style={{ color: "var(--text-muted)" }}
         >
           <RefreshCw className="w-3 h-3" />
-          Refresh
+          {t("refresh")}
         </button>
       </div>
 
@@ -286,7 +290,7 @@ export function HITLQueue() {
                           className="w-3 h-3"
                           style={{ marginRight: "4px" }}
                         />
-                        PENDING
+                        {t("pending")}
                       </span>
                       {action.manual_action && (
                         <span
@@ -296,7 +300,7 @@ export function HITLQueue() {
                             color: "var(--info)",
                           }}
                         >
-                          MANUAL
+                          {t("manual")}
                         </span>
                       )}
                       <span
@@ -325,7 +329,7 @@ export function HITLQueue() {
                         className="text-xs mb-1"
                         style={{ color: "var(--text-secondary)" }}
                       >
-                        <span style={{ color: "var(--text-muted)" }}>Contact: </span>
+                        <span style={{ color: "var(--text-muted)" }}>{t("contact")}</span>
                         {String(action.payload_in.contact_id)}
                       </div>
                     )}
@@ -336,7 +340,7 @@ export function HITLQueue() {
                         className="text-xs"
                         style={{ color: "var(--text-secondary)" }}
                       >
-                        <span style={{ color: "var(--text-muted)" }}>Reasoning: </span>
+                        <span style={{ color: "var(--text-muted)" }}>{t("reasoning")}</span>
                         {String(action.meta.triggered_by)}
                       </div>
                     )}
@@ -347,7 +351,7 @@ export function HITLQueue() {
                         className="text-xs mt-1"
                         style={{ color: "var(--text-secondary)" }}
                       >
-                        <span style={{ color: "var(--text-muted)" }}>Reason: </span>
+                        <span style={{ color: "var(--text-muted)" }}>{t("reason")}</span>
                         {String(action.payload_in.reason)}
                       </div>
                     )}
@@ -365,14 +369,13 @@ export function HITLQueue() {
                           className="text-xs font-semibold mb-1"
                           style={{ color: "var(--info)" }}
                         >
-                          MANUAL ACTION
+                          {t("manualAction")}
                         </div>
                         <div
                           className="text-xs"
                           style={{ color: "var(--text-secondary)" }}
                         >
-                          This action cannot be automated on the current HubSpot plan.
-                          Complete it manually in HubSpot, then click &quot;Mark Complete&quot;.
+                          {t("manualActionDetail")}
                         </div>
                       </div>
                     )}
@@ -386,7 +389,7 @@ export function HITLQueue() {
                             style={{ color: "var(--text-muted)" }}
                           >
                             <Pencil className="w-3 h-3 inline-block mr-1" style={{ verticalAlign: "text-bottom" }} />
-                            OUTREACH MESSAGE
+                            {t("outreachMessage")}
                           </span>
                           {editedPayloads[action.log_id] && (
                             <span
@@ -397,7 +400,7 @@ export function HITLQueue() {
                                 fontSize: "10px",
                               }}
                             >
-                              edited
+                              {t("edited")}
                             </span>
                           )}
                         </div>
@@ -461,7 +464,7 @@ export function HITLQueue() {
                             style={{ color: "var(--text-muted)", cursor: "pointer" }}
                           >
                             <RotateCcw className="w-3 h-3" />
-                            Reset to original
+                            {t("resetToOriginal")}
                           </button>
                         )}
                       </div>
@@ -473,11 +476,12 @@ export function HITLQueue() {
                       style={{ color: "var(--text-muted)" }}
                     >
                       <span>
-                        Session: {action.session_id.substring(0, 8)}…
+                        {t("session", { sessionId: action.session_id.substring(0, 8) + "…" })}
                       </span>
                       <span>
                         {formatDistanceToNow(new Date(action.created_at), {
                           addSuffix: true,
+                          locale: getLocale() === "es" ? es : undefined,
                         })}
                       </span>
                     </div>
@@ -488,7 +492,7 @@ export function HITLQueue() {
                     <button
                       onClick={() => handleApprove(action.log_id)}
                       disabled={isProcessing}
-                      title={action.manual_action ? "Mark Complete" : "Approve"}
+                      title={action.manual_action ? t("markComplete") : t("approve")}
                       style={{
                         display: "inline-flex",
                         alignItems: "center",
@@ -505,12 +509,12 @@ export function HITLQueue() {
                       }}
                     >
                       <Check className="w-4 h-4" />
-                      {action.manual_action ? "Mark Complete" : "Approve"}
+                      {action.manual_action ? t("markComplete") : t("approve")}
                     </button>
                     <button
                       onClick={() => handleReject(action.log_id)}
                       disabled={isProcessing}
-                      title="Reject"
+                      title={t("reject")}
                       style={{
                         display: "inline-flex",
                         alignItems: "center",
@@ -527,7 +531,7 @@ export function HITLQueue() {
                       }}
                     >
                       <X className="w-4 h-4" />
-                      Reject
+                      {t("reject")}
                     </button>
                   </div>
                 </div>
@@ -548,11 +552,11 @@ export function HITLQueue() {
               >
                 {isExpanded ? (
                   <>
-                    <ChevronUp className="w-3.5 h-3.5" /> Hide payload
+                    <ChevronUp className="w-3.5 h-3.5" /> {t("hidePayload")}
                   </>
                 ) : (
                   <>
-                    <ChevronDown className="w-3.5 h-3.5" /> View full payload
+                    <ChevronDown className="w-3.5 h-3.5" /> {t("viewFullPayload")}
                   </>
                 )}
               </button>
@@ -572,7 +576,7 @@ export function HITLQueue() {
                     className="text-xs mb-2 font-semibold"
                     style={{ color: "var(--text-muted)" }}
                   >
-                    PAYLOAD
+                    {t("payload")}
                   </div>
                   <pre
                     style={{
@@ -593,7 +597,7 @@ export function HITLQueue() {
                         className="text-xs mt-3 mb-2 font-semibold"
                         style={{ color: "var(--text-muted)" }}
                       >
-                        META
+                        {t("meta")}
                       </div>
                       <pre
                         style={{

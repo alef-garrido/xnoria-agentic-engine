@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import type { FlatSignal } from "@/features/cx-tools/shared/types/signal";
 import { SignalTile } from "./SignalTile";
 
@@ -21,13 +22,14 @@ const containerVariants = {
 };
 
 export function SignalGrid({ signals, selectedSignalIds, onSignalClick }: SignalGridProps) {
+    const t = useTranslations("cxtools");
     if (signals.length === 0) {
         return (
             <div
                 className="flex flex-col items-center justify-center p-12 text-sm rounded-xl border border-dashed"
                 style={{ color: "var(--text-muted)", borderColor: "var(--border-strong)" }}
             >
-                <p>No signals match the current filters.</p>
+                <p>{t("noMatch")}</p>
             </div>
         );
     }

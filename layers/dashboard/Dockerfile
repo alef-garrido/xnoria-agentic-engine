@@ -2,6 +2,10 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Deployment locale — inlined into client bundles as NEXT_PUBLIC_APP_LOCALE
+ARG APP_LOCALE=en
+ENV NEXT_PUBLIC_APP_LOCALE=$APP_LOCALE
+
 COPY layers/dashboard/package*.json ./
 RUN npm ci
 

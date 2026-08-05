@@ -3,13 +3,35 @@
  *
  * Ported from the CX Churn Wheel repo (src/lib/generateActionPlanPdf.ts).
  * Adapted for the dashboard:
- * - EN-only (no Language param)
  * - Interventions read directly from FlatSignal.interventions (pre-resolved
  *   { id, name } objects by signalBuilder) instead of a getIntervention lookup
  */
 
 import jsPDF from "jspdf";
 import type { FlatSignal } from "@/features/cx-tools/shared/types/signal";
+
+/* ─── Localized strings ──────────────────────────────────────────── */
+
+const PDF_STRINGS: Record<string, { title: string; generated: string; indicators: string; interventions: string; bullet: string }> = {
+  en: {
+    title: "CX Action Plan",
+    generated: "Generated {date}  •  {count} signals  •  {domains} domains",
+    indicators: "INDICATORS",
+    interventions: "INTERVENTIONS",
+    bullet: "›  ",
+  },
+  es: {
+    title: "Plan de Acción CX",
+    generated: "Generado {date}  •  {count} señales  •  {domains} dominios",
+    indicators: "INDICADORES",
+    interventions: "INTERVENCIONES",
+    bullet: "›  ",
+  },
+};
+
+function pdfStrings(language?: string) {
+  return PDF_STRINGS[language === "es" ? "es" : "en"];
+}
 
 /* ─── Colour helpers ──────────────────────────────────────────────── */
 
@@ -40,14 +62,17 @@ const ACCENT: [number, number, number] = [99, 102, 241];
 export interface ActionPlanPdfOptions {
   signals: FlatSignal[];
   selectedIds: string[];
+  language?: string;
 }
 
 export function generateActionPlanPdf({
   signals,
   selectedIds,
+  language,
 }: ActionPlanPdfOptions): void {
   const selected = signals.filter((s) => selectedIds.includes(s.id));
   if (selected.length === 0) return;
+  const strs = pdfStrings(language);
 
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pw = doc.internal.pageSize.getWidth();
@@ -87,14 +112,21 @@ export function generateActionPlanPdf({
   doc.setFont("helvetica", "bold");
   doc.setFontSize(24);
   doc.setTextColor(...WHITE);
-  doc.text("CX Action Plan", mx, y);
+  doc.text(strs.title, mx, y);
   y += 9;
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(...MUTED);
   const uniqueDomains = new Set(selected.map((s) => s.domainName)).size;
-  doc.text(`Generated ${today}  •  ${selected.length} signals  •  ${uniqueDomains} domains`, mx, y);
+  doc.text(
+    strs.generated
+      .replace("{date}", today)
+      .replace("{count}", String(selected.length))
+      .replace("{domains}", String(uniqueDomains)),
+    mx,
+    y
+  );
   y += 14;
 
   /* ── Group signals by domain ──────────────────────────────────── */
@@ -192,14 +224,14 @@ export function generateActionPlanPdf({
         doc.setFont("helvetica", "bold");
         doc.setFontSize(7.5);
         doc.setTextColor(...ACCENT);
-        doc.text("INDICATORS", mx + 7, y);
+        doc.text(strs.indicators, mx + 7, y);
         y += 4;
 
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
         doc.setTextColor(...BODY);
         for (const ind of sig.indicators) {
-          doc.text(`›  ${ind.name.replace(/_/g, " ")}`, mx + 10, y);
+          doc.text(`${strs.bullet}${ind.name.replace(/_/g, " ")}`, mx + 10, y);
           y += 5;
         }
         y += 1;
@@ -210,7 +242,7 @@ export function generateActionPlanPdf({
         doc.setFont("helvetica", "bold");
         doc.setFontSize(7.5);
         doc.setTextColor(...ACCENT);
-        doc.text("INTERVENTIONS", mx + 7, y);
+        doc.text(strs.interventions, mx + 7, y);
         y += 4.5;
 
         doc.setFont("helvetica", "normal");
@@ -245,10 +277,11 @@ export function generateActionPlanPdf({
     doc.setPage(i);
     doc.setFontSize(7);
     doc.setTextColor(...MUTED);
-    doc.text("CX Action Plan", mx, ph - 8);
+    doc.text(strs.title, mx, ph - 8);
     doc.text(`${i} / ${pages}`, pw - mx, ph - 8, { align: "right" });
   }
 
   /* ── Download ─────────────────────────────────────────────────── */
-  doc.save(`cx-action-plan-${today}.pdf`);
+  const suffix = language === "es" ? "-es" : "";
+  doc.save(`cx-action-plan${suffix}-${today}.pdf`);
 }

@@ -47,6 +47,7 @@ export interface FilterAction {
   manual_action:   boolean;
   enabled:         boolean;
   description:     string | null;
+  description_es?: string | null;
   created_at?:     string;
   updated_at?:     string;
 }

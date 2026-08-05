@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, CheckCircle2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { FlatSignal } from "@/features/cx-tools/shared/types/signal";
 
 interface SignalDetailCardProps {
@@ -11,6 +12,7 @@ interface SignalDetailCardProps {
 }
 
 export function SignalDetailCard({ signal, domains, causes }: SignalDetailCardProps) {
+    const t = useTranslations("cxtools");
     if (!signal) {
         return (
             <div
@@ -22,7 +24,7 @@ export function SignalDetailCard({ signal, domains, causes }: SignalDetailCardPr
                     style={{ borderColor: "var(--border-strong)" }}
                 />
                 <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                    Select a signal to view its detailed breakdown.
+                    {t("selectSignalHint")}
                 </p>
             </div>
         );
@@ -72,7 +74,7 @@ export function SignalDetailCard({ signal, domains, causes }: SignalDetailCardPr
                                 className="text-sm font-semibold uppercase tracking-wider"
                                 style={{ color: "var(--text-secondary)" }}
                             >
-                                Indicators
+                                {t("indicators")}
                             </h3>
                         </div>
                         <div className="grid grid-cols-1 gap-2">
@@ -106,7 +108,7 @@ export function SignalDetailCard({ signal, domains, causes }: SignalDetailCardPr
                                 className="text-sm font-semibold uppercase tracking-wider"
                                 style={{ color: "var(--text-secondary)" }}
                             >
-                                Interventions
+                                {t("interventions")}
                             </h3>
                         </div>
                         <ul className="space-y-2">

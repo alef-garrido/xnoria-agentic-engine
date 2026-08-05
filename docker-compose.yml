@@ -64,6 +64,8 @@ services:
       N8N_VERSION_NOTIFICATIONS_ENABLED: false
       # Allow workflows to read env vars via $env
       N8N_BLOCK_ENV_ACCESS_IN_NODE: false
+      # Deployment locale — drives localized message templates in Code nodes
+      APP_LOCALE: ${APP_LOCALE:-en}
       # -------------------------------------------------------------------------
       # Meta WhatsApp Business API
       # W3 · sal.contact.prioritize — readable inside workflows via $env
@@ -122,6 +124,8 @@ services:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       TELEGRAM_OPERATOR_CHAT_ID: ${TELEGRAM_OPERATOR_CHAT_ID}
       DASHBOARD_URL: ${DASHBOARD_URL:-http://localhost:4000}
+      # Deployment locale — localization of user-facing strings (en | es)
+      APP_LOCALE: ${APP_LOCALE:-en}
       # COM_CONTENT_SHEET_ID — used by W-COM-1 · com.content.publish
       COM_CONTENT_SHEET_ID: ${COM_CONTENT_SHEET_ID}
     ports:
@@ -187,6 +191,8 @@ services:
       EMBEDDING_API_KEY: ${EMBEDDING_API_KEY}
       COGNITIVE_MEMORY_PORT: ${COGNITIVE_MEMORY_PORT:-3001}
       FILTER_URL: http://filter:3000
+      # Deployment locale — localization of agent-facing strings (en | es)
+      APP_LOCALE: ${APP_LOCALE:-en}
       POSTGRES_URL: postgresql://${PROJECT_ID:-exnoria}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       # PostHog MCP (optional — cognitive degrades gracefully if not set)
@@ -211,6 +217,9 @@ services:
     build:
       context: .
       dockerfile: layers/dashboard/Dockerfile
+      args:
+        # Build-time locale — NEXT_PUBLIC_APP_LOCALE is inlined into client bundles
+        APP_LOCALE: ${APP_LOCALE:-en}
     container_name: ${PROJECT_ID:-exnoria}_dashboard
     restart: unless-stopped
     depends_on:
@@ -219,6 +228,8 @@ services:
     environment:
       PROJECT_ID: ${PROJECT_ID:-exnoria}
       NEXT_PUBLIC_PROJECT_SUBTITLE: ${NEXT_PUBLIC_PROJECT_SUBTITLE:-}
+      # Deployment locale (en | es) — must match build arg
+      NEXT_PUBLIC_APP_LOCALE: ${APP_LOCALE:-en}
       POSTGRES_URL: postgresql://${PROJECT_ID:-exnoria}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
       ADMIN_PASSWORD: ${DASHBOARD_ADMIN_PASSWORD}
       AUTH_SECRET: ${DASHBOARD_AUTH_SECRET}

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Server, Activity, Cpu, MemoryStick, HardDrive } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface Service {
   name: string;
@@ -47,6 +48,7 @@ function bytesToGB(bytes: number) {
 }
 
 export default function SystemMonitorPage() {
+  const t = useTranslations("system");
   const [data, setData] = useState<SystemData | null>(null);
   const [error, setError] = useState(false);
   const dataRef = useRef(data);
@@ -83,17 +85,17 @@ export default function SystemMonitorPage() {
             color: 'var(--text-primary)'
           }}
         >
-          System Monitor
+          {t("title")}
         </h1>
         <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-muted)' }}>
           <Activity className="w-4 h-4 animate-pulse" style={{ color: 'var(--positive)' }} />
-          Polling every 10s
+          {t("polling")}
         </div>
       </div>
 
       {error ? (
         <div className="text-center py-12 rounded-xl" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
-          <p style={{ color: 'var(--error)' }}>Failed to fetch system metrics. Ensure Docker API is mounted.</p>
+          <p style={{ color: 'var(--error)' }}>{t("fetchFailed")}</p>
         </div>
       ) : !data ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
@@ -106,7 +108,7 @@ export default function SystemMonitorPage() {
           {/* Services Grid */}
           <div>
             <h2 className="text-lg font-semibold mb-4" style={{ fontFamily: 'var(--font-heading)', color: 'var(--text-primary)' }}>
-              Core Services
+              {t("coreServices")}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
               {data.services.map((service) => (
@@ -127,11 +129,11 @@ export default function SystemMonitorPage() {
                   
                   <div className="grid grid-cols-2 gap-2 mt-auto">
                     <div className="flex flex-col">
-                      <span className="text-[10px] uppercase font-semibold" style={{ color: 'var(--text-muted)' }}>Uptime</span>
+                      <span className="text-[10px] uppercase font-semibold" style={{ color: 'var(--text-muted)' }}>{t("uptime")}</span>
                       <span className="text-sm truncate" style={{ color: 'var(--text-secondary)' }}>{service.uptime || 'N/A'}</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[10px] uppercase font-semibold" style={{ color: 'var(--text-muted)' }}>Restarts</span>
+                      <span className="text-[10px] uppercase font-semibold" style={{ color: 'var(--text-muted)' }}>{t("restarts")}</span>
                       <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{service.restartCount}</span>
                     </div>
                   </div>
@@ -143,7 +145,7 @@ export default function SystemMonitorPage() {
           {/* Host Metrics Grid */}
           <div>
             <h2 className="text-lg font-semibold mb-4 mt-4" style={{ fontFamily: 'var(--font-heading)', color: 'var(--text-primary)' }}>
-              Host Metrics
+              {t("hostMetrics")}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div 
@@ -152,7 +154,7 @@ export default function SystemMonitorPage() {
               >
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                    <Cpu className="w-4 h-4" /> CPU Load
+                    <Cpu className="w-4 h-4" /> {t("cpuLoad")}
                   </div>
                   <div className="text-2xl font-bold font-mono" style={{ color: 'var(--text-primary)' }}>
                     {(data.host.cpuPercent).toFixed(2)}
@@ -166,7 +168,7 @@ export default function SystemMonitorPage() {
               >
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                    <MemoryStick className="w-4 h-4" /> Memory Output
+                    <MemoryStick className="w-4 h-4" /> {t("memoryOutput")}
                   </div>
                   <div className="text-2xl font-bold font-mono" style={{ color: 'var(--text-primary)' }}>
                     {bytesToGB(data.host.ramUsed)} <span className="text-sm font-normal" style={{ color: 'var(--text-muted)' }}>/ {bytesToGB(data.host.ramTotal)} GB</span>
@@ -180,13 +182,13 @@ export default function SystemMonitorPage() {
               >
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
-                    <HardDrive className="w-4 h-4" /> Disk Utilization
+                    <HardDrive className="w-4 h-4" /> {t("diskUtilization")}
                   </div>
                   <div className="text-2xl font-bold font-mono" style={{ color: 'var(--text-primary)' }}>
                     {data.host.diskTotal ? (
                       <>{bytesToGB(data.host.diskUsed)} <span className="text-sm font-normal" style={{ color: 'var(--text-muted)' }}>/ {bytesToGB(data.host.diskTotal)} GB</span></>
                     ) : (
-                      <span className="text-base font-normal" style={{ color: 'var(--warning)' }}>Not Available</span>
+                      <span className="text-base font-normal" style={{ color: 'var(--warning)' }}>{t("notAvailable")}</span>
                     )}
                   </div>
                 </div>

@@ -10,6 +10,7 @@ const escalation_1 = require("./specialists/escalation");
 const telegram_1 = require("../channels/telegram");
 const session_1 = require("../memory/session");
 const logging_1 = require("../../../shared/logging");
+const strings_1 = require("../i18n/strings");
 const CLUSTER_RUNNERS = {
     acqsal: acqsal_1.runAcqSalSpecialist,
     lifecycle: lifecycle_1.runLifecycleSpecialist,
@@ -67,9 +68,9 @@ async function coordinate(db, event) {
         else {
             // Unrecognised or missing stage — reply gracefully so the operator knows what to send
             const hint = event.stage
-                ? `Stage "${event.stage}" is not recognised.`
-                : 'No journey stage detected in your message.';
-            const replyText = `${hint} Please include a stage keyword: ACQ, SAL, ONB, PRD, SUP, COM, RET or EXP.`;
+                ? (0, strings_1.t)().stageNotRecognized(event.stage)
+                : (0, strings_1.t)().noStageDetected;
+            const replyText = `${hint} ${(0, strings_1.t)().stageKeywordHint}`;
             logger.warn({ contact_id: event.contact_id, hint }, 'Stage validation failed');
             await (0, telegram_1.sendReply)(event.contact_id, replyText);
             await (0, session_1.logSessionToDb)(db, session_id, event, 'coordinator', [], replyText);

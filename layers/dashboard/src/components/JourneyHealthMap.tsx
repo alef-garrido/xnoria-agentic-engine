@@ -10,6 +10,7 @@ import {
   Clock,
   RefreshCw,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import {
   STAGE_META,
   getStageAverageSeverity,
@@ -78,6 +79,7 @@ const ACTIVE_STAGES: JourneyStage[] = ["ACQ", "SAL", "SUP", "RET"];
 // Component
 // ---------------------------------------------------------------------------
 export function JourneyHealthMap() {
+  const t = useTranslations("journey");
   const [metrics, setMetrics] = useState<StageHealthMetrics[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -154,7 +156,7 @@ export function JourneyHealthMap() {
           style={{ color: "var(--warning)" }}
         />
         <p style={{ color: "var(--text-secondary)" }}>
-          Unable to fetch health metrics. Ensure the filter service is running.
+          {t("fetchFailed")}
         </p>
       </div>
     );
@@ -188,7 +190,7 @@ export function JourneyHealthMap() {
         <div className="flex items-center gap-2">
           {lastUpdated && (
             <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>
-              Updated {lastUpdated.toLocaleTimeString()}
+              {t("updated", { time: lastUpdated.toLocaleTimeString() })}
             </span>
           )}
           <button
@@ -204,7 +206,7 @@ export function JourneyHealthMap() {
               alignItems: "center",
               transition: "all 0.2s ease",
             }}
-            aria-label="Refresh"
+            aria-label={t("refresh")}
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -303,7 +305,7 @@ export function JourneyHealthMap() {
                         marginBottom: "2px",
                       }}
                     >
-                      Actions
+                      {t("actions")}
                     </div>
                     <div
                       style={{
@@ -324,9 +326,8 @@ export function JourneyHealthMap() {
                         marginBottom: "2px",
                       }}
                     >
-                      Exec Rate
-                    </div>
-                    <div
+                      {t("execRate")}
+                    </div>                    <div
                       style={{
                         fontSize: "18px",
                         fontWeight: 700,
@@ -352,7 +353,7 @@ export function JourneyHealthMap() {
                         marginBottom: "2px",
                       }}
                     >
-                      Severity
+                      {t("severity")}
                     </div>
                     <div
                       style={{
@@ -398,10 +399,10 @@ export function JourneyHealthMap() {
               color: "var(--text-primary)",
             }}
           >
-            Action Volume by Stage
+            {t("actionVolume")}
           </h2>
           <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>
-            Last {days} days
+            {t("lastDays", { days })}
           </span>
         </div>
 
@@ -420,7 +421,7 @@ export function JourneyHealthMap() {
               className="text-center py-8"
               style={{ color: "var(--text-muted)", fontSize: "14px" }}
             >
-              No action data for this period.
+              {t("noActionData")}
             </div>
           ) : (
             <div className="flex flex-col gap-3">
@@ -485,8 +486,8 @@ export function JourneyHealthMap() {
                             textShadow: "0 1px 2px rgba(0,0,0,0.3)",
                           }}
                         >
-                          {m?.executed ?? 0} exec / {m?.rejected ?? 0} rej /{" "}
-                          {m?.pending_hitl ?? 0} hitl
+                          {m?.executed ?? 0} {t("exec")} / {m?.rejected ?? 0} {t("rej")} /{" "}
+                          {m?.pending_hitl ?? 0} {t("hitl")}
                         </div>
                       )}
                     </div>
@@ -533,10 +534,10 @@ export function JourneyHealthMap() {
               color: "var(--text-primary)",
             }}
           >
-            Decision Quality
+            {t("decisionQuality")}
           </h2>
           <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>
-            HITL metrics — last {days} days
+            {t("hitlMetrics", { days })}
           </span>
         </div>
 
@@ -555,13 +556,13 @@ export function JourneyHealthMap() {
                 }}
               >
                 {[
-                  "Stage",
-                  "HITL Actions",
-                  "Approved",
-                  "Rejected",
-                  "Approval Rate",
-                  "Top Rejection",
-                  "Avg Review",
+                  t("colStage"),
+                  t("colHitlActions"),
+                  t("colApproved"),
+                  t("colRejected"),
+                  t("colApprovalRate"),
+                  t("colTopRejection"),
+                  t("colAvgReview"),
                 ].map((h) => (
                   <th
                     key={h}
@@ -606,7 +607,7 @@ export function JourneyHealthMap() {
                       color: "var(--text-muted)",
                     }}
                   >
-                    No decision data available.
+                    {t("noDecisionData")}
                   </td>
                 </tr>
               ) : (
@@ -704,7 +705,7 @@ export function JourneyHealthMap() {
                           />
                           <span style={{ color: "var(--text-secondary)" }}>
                             {m?.avg_review_minutes != null
-                              ? `${m.avg_review_minutes} min`
+                              ? `${m.avg_review_minutes} ${t("min")}`
                               : "—"}
                           </span>
                         </div>

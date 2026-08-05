@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Info, X } from "lucide-react";
 import { useCompassData } from "@/features/cx-tools/compass/context/CompassDataContext";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 const subscribe = () => () => {};
 
@@ -13,6 +14,7 @@ export default function Legend() {
   // SSR-safe client check — createPortal(document.body) crashes server render
   const mounted = useSyncExternalStore(subscribe, () => true, () => false);
   const { wheelData, domainPrefixes, uiStrings } = useCompassData();
+  const t = useTranslations("cxtools");
 
   const close = useCallback(() => setOpen(false), []);
 
@@ -35,7 +37,7 @@ export default function Legend() {
           color: "var(--text-primary)",
           borderColor: "var(--border)",
         }}
-        aria-label="Open legend"
+        aria-label={t("openLegend")}
       >
         <Info className="w-3 h-3" />
         {uiStrings.legend}
@@ -80,7 +82,7 @@ export default function Legend() {
                 <button
                   onClick={close}
                   className="absolute top-3 right-3 p-1.5 rounded-md hover:bg-white/10 transition-colors"
-                  aria-label="Close legend"
+                  aria-label={t("closeLegend")}
                 >
                   <X className="w-4 h-4" />
                 </button>

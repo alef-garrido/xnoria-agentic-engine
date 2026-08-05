@@ -4,6 +4,7 @@ import React from "react";
 import { MatrizData, TimelineNode } from "@/features/cx-tools/matriz/lib/types";
 import { TimelineBranch } from "./TimelineBranch";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 interface TimelineJourneyProps {
   data: MatrizData;
@@ -15,13 +16,14 @@ interface TimelineJourneyProps {
 }
 
 export const TimelineJourney: React.FC<TimelineJourneyProps> = ({ data, activeLayers }) => {
+  const t = useTranslations("cxtools");
   // Flatten stages into nodes with global stage indexing
   const nodes: TimelineNode[] = data.touchpoints.map((tp) => {
     const stage = data.journey.find(s => s.id === tp.stage);
     return {
       ...tp,
       stageColor: stage?.color || "#ffffff",
-      stageLabel: stage?.label || "Unknown",
+      stageLabel: stage?.label || t("unknownStage"),
       localIndex: stage?.order || 1
     };
   });

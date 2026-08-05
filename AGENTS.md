@@ -218,6 +218,40 @@ All services in the Xnoria platform use structured logging instead of traditiona
 4. **Performance conscious** - Avoid expensive string operations in hot paths
 5. **Observability focused** - Logs designed for machine parsing and analysis
 
+## Localization (APP_LOCALE)
+
+One instance = one language. The deployment locale is set per instance via `APP_LOCALE=en|es` in `.env` (default `en`). There is no per-user language switching — this matches Phase 5 instance templating.
+
+### Tiered Policy
+| Tier | Content | Localized? |
+|---|---|---|
+| Dashboard UI chrome | Sidebar, pages, buttons, labels, toasts, PDF action plan | ✅ next-intl catalogs |
+| cx-tools | Compass/Radar/Matriz/Editor UI + wheel/domain/cause/signal names | ✅ `cxtools` catalog + `translate()` module |
+| Filter layer | HITL Telegram template, rejection reasons, `description_es` | ✅ `src/i18n/strings.ts` (en/es dicts) |
+| Cognitive layer | Language instruction, fallbacks, confirmations, error replies | ✅ `src/i18n/strings.ts` |
+| n8n workflows | Customer-facing message templates (6 workflows) | ✅ `$env.APP_LOCALE` branch in Code nodes |
+| LLM-facing content | Tool definitions, signal IDs, engram keys, rejection codes | ❌ intentionally English |
+
+### Plumbing
+- `docker-compose.yml` sets `APP_LOCALE` on n8n, filter, and cognitive (runtime env); dashboard receives it as build arg → `NEXT_PUBLIC_APP_LOCALE` (inlined into client bundles).
+- Dashboard uses **next-intl v4**: catalogs in `layers/dashboard/messages/{en,es}.json`, `src/i18n/request.ts` + `next-intl/plugin` in `next.config.ts`, provider in `src/app/layout.tsx`, `getLocale()` helper in `src/i18n/locale.ts`.
+- Compass visualization data comes from `resolveWheelData(language)` in `src/features/cx-tools/shared/data/wheelStructure.ts` (single source of truth built from `WHEEL_STRUCTURE` + `translations.ts`). SignalExplorer passes `getLocale()` to `getCachedSignals()` and `generateActionPlanPdf()`.
+- Seeded action descriptions are bilingual: `description` (en) + `description_es` columns; allowlist API returns both and the dashboard picks per `getLocale()`.
+
+### Adding a New UI String
+1. Add key to BOTH `messages/en.json` and `messages/es.json` (keep key names identical, ICU placeholders like `{count, plural, ...}` unchanged).
+2. Reference via `useTranslations("cxtools")` / `getTranslations("...")` in components.
+3. Run `npm run build && npm run lint` in `layers/dashboard`.
+
+### Verification
+```bash
+# Dashboard renders ES end-to-end (build with APP_LOCALE=es)
+APP_LOCALE=es docker compose build dashboard && make up
+# Filter serves description_es
+curl -s http://localhost:3000/allowlist | jq '.actions[0].description_es'
+# n8n template check — trigger any of the 6 localized workflows and inspect message body
+```
+
 ## Key Implementation Details
 ### Filter Service Flow (`POST /filter/execute`)
 1. Validate required fields (action_id, stage, session_id, payload)

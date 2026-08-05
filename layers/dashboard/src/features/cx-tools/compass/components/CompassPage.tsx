@@ -10,13 +10,15 @@ import Breadcrumbs from "./Breadcrumbs";
 import Legend from "./Legend";
 import SearchBar from "./SearchBar";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 function ViewToggle({ compact = false }: { compact?: boolean }) {
   const { viewMode, setViewMode } = useWheel();
+  const t = useTranslations("cxtools");
 
   const modes: { id: "wheel" | "atlas"; label: string }[] = [
-    { id: "wheel", label: "CX Compass" },
-    { id: "atlas", label: "CX Cause Atlas" },
+    { id: "wheel", label: t("viewWheel") },
+    { id: "atlas", label: t("viewAtlas") },
   ];
 
   return (

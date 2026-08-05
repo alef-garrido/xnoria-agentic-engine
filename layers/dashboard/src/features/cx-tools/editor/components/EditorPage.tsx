@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { EditorProvider, useEditor } from "@/features/cx-tools/editor/EditorContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { InterventionEditor } from "@/features/cx-tools/editor/components/Interv
 import { Download } from "lucide-react";
 
 function EditorContent() {
+  const t = useTranslations("cxtools");
   const { exportJSON, domains, interventions } = useEditor();
 
   const totalCauses = domains.reduce((sum, d) => sum + d.causes.length, 0);
@@ -25,14 +27,14 @@ function EditorContent() {
       <header className="flex shrink-0 items-center justify-between border-b border-[var(--border)] bg-[var(--card)] p-4">
         <div>
           <h1 className="text-xl font-bold tracking-tight" style={{ fontFamily: "var(--font-heading)" }}>
-            CX System Editor
+            {t("editorTitle")}
           </h1>
           <p className="text-xs text-[var(--text-muted)]">
-            {domains.length} domains · {totalCauses} causes · {totalSignals} signals · {totalInterventions} interventions
+            {t("editorCounts", { domains: domains.length, causes: totalCauses, signals: totalSignals, interventions: totalInterventions })}
           </p>
         </div>
         <Button onClick={exportJSON} variant="outline" size="sm" className="gap-1.5">
-          <Download className="h-4 w-4" /> Export JSON
+          <Download className="h-4 w-4" /> {t("exportJson")}
         </Button>
       </header>
 
@@ -40,10 +42,10 @@ function EditorContent() {
       <div className="flex-1 overflow-auto p-4 md:p-6">
         <Tabs defaultValue="domains" className="mx-auto w-full max-w-[1400px]">
           <TabsList>
-            <TabsTrigger value="domains">Domains</TabsTrigger>
-            <TabsTrigger value="causes">Causes</TabsTrigger>
-            <TabsTrigger value="signals">Signals</TabsTrigger>
-            <TabsTrigger value="interventions">Interventions</TabsTrigger>
+            <TabsTrigger value="domains">{t("tabDomains")}</TabsTrigger>
+            <TabsTrigger value="causes">{t("tabCauses")}</TabsTrigger>
+            <TabsTrigger value="signals">{t("tabSignals")}</TabsTrigger>
+            <TabsTrigger value="interventions">{t("tabInterventions")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="domains">

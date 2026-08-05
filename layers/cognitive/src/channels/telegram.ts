@@ -5,6 +5,7 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { CXEvent, JourneyStage } from '../shared/types';
 import { createLogger } from '../../../shared/logging';
+import { t } from '../i18n/strings';
 
 const logger = createLogger('telegram', 'cognitive');
 
@@ -88,7 +89,7 @@ export function initTelegram(
       await onEvent(event);
     } catch (err) {
       logger.error({ err, contact_id: contactId }, 'Error processing event');
-      await sendReply(contactId, 'Sorry, something went wrong. Please try again.');
+      await sendReply(contactId, t().telegramErrorReply);
     }
   });
 

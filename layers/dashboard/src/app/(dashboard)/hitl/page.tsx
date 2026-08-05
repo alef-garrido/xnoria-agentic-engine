@@ -2,8 +2,11 @@
 
 import { HITLQueue } from "@/components/HITLQueue";
 import { ShieldCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function HITLPage() {
+  const t = useTranslations("hitl");
+
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
@@ -20,10 +23,10 @@ export default function HITLPage() {
             className="w-7 h-7 inline-block mr-2"
             style={{ color: "var(--warning)", verticalAlign: "text-bottom" }}
           />
-          Approval Queue
+          {t("title")}
         </h1>
         <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
-          Actions flagged for human review — approve or reject before execution
+          {t("subtitle")}
         </p>
       </div>
 

@@ -1,34 +1,38 @@
 import Link from "next/link";
 import { Compass, Radar, LayoutGrid, Pencil, ChevronRight } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
-const TOOLS = [
-  {
-    href: "/tools/compass",
-    label: "Compass",
-    description: "Churn wheel explorer — domain, cause and signal navigation.",
-    icon: Compass,
-  },
-  {
-    href: "/tools/radar",
-    label: "Radar",
-    description: "Signal radar — live signals, detection and action plan export.",
-    icon: Radar,
-  },
-  {
-    href: "/tools/matriz",
-    label: "Matriz",
-    description: "Impact/effort matrix — prioritization of interventions.",
-    icon: LayoutGrid,
-  },
-  {
-    href: "/tools/editor",
-    label: "Editor",
-    description: "Wheel editor — configure domains, causes, signals and interventions.",
-    icon: Pencil,
-  },
-];
+export default async function ToolsLanding() {
+  const t = await getTranslations("tools");
+  const tc = await getTranslations("cxtools");
 
-export default function ToolsLanding() {
+  const TOOLS = [
+    {
+      href: "/tools/compass",
+      label: tc("toolCompass"),
+      description: t("compassDesc"),
+      icon: Compass,
+    },
+    {
+      href: "/tools/radar",
+      label: tc("toolRadar"),
+      description: t("radarDesc"),
+      icon: Radar,
+    },
+    {
+      href: "/tools/matriz",
+      label: tc("toolMatriz"),
+      description: t("matrizDesc"),
+      icon: LayoutGrid,
+    },
+    {
+      href: "/tools/editor",
+      label: tc("toolEditor"),
+      description: t("editorDesc"),
+      icon: Pencil,
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -36,10 +40,10 @@ export default function ToolsLanding() {
           className="text-2xl font-bold tracking-tight"
           style={{ fontFamily: "var(--font-heading)", color: "var(--text-primary)" }}
         >
-          CX Tools
+          {t("title")}
         </h1>
         <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
-          Decision-support tools for customer experience analysis.
+          {t("subtitle")}
         </p>
       </div>
 

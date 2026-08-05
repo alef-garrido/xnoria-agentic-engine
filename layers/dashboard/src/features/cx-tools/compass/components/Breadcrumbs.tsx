@@ -2,13 +2,15 @@
 import { useWheel } from "@/features/cx-tools/compass/context/WheelContext";
 import { useCompassData } from "@/features/cx-tools/compass/context/CompassDataContext";
 import { ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function Breadcrumbs() {
   const { viewState, selectedDomain, selectedCause, selectedSignal, resetToHome, selectDomain, selectCause } = useWheel();
   const { uiStrings } = useCompassData();
+  const t = useTranslations("cxtools");
 
   return (
-    <nav className="flex items-center gap-1 text-xs" aria-label="Breadcrumb">
+    <nav className="flex items-center gap-1 text-xs" aria-label={t("breadcrumb")}>
       <button
         onClick={resetToHome}
         className="hover:underline transition-colors"

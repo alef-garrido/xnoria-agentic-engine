@@ -3,6 +3,7 @@
 import { useEffect, useState, type ComponentType, type CSSProperties } from "react";
 import { Cpu, HardDrive, MemoryStick, Clock } from "lucide-react";
 import { clientLogger } from "@/lib/client-logger";
+import { useTranslations } from "next-intl";
 
 interface SystemStats {
   cpu: number;
@@ -71,6 +72,7 @@ function StatusMetric({ icon: Icon, label, value, barPercent, color }: StatusMet
 }
 
 export function StatusBar() {
+  const t = useTranslations("statusbar");
   const [stats, setStats] = useState<SystemStats>({
     cpu: 0,
     ram: { used: 0, total: 4 },
@@ -133,12 +135,12 @@ export function StatusBar() {
       }}
     >
       {/* CPU */}
-      <StatusMetric icon={Cpu} label="CPU" value={`${stats.cpu.toFixed(0)}%`} barPercent={stats.cpu} color={cpuColor} />
+      <StatusMetric icon={Cpu} label={t("cpu")} value={`${stats.cpu.toFixed(0)}%`} barPercent={stats.cpu} color={cpuColor} />
 
       {/* RAM */}
       <StatusMetric
         icon={MemoryStick}
-        label="RAM"
+        label={t("ram")}
         value={`${stats.ram.used.toFixed(1)}/${stats.ram.total.toFixed(0)}GB`}
         barPercent={ramPercent}
         color={ramColor}
@@ -147,7 +149,7 @@ export function StatusBar() {
       {/* Disk */}
       <StatusMetric
         icon={HardDrive}
-        label="DISK"
+        label={t("disk")}
         value={`${diskPercent.toFixed(0)}%`}
         barPercent={diskPercent}
         color={diskColor}
@@ -166,8 +168,7 @@ export function StatusBar() {
             color: "var(--text-muted)",
           }}
         >
-          SVC: {stats.activeServices}/{stats.totalServices}
-        </span>
+          SVC: {stats.activeServices}/{stats.totalServices}        </span>
       </div>
 
       {/* Separator */}
@@ -184,7 +185,7 @@ export function StatusBar() {
             color: "var(--text-muted)",
           }}
         >
-          Uptime: {stats.uptime}
+          {t("uptime")}: {stats.uptime}
         </span>
       </div>
     </div>

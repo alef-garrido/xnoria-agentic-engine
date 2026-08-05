@@ -19,6 +19,7 @@ import { sendReply } from '../channels/telegram';
 import { logSessionToDb, ActionRecord } from '../memory/session';
 import { createLLMClientWithFallback } from '../shared/llm-fallback';
 import { createLogger } from '../../../shared/logging';
+import { t, languageInstruction } from '../i18n/strings';
 
 const logger = createLogger('single-agent', 'cognitive');
 
@@ -38,6 +39,9 @@ Key judgment rules:
 - For PRD_CAP_02: log only, do not message the contact
 
 Context has already been retrieved and is provided below. Select one action only.`;
+
+// Deployment-level language instruction — prepended to the system prompt
+const LANGUAGE_INSTRUCTION = languageInstruction();
 
 // Pre-processing: gather context deterministically before LLM call
 async function gatherContext(event: CXEvent): Promise<string> {
@@ -88,7 +92,7 @@ export async function runSingleAgent(db: Pool, event: CXEvent): Promise<void> {
   const llm = clientConfig.client as OpenAI;
   logger.info({ model: clientConfig.model, provider: clientConfig.provider }, 'LLM client ready');
 
-  const systemPrompt = `${SINGLE_AGENT_SYSTEM_PROMPT}\n\n## Retrieved Context\n${contextBlock}`;
+  const systemPrompt = `${LANGUAGE_INSTRUCTION}\n\n${SINGLE_AGENT_SYSTEM_PROMPT}\n\n## Retrieved Context\n${contextBlock}`;
 
   const session_id = (event.meta?.session_id as string | undefined) ?? uuid();
   const actionsTaken: ActionRecord[] = [];
@@ -141,7 +145,7 @@ export async function runSingleAgent(db: Pool, event: CXEvent): Promise<void> {
         logger.warn({ retry: retries, iteration: iterations }, 'LLM function call malformed — retrying');
         messages.push({
           role: 'user' as const,
-          content: 'Your previous function call had a JSON syntax error. Ensure you pass valid JSON (curly braces {}, double quotes on keys/strings, no brackets). Call the function again with correct syntax.',
+          content: t().jsonRetryHint,
         });
       }
     }
@@ -200,7 +204,7 @@ export async function runSingleAgent(db: Pool, event: CXEvent): Promise<void> {
 
     if (contextCalls.length > 0) {
       logger.warn({ tools: contextCalls.map(t => t.function.name) }, 'LLM requested context tools after pre-processing — sending fallback reply');
-      const fallback = 'I couldn\'t retrieve enough context to process this request. Please provide more details or include a stage keyword (ACQ, SAL, ONB, PRD, SUP, COM, RET, EXP).';
+      const fallback = t().contextFallback;
       botReply = fallback;
       await sendReply(event.contact_id, fallback);
       break;
@@ -254,19 +258,19 @@ export async function runSingleAgent(db: Pool, event: CXEvent): Promise<void> {
       let confirmMsg: string;
       switch (filterResponse.status) {
         case 'executed':
-          confirmMsg = `✅ Action \`${mapping.action_id}\` executed successfully.`;
+          confirmMsg = t().confirmExecuted(mapping.action_id);
           break;
         case 'pending_hitl':
-          confirmMsg = `⏳ Action \`${mapping.action_id}\` is pending human approval (HITL). Check the dashboard to approve or reject.`;
+          confirmMsg = t().confirmPendingHitl(mapping.action_id);
           break;
         case 'rejected':
-          confirmMsg = `🚫 Action \`${mapping.action_id}\` was rejected by the filter. Reason: ${filterResponse.rejection_code ?? 'unknown'}.`;
+          confirmMsg = t().confirmRejected(mapping.action_id, filterResponse.rejection_code);
           break;
         case 'error':
-          confirmMsg = `⚠️ Action \`${mapping.action_id}\` failed to execute. ${filterResponse.message ?? 'Workflow unreachable.'}`;
+          confirmMsg = t().confirmError(mapping.action_id, filterResponse.message);
           break;
         default:
-          confirmMsg = `ℹ️ Action \`${mapping.action_id}\` — status: ${filterResponse.status}.`;
+          confirmMsg = t().confirmDefault(mapping.action_id, filterResponse.status);
       }
       botReply = confirmMsg;
       await sendReply(event.contact_id, confirmMsg);

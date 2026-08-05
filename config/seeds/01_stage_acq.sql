@@ -1,5 +1,5 @@
 -- Acquisition Stage Seed Pack
-INSERT INTO filter_action (action_id, stage, n8n_workflow_id, requires_hitl, manual_action, enabled, description)
+INSERT INTO filter_action (action_id, stage, n8n_workflow_id, requires_hitl, manual_action, enabled, description, description_es)
 VALUES
   (
     'acq.lead.score',
@@ -8,7 +8,8 @@ VALUES
     false,
     false,
     true,
-    'Score an incoming lead using rule-based logic and apply CRM tags in HubSpot'
+    'Score an incoming lead using rule-based logic and apply CRM tags in HubSpot',
+    'Calificar un lead entrante con lógica basada en reglas y aplicar etiquetas en HubSpot'
   ),
   (
     'acq.lead.engage',
@@ -17,7 +18,8 @@ VALUES
     false,
     false,
     true,
-    'Send immediate WhatsApp acknowledgment to inbound lead'
+    'Send immediate WhatsApp acknowledgment to inbound lead',
+    'Enviar confirmación inmediata por WhatsApp al lead entrante'
   ),
   (
     'acq.lead.nurture',
@@ -26,7 +28,8 @@ VALUES
     false,
     false,
     true,
-    'AI nurture conversation for out-of-hours contacts'
+    'AI nurture conversation for out-of-hours contacts',
+    'Conversación de nurturing con IA para contactos fuera de horario'
   ),
   (
     'acq.contact.outreach',
@@ -35,7 +38,8 @@ VALUES
     true,
     false,
     true,
-    'Cold outreach via WhatsApp + email, sync to HubSpot — requires HITL operator review before sending'
+    'Cold outreach via WhatsApp + email, sync to HubSpot — requires HITL operator review before sending',
+    'Prospección en frío por WhatsApp + email con sincronización a HubSpot — requiere revisión del operador (HITL) antes del envío'
   ),
   (
     'acq.contact.upsert',
@@ -44,7 +48,8 @@ VALUES
     false,
     false,
     true,
-    'Create or update a contact in HubSpot CRM, returns contact_id for chaining'
+    'Create or update a contact in HubSpot CRM, returns contact_id for chaining',
+    'Crear o actualizar un contacto en HubSpot CRM, devuelve contact_id para acciones encadenadas'
   ),
   (
     'acq.contact.get',
@@ -53,7 +58,8 @@ VALUES
     false,
     false,
     true,
-    'Retrieve contact properties from HubSpot including CX pain points and PCI score'
+    'Retrieve contact properties from HubSpot including CX pain points and PCI score',
+    'Recuperar propiedades del contacto en HubSpot, incluyendo puntos de dolor CX y puntuación PCI'
   )
 ON CONFLICT (action_id) DO UPDATE
   SET
@@ -63,4 +69,5 @@ ON CONFLICT (action_id) DO UPDATE
     manual_action   = EXCLUDED.manual_action,
     enabled         = EXCLUDED.enabled,
     description     = EXCLUDED.description,
+    description_es  = EXCLUDED.description_es,
     updated_at      = now();

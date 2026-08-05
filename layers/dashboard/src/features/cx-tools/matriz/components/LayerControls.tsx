@@ -4,6 +4,7 @@ import React from "react";
 import { Settings, Brain, User, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 interface LayerControlsProps {
   activeLayers: {
@@ -24,6 +25,7 @@ export const LayerControls: React.FC<LayerControlsProps> = ({
   toggleLayer,
   labels,
 }) => {
+  const t = useTranslations("cxtools");
   const controls = [
     {
       id: "workflows" as const,
@@ -101,7 +103,7 @@ export const LayerControls: React.FC<LayerControlsProps> = ({
           animate={{ opacity: 1, x: 0 }}
           className="text-orange-400/80 text-sm italic"
         >
-          Without a system, these decisions are unstructured.
+          {t("matrizNoLayers")}
         </motion.p>
       )}
     </div>

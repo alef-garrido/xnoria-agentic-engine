@@ -2,8 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { formatDistanceToNow, format } from "date-fns";
+import { es } from "date-fns/locale";
 import { History as HistoryIcon, MessagesSquare, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { clientLogger } from "@/lib/client-logger";
+import { useTranslations } from "next-intl";
+import { getLocale } from "@/i18n/locale";
 
 interface Session {
   id: string;
@@ -31,6 +34,7 @@ interface SessionsResponse {
 }
 
 function SessionRow({ session }: { session: Session }) {
+  const t = useTranslations("sessions");
   const [expanded, setExpanded] = useState(false);
   const [history, setHistory] = useState<HistoryMessage[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -91,10 +95,10 @@ function SessionRow({ session }: { session: Session }) {
           <div className="flex flex-wrap items-center gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
             <span className="flex items-center gap-1">
               <MessagesSquare className="w-3.5 h-3.5" />
-              {session.actions_taken} actions
+              {session.actions_taken} {t("actions")}
             </span>
             <span className="hidden md:inline-block">🤖 {session.model}</span>
-            <span>{formatDistanceToNow(new Date(session.created_at), { addSuffix: true })}</span>
+            <span>{formatDistanceToNow(new Date(session.created_at), { addSuffix: true, locale: getLocale() === "es" ? es : undefined })}</span>
           </div>
         </div>
 
@@ -116,7 +120,7 @@ function SessionRow({ session }: { session: Session }) {
 
           {history && history.length === 0 && (
             <div className="text-sm text-center p-4" style={{ color: 'var(--text-muted)' }}>
-              No history messages found for this session.
+              {t("noHistory")}
             </div>
           )}
 
@@ -147,6 +151,7 @@ function SessionRow({ session }: { session: Session }) {
 }
 
 export default function SessionsPage() {
+  const t = useTranslations("sessions");
   const [sessions, setSessions] = useState<Session[] | null>(null);
   const [error, setError] = useState(false);
   const sessionsRef = useRef(sessions);
@@ -183,14 +188,14 @@ export default function SessionsPage() {
             color: 'var(--text-primary)'
           }}
         >
-          Session History
+          {t("title")}
         </h1>
       </div>
       
       <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)', backgroundColor: 'var(--card)' }}>
         {error && (
           <div className="text-center py-12" style={{ color: 'var(--error)' }}>
-            <p>Failed to load sessions</p>
+            <p>{t("failedToLoad")}</p>
           </div>
         )}
 
@@ -209,7 +214,7 @@ export default function SessionsPage() {
         {sessions && sessions.length === 0 && (
           <div className="text-center py-12" style={{ color: 'var(--text-secondary)' }}>
             <HistoryIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>No sessions logged yet</p>
+            <p>{t("noSessions")}</p>
           </div>
         )}
 

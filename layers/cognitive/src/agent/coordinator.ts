@@ -16,6 +16,7 @@ import { runEscalationSpecialist } from './specialists/escalation';
 import { sendReply } from '../channels/telegram';
 import { logSessionToDb } from '../memory/session';
 import { createLogger } from '../../../shared/logging';
+import { t } from '../i18n/strings';
 
 export type AgentCluster = 'acqsal' | 'lifecycle' | 'escalation';
 
@@ -85,9 +86,9 @@ export async function coordinate(db: Pool, event: CXEvent): Promise<void> {
     } else {
       // Unrecognised or missing stage — reply gracefully so the operator knows what to send
       const hint = event.stage
-        ? `Stage "${event.stage}" is not recognised.`
-        : 'No journey stage detected in your message.';
-      const replyText = `${hint} Please include a stage keyword: ACQ, SAL, ONB, PRD, SUP, COM, RET or EXP.`;
+        ? t().stageNotRecognized(event.stage)
+        : t().noStageDetected;
+      const replyText = `${hint} ${t().stageKeywordHint}`;
       logger.warn({ contact_id: event.contact_id, hint }, 'Stage validation failed');
       await sendReply(event.contact_id, replyText);
       await logSessionToDb(db, session_id, event, 'coordinator', [], replyText);

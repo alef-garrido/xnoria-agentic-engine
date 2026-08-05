@@ -2,10 +2,12 @@
 import { useWheel } from "@/features/cx-tools/compass/context/WheelContext";
 import { useCompassData } from "@/features/cx-tools/compass/context/CompassDataContext";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 export default function CenterHub() {
   const { resetToHome, hoveredLabel, viewState } = useWheel();
   const { wheelData } = useCompassData();
+  const t = useTranslations("cxtools");
   const { center } = wheelData;
 
   return (
@@ -14,7 +16,7 @@ export default function CenterHub() {
       onClick={resetToHome}
       tabIndex={0}
       role="button"
-      aria-label="Reset to home view"
+      aria-label={t("resetHome")}
       onKeyDown={(e) => e.key === "Enter" && resetToHome()}
     >
       <circle

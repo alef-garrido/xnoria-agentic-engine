@@ -210,7 +210,7 @@ Placeholder actions (disabled):
 
 ### Local CI Gate (replaces GitHub Actions — dropped 2026-08-06)
 
-- Run the full verification pipeline with `./scripts/ci-check.sh` — dashboard `format:check → lint → typecheck → test → build`, then cognitive build, then filter build. Exit 0 = all layers pass.
+- Run the full verification pipeline with `./scripts/ci-check.sh` — dashboard `format:check → lint → typecheck → test → build`, then cognitive + filter `format:check → build`. Exit 0 = all layers pass.
 - **Pre-commit hooks** (husky + lint-staged, root): prettier on staged code/json/css/md, eslint on staged dashboard files (via `scripts/lint-dashboard.sh` — runs eslint from the dashboard dir, where flat config + eslint-config-next resolve correctly). Hooks may reformat staged files — always check `git status` before committing.
 - There is no GitHub Actions CI in this repo (GitHub-side `startup_failure` on every trigger — see `.plan/ui-audit-2026-08.md` WS-8). The local gate + hooks are the enforcement layer.
 

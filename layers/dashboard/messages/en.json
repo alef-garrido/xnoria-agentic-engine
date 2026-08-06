@@ -354,5 +354,12 @@
     "layerHuman": "Human Control",
     "unknownStage": "Unknown",
     "matrizNoLayers": "Without a system, these decisions are unstructured."
+  },
+  "common": {
+    "errorTitle": "Something went wrong",
+    "errorBody": "An unexpected error occurred while rendering this page. Your data is safe — refresh or try again.",
+    "retry": "Try again",
+    "backToDashboard": "Back to dashboard",
+    "loading": "Loading…"
   }
 }

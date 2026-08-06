@@ -354,5 +354,12 @@
     "layerHuman": "Control Humano",
     "unknownStage": "Desconocida",
     "matrizNoLayers": "Sin un sistema, estas decisiones no están estructuradas."
+  },
+  "common": {
+    "errorTitle": "Algo salió mal",
+    "errorBody": "Ocurrió un error inesperado al renderizar esta página. Tus datos están a salvo — actualiza o inténtalo de nuevo.",
+    "retry": "Reintentar",
+    "backToDashboard": "Volver al panel",
+    "loading": "Cargando…"
   }
 }

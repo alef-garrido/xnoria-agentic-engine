@@ -249,6 +249,74 @@ export const TRANSLATIONS = {
     "indicator.exp_val_02_er": "expansion_revenue",
     "indicator.exp_rel_01_na": "number_of_advocates",
     "indicator.exp_rel_02_na": "number_of_advocates",
+
+    // ========================================================================
+    // MATRIZ - STAGE LABELS
+    // ========================================================================
+    "matriz.stage.acq": "Acquisition",
+    "matriz.stage.sal": "Sales Experience",
+    "matriz.stage.onb": "Onboarding",
+    "matriz.stage.prd": "Product Experience",
+    "matriz.stage.sup": "Support & Service",
+    "matriz.stage.com": "Communication",
+    "matriz.stage.ret": "Retention",
+    "matriz.stage.exp": "Expansion",
+
+    // ========================================================================
+    // MATRIZ - TOUCHPOINTS
+    // ========================================================================
+    "matriz.tp.tp_ads.label": "Ads / Landing",
+    "matriz.tp.tp_ads.signal.0": "Low CTR",
+    "matriz.tp.tp_ads.signal.1": "High bounce",
+    "matriz.tp.tp_ads.layer.workflows": "Lead capture and tracking",
+    "matriz.tp.tp_ads.layer.agent": "Detects low conversion and mismatch",
+    "matriz.tp.tp_ads.layer.human": "Adjusts campaigns and messaging",
+
+    "matriz.tp.tp_first_contact.label": "First Contact",
+    "matriz.tp.tp_first_contact.signal.0": "No response",
+    "matriz.tp.tp_first_contact.signal.1": "Cold lead",
+    "matriz.tp.tp_first_contact.layer.workflows": "Automated follow-ups",
+    "matriz.tp.tp_first_contact.layer.agent": "Prioritizes high-value leads",
+    "matriz.tp.tp_first_contact.layer.human": "Personalized outreach strategy",
+
+    "matriz.tp.tp_welcome.label": "Welcome",
+    "matriz.tp.tp_welcome.signal.0": "Early drop-off",
+    "matriz.tp.tp_welcome.layer.workflows": "Onboarding sequences",
+    "matriz.tp.tp_welcome.layer.agent": "Detects early abandonment",
+    "matriz.tp.tp_welcome.layer.human": "Intervenes in critical accounts",
+
+    "matriz.tp.tp_feature.label": "Feature Usage",
+    "matriz.tp.tp_feature.signal.0": "Low usage",
+    "matriz.tp.tp_feature.signal.1": "UX friction",
+    "matriz.tp.tp_feature.layer.workflows": "Tracking and nudges",
+    "matriz.tp.tp_feature.layer.agent": "Detects usage patterns",
+    "matriz.tp.tp_feature.layer.human": "Feature adoption consultations",
+
+    "matriz.tp.tp_support.label": "Tickets / Chat",
+    "matriz.tp.tp_support.signal.0": "High volume",
+    "matriz.tp.tp_support.signal.1": "Repeated issues",
+    "matriz.tp.tp_support.layer.workflows": "Classification and basic responses",
+    "matriz.tp.tp_support.layer.agent": "Suggests responses and detects urgency",
+    "matriz.tp.tp_support.layer.human": "Resolves complex cases",
+
+    "matriz.tp.tp_campaigns.label": "Campaigns",
+    "matriz.tp.tp_campaigns.signal.0": "Low engagement",
+    "matriz.tp.tp_campaigns.layer.workflows": "Campaign automation",
+    "matriz.tp.tp_campaigns.layer.agent": "Optimizes timing and content",
+    "matriz.tp.tp_campaigns.layer.human": "Content and targeting validation",
+
+    "matriz.tp.tp_churn_risk.label": "Churn Risk",
+    "matriz.tp.tp_churn_risk.signal.0": "Inactivity",
+    "matriz.tp.tp_churn_risk.signal.1": "Low interaction",
+    "matriz.tp.tp_churn_risk.layer.workflows": "Alerts and sequences",
+    "matriz.tp.tp_churn_risk.layer.agent": "Prioritizes accounts at risk",
+    "matriz.tp.tp_churn_risk.layer.human": "Strategic intervention",
+
+    "matriz.tp.tp_upsell.label": "Upsell / Reactivation",
+    "matriz.tp.tp_upsell.signal.0": "Upgrade opportunity",
+    "matriz.tp.tp_upsell.layer.workflows": "Automated campaigns",
+    "matriz.tp.tp_upsell.layer.agent": "Detects opportunity and timing",
+    "matriz.tp.tp_upsell.layer.human": "Closing and negotiation",
   },
 
   // ========================================================================
@@ -483,6 +551,74 @@ export const TRANSLATIONS = {
     "indicator.exp_val_02_er": "ingresos_expansion",
     "indicator.exp_rel_01_na": "numero_defensores",
     "indicator.exp_rel_02_na": "numero_defensores",
+
+    // ========================================================================
+    // MATRIZ - STAGE LABELS
+    // ========================================================================
+    "matriz.stage.acq": "Adquisición",
+    "matriz.stage.sal": "Experiencia de ventas",
+    "matriz.stage.onb": "Onboarding",
+    "matriz.stage.prd": "Experiencia de producto",
+    "matriz.stage.sup": "Soporte y servicio",
+    "matriz.stage.com": "Comunicación",
+    "matriz.stage.ret": "Retención",
+    "matriz.stage.exp": "Expansión",
+
+    // ========================================================================
+    // MATRIZ - TOUCHPOINTS
+    // ========================================================================
+    "matriz.tp.tp_ads.label": "Anuncios / Aterrizaje",
+    "matriz.tp.tp_ads.signal.0": "CTR bajo",
+    "matriz.tp.tp_ads.signal.1": "Alta tasa de rebote",
+    "matriz.tp.tp_ads.layer.workflows": "Captura y seguimiento de leads",
+    "matriz.tp.tp_ads.layer.agent": "Detecta baja conversión y desajuste",
+    "matriz.tp.tp_ads.layer.human": "Ajusta campañas y mensajes",
+
+    "matriz.tp.tp_first_contact.label": "Primer contacto",
+    "matriz.tp.tp_first_contact.signal.0": "Sin respuesta",
+    "matriz.tp.tp_first_contact.signal.1": "Lead frío",
+    "matriz.tp.tp_first_contact.layer.workflows": "Seguimientos automatizados",
+    "matriz.tp.tp_first_contact.layer.agent": "Prioriza leads de alto valor",
+    "matriz.tp.tp_first_contact.layer.human": "Estrategia de alcance personalizada",
+
+    "matriz.tp.tp_welcome.label": "Bienvenida",
+    "matriz.tp.tp_welcome.signal.0": "Abandono temprano",
+    "matriz.tp.tp_welcome.layer.workflows": "Secuencias de onboarding",
+    "matriz.tp.tp_welcome.layer.agent": "Detecta abandono temprano",
+    "matriz.tp.tp_welcome.layer.human": "Interviene en cuentas críticas",
+
+    "matriz.tp.tp_feature.label": "Uso de funciones",
+    "matriz.tp.tp_feature.signal.0": "Uso bajo",
+    "matriz.tp.tp_feature.signal.1": "Fricción UX",
+    "matriz.tp.tp_feature.layer.workflows": "Seguimiento y empujones",
+    "matriz.tp.tp_feature.layer.agent": "Detecta patrones de uso",
+    "matriz.tp.tp_feature.layer.human": "Consultoría de adopción de funciones",
+
+    "matriz.tp.tp_support.label": "Tickets / Chat",
+    "matriz.tp.tp_support.signal.0": "Alto volumen",
+    "matriz.tp.tp_support.signal.1": "Problemas recurrentes",
+    "matriz.tp.tp_support.layer.workflows": "Clasificación y respuestas básicas",
+    "matriz.tp.tp_support.layer.agent": "Sugiere respuestas y detecta urgencia",
+    "matriz.tp.tp_support.layer.human": "Resuelve casos complejos",
+
+    "matriz.tp.tp_campaigns.label": "Campañas",
+    "matriz.tp.tp_campaigns.signal.0": "Bajo compromiso",
+    "matriz.tp.tp_campaigns.layer.workflows": "Automatización de campañas",
+    "matriz.tp.tp_campaigns.layer.agent": "Optimiza momento y contenido",
+    "matriz.tp.tp_campaigns.layer.human": "Validación de contenido y segmentación",
+
+    "matriz.tp.tp_churn_risk.label": "Riesgo de fuga",
+    "matriz.tp.tp_churn_risk.signal.0": "Inactividad",
+    "matriz.tp.tp_churn_risk.signal.1": "Baja interacción",
+    "matriz.tp.tp_churn_risk.layer.workflows": "Alertas y secuencias",
+    "matriz.tp.tp_churn_risk.layer.agent": "Prioriza cuentas en riesgo",
+    "matriz.tp.tp_churn_risk.layer.human": "Intervención estratégica",
+
+    "matriz.tp.tp_upsell.label": "Upsell / Reactivación",
+    "matriz.tp.tp_upsell.signal.0": "Oportunidad de mejora",
+    "matriz.tp.tp_upsell.layer.workflows": "Campañas automatizadas",
+    "matriz.tp.tp_upsell.layer.agent": "Detecta oportunidad y momento",
+    "matriz.tp.tp_upsell.layer.human": "Cierre y negociación",
   },
 } as const;
 

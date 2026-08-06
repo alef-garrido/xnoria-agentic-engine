@@ -15,6 +15,8 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs,cjs,json,css,md}": "layers/dashboard/node_modules/.bin/prettier --write",
-    "layers/dashboard/src/**/*.{ts,tsx}": "scripts/lint-dashboard.sh"
+    "layers/dashboard/src/**/*.{ts,tsx}": "scripts/lint-dashboard.sh",
+    "layers/cognitive/src/**/*.ts": "scripts/lint-layer.sh cognitive",
+    "layers/orchestration/filter/src/**/*.ts": "scripts/lint-layer.sh filter"
   }
 }

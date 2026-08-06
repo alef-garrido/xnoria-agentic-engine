@@ -11,7 +11,7 @@ import { dispatchToN8n } from "./execution/dispatch";
 import { writeLog } from "./audit/log";
 import { getPendingActions, approveAction, rejectAction } from "./hitl/hitl";
 import { notifyOperator } from "./hitl/telegram";
-import { FilterRequest, FilterResponse } from "./shared/types";
+import { FilterRequest, FilterResponse, RejectionCode } from "./shared/types";
 import { createLogger } from "./shared/logging";
 import { t } from "./i18n/strings";
 
@@ -86,7 +86,7 @@ app.post("/filter/execute", async (req: Request, res: Response) => {
     return res.status(403).json({
       status: "rejected",
       log_id,
-      rejection_code: (rejectionCode as any) ?? undefined,
+      rejection_code: (rejectionCode as RejectionCode) ?? undefined,
       message: rejectionReason ?? undefined,
     } satisfies Partial<FilterResponse>);
   }
@@ -259,6 +259,21 @@ app.post("/filter/hitl/:log_id/reject", async (req: Request, res: Response) => {
 // ==============================================================================
 
 // GET /filter/health — aggregated per-stage metrics from filter_log
+interface StageMetricsRow {
+  stage: string;
+  total_actions: number | string;
+  executed: number | string;
+  rejected: number | string;
+  pending_hitl: number | string;
+  execution_rate: number | string;
+  hitl_total: number | string;
+  hitl_approved: number | string;
+  hitl_rejected: number | string;
+  hitl_approval_rate: number | string;
+  avg_review_minutes: number | string | null;
+  top_rejection_code: string | null;
+}
+
 app.get("/filter/health", async (req: Request, res: Response) => {
   const days = parseInt(req.query.days as string) || 30;
 
@@ -324,19 +339,21 @@ app.get("/filter/health", async (req: Request, res: Response) => {
       [days]
     );
 
-    const metrics = result.rows.map((row: any) => ({
+    const metrics = result.rows.map((row: StageMetricsRow) => ({
       stage: row.stage,
       period_days: days,
       total_actions: row.total_actions,
       executed: row.executed,
       rejected: row.rejected,
       pending_hitl: row.pending_hitl,
-      execution_rate: parseFloat(row.execution_rate),
+      execution_rate: parseFloat(String(row.execution_rate)),
       hitl_total: row.hitl_total,
       hitl_approved: row.hitl_approved,
       hitl_rejected: row.hitl_rejected,
-      hitl_approval_rate: parseFloat(row.hitl_approval_rate),
-      avg_review_minutes: row.avg_review_minutes ? parseFloat(row.avg_review_minutes) : null,
+      hitl_approval_rate: parseFloat(String(row.hitl_approval_rate)),
+      avg_review_minutes: row.avg_review_minutes
+        ? parseFloat(String(row.avg_review_minutes))
+        : null,
       top_rejection_code: row.top_rejection_code ?? null,
     }));
 

@@ -24,18 +24,6 @@ export const STAGE_TO_CLUSTER: Record<string, AgentCluster> = {
 };
 
 /**
- * Context retrieval tools — always available to all clusters
- * These map to null in TOOL_TO_ACTION (routed to MCP, not filter)
- */
-const CONTEXT_TOOL_NAMES = new Set([
-  "compass_get_signal",
-  "compass_get_interventions",
-  "posthog_get_contact_events",
-  "posthog_get_feature_adoption",
-  "reply",
-]);
-
-/**
  * Get tool subset for a given cluster
  *
  * - Context tools (compass, posthog, reply) are always included

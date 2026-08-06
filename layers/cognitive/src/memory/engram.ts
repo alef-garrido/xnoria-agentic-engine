@@ -24,7 +24,6 @@ export interface EngramResult {
 export async function getContactHistory(
   contactId: string,
   stage: string,
-  query: string = "general",
   maxEntries: number = 3,
   agentCluster?: string
 ): Promise<string> {

@@ -14,12 +14,6 @@ const port = parseInt(process.env.COGNITIVE_MEMORY_PORT ?? "0", 10);
 
 app.use(express.json());
 
-// DB connection pool (shared with main)
-const db = new Pool({
-  connectionString: process.env.POSTGRES_URL,
-  max: 5,
-});
-
 // Memory search endpoint
 app.get("/memory/search", (req: Request, res: Response) => {
   const { contact_id, stage } = req.query;
@@ -35,29 +29,25 @@ app.get("/memory/search", (req: Request, res: Response) => {
   const searchQuery = stage ? `${contact_id} | ${stage}` : contact_id;
   const engramSearch = `engram search "${searchQuery}"`;
 
-  exec(
-    engramSearch,
-    { maxBuffer: 1024 * 1024 },
-    (error, stdout: string | Buffer, stderr: string | Buffer) => {
-      if (error) {
-        logger.error({ err: error.message }, "Engram CLI search failed");
-        return res.status(500).json({
-          error: "MEMORY_UNAVAILABLE",
-          message: `Memory search failed: ${error.message}`,
-        });
-      }
-
-      // Convert stdout to string (exec may return Buffer)
-      const output = typeof stdout === "string" ? stdout : stdout.toString();
-
-      // Parse engram CLI output
-      // Output format: "Found X memories:" followed by entries
-      // Extract memory entries from stdout
-      const memories = parseEngramOutput(output);
-
-      res.json({ memories });
+  exec(engramSearch, { maxBuffer: 1024 * 1024 }, (error, stdout: string | Buffer) => {
+    if (error) {
+      logger.error({ err: error.message }, "Engram CLI search failed");
+      return res.status(500).json({
+        error: "MEMORY_UNAVAILABLE",
+        message: `Memory search failed: ${error.message}`,
+      });
     }
-  );
+
+    // Convert stdout to string (exec may return Buffer)
+    const output = typeof stdout === "string" ? stdout : stdout.toString();
+
+    // Parse engram CLI output
+    // Output format: "Found X memories:" followed by entries
+    // Extract memory entries from stdout
+    const memories = parseEngramOutput(output);
+
+    res.json({ memories });
+  });
 });
 
 // Parse Engram CLI output into structured memory objects

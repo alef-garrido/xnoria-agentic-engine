@@ -7,7 +7,7 @@ export default function ToolsLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const t = useTranslations("cxtools");
   const tool = pathname.split("/")[2];
-  const toolLabel = tool ? t(`tool${tool.charAt(0).toUpperCase()}${tool.slice(1)}` as never) : "";
+  const toolLabel = tool ? t(`tool${tool.charAt(0).toUpperCase()}${tool.slice(1)}`) : "";
 
   return (
     <div className="flex flex-col gap-6">

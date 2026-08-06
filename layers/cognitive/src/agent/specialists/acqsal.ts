@@ -55,7 +55,7 @@ function parseLegacyFunctionCalls(
     while ((match = pattern.exec(content)) !== null) {
       try {
         const name = match[1].trim();
-        let argsStr = match[2].trim();
+        const argsStr = match[2].trim();
 
         // Handle different argument formats
         if (argsStr.startsWith("{") && argsStr.endsWith("}")) {
@@ -204,8 +204,11 @@ export async function runAcqSalSpecialist(db: Pool, event: CXEvent): Promise<voi
           })),
           tool_choice: "auto",
         });
-      } catch (err: any) {
-        logger.error({ err: err.message, model: clientConfig.model }, "LLM API error");
+      } catch (err) {
+        logger.error(
+          { err: err instanceof Error ? err.message : String(err), model: clientConfig.model },
+          "LLM API error"
+        );
         throw err;
       }
 
@@ -384,7 +387,7 @@ export async function runAcqSalSpecialist(db: Pool, event: CXEvent): Promise<voi
 
     // Log session to Postgres for the Dashboard (fire-and-forget)
     await logSessionToDb(db, session_id, event, clientConfig.model, actionsTaken, botReply);
-  } catch (error: any) {
+  } catch (error) {
     logger.error(
       { err: error instanceof Error ? error.message : String(error) },
       "Unhandled error in acqsal specialist"

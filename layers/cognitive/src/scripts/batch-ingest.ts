@@ -20,7 +20,6 @@ Los metadatos del lead (LinkedIn, Company) deben persistirse en el payload inici
 import { Pool } from "pg";
 import { parse } from "csv-parse/sync";
 import { readFileSync } from "fs";
-import { join } from "path";
 import { createLogger } from "../../../shared/logging";
 import { CXEvent } from "../shared/types";
 import { createEventLoop } from "../events/loop";

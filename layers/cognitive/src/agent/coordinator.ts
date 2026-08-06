@@ -36,7 +36,7 @@ async function buildCrossStageHistory(
   logger: ReturnType<typeof createLogger>
 ): Promise<string> {
   try {
-    return await getContactHistory(contactId, "ALL", "general", 5);
+    return await getContactHistory(contactId, "ALL", 5);
   } catch (err) {
     logger.warn({ err }, "Cross-stage history fetch failed");
     return "";

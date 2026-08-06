@@ -9,7 +9,6 @@
 // ==============================================================================
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { createLogger } from "../../../shared/logging";
 
 const logger = createLogger("mcp-client", "cognitive");

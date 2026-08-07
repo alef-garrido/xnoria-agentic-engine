@@ -16,7 +16,9 @@
   },
   "topbar": {
     "admin": "Admin",
-    "version": "v1.0"
+    "version": "v1.0",
+    "themeToLight": "Cambiar a tema claro",
+    "themeToDark": "Cambiar a tema oscuro"
   },
   "statusbar": {
     "cpu": "CPU",
@@ -35,6 +37,8 @@
     "invalidCredentials": "Credenciales incorrectas.",
     "loginFailed": "Error al iniciar sesión.",
     "connectionError": "Error de conexión.",
+    "themeToLight": "Cambiar a tema claro",
+    "themeToDark": "Cambiar a tema oscuro",
     "footerSuffix": "CX Intelligence Engine"
   },
   "home": {

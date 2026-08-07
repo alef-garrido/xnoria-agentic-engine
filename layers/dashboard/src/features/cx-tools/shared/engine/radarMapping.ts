@@ -32,7 +32,7 @@ export function mapSignalsToRadar(
             domains.findIndex((d) => d.id === signal.domain)
           );
     const domainData = domains.find((d) => d.id === signal.domain) || domains[0];
-    const color = domainData ? domainData.color : "#ffffff";
+    const color = domainData ? domainData.color : "#64748b";
 
     // 2. Spread out signals slightly if they are in the same domain so they don't perfectly overlap
     const sameDomainSignals = signals.filter((s) => s.domain === signal.domain);

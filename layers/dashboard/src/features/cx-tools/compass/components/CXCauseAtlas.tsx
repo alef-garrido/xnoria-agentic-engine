@@ -43,7 +43,7 @@ export default function CXCauseAtlas() {
   };
 
   return (
-    <div className="w-full h-full overflow-auto p-4 md:p-6 lg:p-8 lg:pt-4 rounded-2xl bg-white/5 border border-white/10 shadow-lg backdrop-blur-sm">
+    <div className="w-full h-full overflow-auto p-4 md:p-6 lg:p-8 lg:pt-4 rounded-2xl bg-[var(--chip-surface)] border border-[var(--chip-border)] shadow-lg backdrop-blur-sm">
       <div className="min-w-max">
         {/* Header Row */}
         <div className="grid grid-cols-[160px_repeat(10,_minmax(100px,_1fr))] gap-4 mb-4">
@@ -53,10 +53,12 @@ export default function CXCauseAtlas() {
           {causesOrder.map((cause) => (
             <div
               key={cause.code}
-              className="flex flex-col items-center justify-end pb-2 border-b border-white/10 relative"
+              className="flex flex-col items-center justify-end pb-2 border-b border-[var(--border)] relative"
             >
-              <span className="font-mono font-bold text-lg mb-1 text-white/90">{cause.code}</span>
-              <span className="text-xs font-semibold text-center leading-tight text-white/70">
+              <span className="font-mono font-bold text-lg mb-1 text-[var(--text-primary)]">
+                {cause.code}
+              </span>
+              <span className="text-xs font-semibold text-center leading-tight text-[var(--text-secondary)]">
                 {cause.name}
               </span>
             </div>
@@ -75,14 +77,14 @@ export default function CXCauseAtlas() {
             <div /> {/* Domain col spacer */}
             {causesOrder.map((c) => (
               <div key={c.code} className="flex justify-center">
-                <div className="w-px h-full bg-white/[0.03]" />
+                <div className="w-px h-full bg-[var(--chip-surface)]" />
               </div>
             ))}
           </div>
           {wheelData.domains.map((domain) => (
             <div
               key={domain.id}
-              className="grid grid-cols-[160px_repeat(10,_minmax(100px,_1fr))] gap-4 items-stretch group p-2 -m-2 rounded-xl border border-transparent hover:border-white/5 transition-all"
+              className="grid grid-cols-[160px_repeat(10,_minmax(100px,_1fr))] gap-4 items-stretch group p-2 -m-2 rounded-xl border border-transparent hover:border-[var(--chip-border)] transition-all"
               style={
                 {
                   "--domain-color": domain.color,
@@ -115,7 +117,7 @@ export default function CXCauseAtlas() {
                       key={causeDef.code}
                       className="flex items-center justify-center p-2 relative z-10"
                     >
-                      <div className="w-1.5 h-1.5 rounded-full bg-white/10 transition-all duration-300 group-hover:bg-[var(--domain-color)] opacity-50" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-[var(--chip-surface)] transition-all duration-300 group-hover:bg-[var(--domain-color)] opacity-50" />
                     </div>
                   );
                 }
@@ -141,7 +143,7 @@ export default function CXCauseAtlas() {
                       borderColor: `color-mix(in srgb, var(--domain-color) 30%, transparent)`,
                     }}
                   >
-                    <span className="font-mono font-bold text-lg mb-1 text-white/90 drop-shadow-sm">
+                    <span className="font-mono font-bold text-lg mb-1 text-[var(--text-primary)]">
                       {causeDef.code}
                     </span>
                   </motion.button>

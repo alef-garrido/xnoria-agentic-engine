@@ -88,7 +88,7 @@ export function SessionRow({ session }: { session: Session }) {
           </div>
         </div>
 
-        <div className="flex-shrink-0 text-gray-500">
+        <div className="flex-shrink-0 text-[var(--text-muted)]">
           {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
         </div>
       </div>

@@ -6,11 +6,11 @@ import { cxTokens } from "./cxTokens";
  */
 export const radarTokens = {
   grid: {
-    stroke: `rgba(255, 255, 255, ${cxTokens.stroke.grid.opacity})`,
+    stroke: `var(--gridline-soft)`,
     strokeWidth: cxTokens.stroke.grid.width,
   },
   axes: {
-    stroke: `rgba(255, 255, 255, ${cxTokens.stroke.axis.opacity})`,
+    stroke: `var(--gridline)`,
     strokeWidth: cxTokens.stroke.axis.width,
   },
   point: {

@@ -4,6 +4,7 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Terminal, Lock, User, AlertCircle, KeyRound } from "lucide-react";
 import { BRANDING } from "@/config/branding";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { useTranslations } from "next-intl";
 import { ApiError, apiFetch } from "@/lib/client-api";
 
@@ -125,14 +126,16 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 -ml-[var(--layout-sidebar-w)] bg-[var(--background)]">
+      {/* Theme Toggle */}
+      <ThemeToggle className="fixed top-4 right-4 z-50 px-2.5 py-2 rounded-lg bg-[var(--surface-elevated)] border border-[var(--border)]" />
       <div className="w-full max-w-md">
         <Suspense
           fallback={
             <div className="rounded-xl p-10 animate-pulse bg-[var(--card)] border border-[var(--border)]">
-              <div className="h-8 bg-gray-700 rounded mb-6" />
-              <div className="h-12 bg-gray-700 rounded mb-4" />
-              <div className="h-12 bg-gray-700 rounded mb-4" />
-              <div className="h-10 bg-gray-700 rounded" />
+              <div className="h-8 bg-[var(--surface-elevated)] rounded mb-6" />
+              <div className="h-12 bg-[var(--surface-elevated)] rounded mb-4" />
+              <div className="h-12 bg-[var(--surface-elevated)] rounded mb-4" />
+              <div className="h-10 bg-[var(--surface-elevated)] rounded" />
             </div>
           }
         >

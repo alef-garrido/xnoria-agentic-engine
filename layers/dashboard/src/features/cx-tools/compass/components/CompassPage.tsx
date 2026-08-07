@@ -26,13 +26,13 @@ function ViewToggle({ compact = false }: { compact?: boolean }) {
 
   return (
     <div
-      className={`flex items-center bg-black/40 rounded-full border border-white/10 relative ${compact ? "w-full" : "p-1"}`}
+      className={`flex items-center bg-[var(--overlay-light)] rounded-full border border-[var(--chip-border)] relative ${compact ? "w-full" : "p-1"}`}
     >
       {modes.map((mode) => (
         <button
           key={mode.id}
           onClick={() => setViewMode(mode.id)}
-          className={`relative px-4 py-1.5 text-sm font-semibold tracking-wide rounded-full transition-colors z-10 ${compact ? "flex-1" : ""} ${viewMode === mode.id ? "text-white" : "text-white/60 hover:text-white"}`}
+          className={`relative px-4 py-1.5 text-sm font-semibold tracking-wide rounded-full transition-colors z-10 ${compact ? "flex-1" : ""} ${viewMode === mode.id ? "text-white" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"}`}
         >
           {viewMode === mode.id && (
             <motion.div
@@ -55,10 +55,10 @@ function CompassContent() {
   return (
     <div className="relative flex flex-col overflow-hidden h-[calc(100vh_-_var(--layout-main-inset-y))] bg-[var(--bg)] text-[var(--text-primary)]">
       {/* Top Nav Bar */}
-      <header className="flex items-center justify-between p-4 border-b border-white/5 bg-black/20 backdrop-blur-sm z-10 gap-4">
+      <header className="flex items-center justify-between p-4 border-b border-[var(--border)] bg-[var(--surface)]/40 backdrop-blur-sm z-10 gap-4">
         {/* Left: App Title */}
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-bold tracking-tight text-white m-0 leading-none font-[var(--font-heading)]">
+          <h1 className="text-xl font-bold tracking-tight text-[var(--text-primary)] m-0 leading-none font-[var(--font-heading)]">
             {wheelData.wheel_name}
           </h1>
         </div>

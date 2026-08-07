@@ -22,7 +22,7 @@ export const TimelineJourney: React.FC<TimelineJourneyProps> = ({ data, activeLa
     const stage = data.journey.find((s) => s.id === tp.stage);
     return {
       ...tp,
-      stageColor: stage?.color || "#ffffff",
+      stageColor: stage?.color || "#64748b",
       stageLabel: stage?.label || t("unknownStage"),
       localIndex: stage?.order || 1,
     };
@@ -108,7 +108,7 @@ export const TimelineJourney: React.FC<TimelineJourneyProps> = ({ data, activeLa
             y1={centerY}
             x2={currentStartX}
             y2={centerY}
-            stroke="#ffffff"
+            stroke="var(--text-secondary)"
             strokeWidth="6"
             strokeLinecap="round"
           />

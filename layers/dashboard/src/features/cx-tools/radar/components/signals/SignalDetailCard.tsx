@@ -23,7 +23,7 @@ export function SignalDetailCard({ signal, domains, causes }: SignalDetailCardPr
   }
 
   const domain = domains.find((d) => signal.domain === d.id);
-  const domainColor = domain?.color || "#ffffff";
+  const domainColor = domain?.color || "#64748b";
   const causeName = causes.find((c) => c.code === signal.causeCode)?.name || signal.causeCode;
 
   return (

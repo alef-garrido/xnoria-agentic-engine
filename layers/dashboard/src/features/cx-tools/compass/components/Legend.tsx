@@ -36,7 +36,7 @@ export default function Legend() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-mono font-medium rounded-md border transition-colors hover:bg-white/10 text-[var(--text-primary)] border-[var(--border)]"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 text-[10px] font-mono font-medium rounded-md border transition-colors hover:bg-[var(--chip-surface)] text-[var(--text-primary)] border-[var(--border)]"
         aria-label={t("openLegend")}
       >
         <Info className="w-3 h-3" />
@@ -75,7 +75,7 @@ export default function Legend() {
                 >
                   <button
                     onClick={close}
-                    className="absolute top-3 right-3 p-1.5 rounded-md hover:bg-white/10 transition-colors"
+                    className="absolute top-3 right-3 p-1.5 rounded-md hover:bg-[var(--chip-surface)] transition-colors"
                     aria-label={t("closeLegend")}
                   >
                     <X className="w-4 h-4" />

@@ -146,7 +146,7 @@ export function InterventionEditor() {
                 </TableCell>
                 <TableCell className="text-sm">{intervention.name.en}</TableCell>
                 <TableCell className="text-center">
-                  <span className="rounded bg-white/10 px-1.5 py-0.5 font-mono text-xs">
+                  <span className="rounded bg-[var(--chip-surface)] px-1.5 py-0.5 font-mono text-xs">
                     {countRefs(intervention.id)}
                   </span>
                 </TableCell>

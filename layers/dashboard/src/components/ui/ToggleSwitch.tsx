@@ -4,18 +4,21 @@ interface ToggleSwitchProps {
   checked: boolean;
   onChange: (value: boolean) => void;
   activeColor?: string;
+  ariaLabel?: string;
 }
 
 export function ToggleSwitch({
   checked,
   onChange,
   activeColor = "var(--positive)",
+  ariaLabel,
 }: ToggleSwitchProps) {
   return (
     <button
       onClick={() => onChange(!checked)}
       role="switch"
       aria-checked={checked}
+      aria-label={ariaLabel}
       className="relative w-[36px] h-[20px] rounded-[10px] cursor-pointer transition-all duration-200 shrink-0"
       style={{
         backgroundColor: checked ? activeColor : "var(--surface-elevated)",

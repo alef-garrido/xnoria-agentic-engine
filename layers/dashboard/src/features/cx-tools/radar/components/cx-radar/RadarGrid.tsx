@@ -29,7 +29,7 @@ export function RadarGrid({ config }: RadarGridProps) {
           <text
             x={center}
             y={center - r - 4} // Positioned slightly above the ring at 12 o'clock
-            fill="rgba(255, 255, 255, 0.4)" // Subtle text so it doesn't fight the points
+            fill="var(--text-secondary)"
             fontSize="9px"
             letterSpacing="0.05em"
             textAnchor="middle"

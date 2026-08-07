@@ -45,7 +45,7 @@ export function RadarPoint({
         cy={node.y}
         r={radius}
         fill={node.color}
-        stroke={isHovered ? "#fff" : "none"}
+        stroke={isHovered ? "var(--text-primary)" : "none"}
         strokeWidth={isHovered ? 1 : 0}
         style={{ filter }}
 
@@ -73,7 +73,7 @@ export function RadarPoint({
             exit={{ opacity: 0, y: node.y + radius + 10 }}
             x={node.x}
             textAnchor="middle"
-            fill="#ffffff"
+            fill="var(--text-primary)"
             fontSize="11px"
             letterSpacing="0.03em"
             className="pointer-events-none select-none font-medium drop-shadow-md"

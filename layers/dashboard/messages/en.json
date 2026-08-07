@@ -16,7 +16,9 @@
   },
   "topbar": {
     "admin": "Admin",
-    "version": "v1.0"
+    "version": "v1.0",
+    "themeToLight": "Switch to light theme",
+    "themeToDark": "Switch to dark theme"
   },
   "statusbar": {
     "cpu": "CPU",
@@ -35,6 +37,8 @@
     "invalidCredentials": "Incorrect credentials.",
     "loginFailed": "Failed to sign in.",
     "connectionError": "Connection error.",
+    "themeToLight": "Switch to light theme",
+    "themeToDark": "Switch to dark theme",
     "footerSuffix": "CX Intelligence Engine"
   },
   "home": {

@@ -259,6 +259,10 @@ docker exec exnoria_postgres psql -U xnoria -d exnoria -c \
 - Stage knowledge: import `STAGES` / `ACTIVE_STAGES` / `JourneyStage` from `src/lib/constants.ts` — never hardcode stage lists
 - Journey health status logic lives in `src/lib/healthStatus.ts` (pure functions) — keep derivation out of components
 - Prefer Tailwind utility classes and CSS variables (`text-[var(--text-secondary)]`, `bg-[var(--card)]`); avoid inline `style={{}}` for static styling
+- **Theming:** design tokens live in `src/app/globals.css` — `:root` holds the dark palette, `html.light` overrides it (the dashboard is dark-first). Theme is applied to `<html>` via the inline script in `src/app/layout.tsx` (no-FOUC) and managed client-side by `ThemeProvider` (`src/providers/ThemeProvider.tsx`) + `useTheme` (`src/hooks/useTheme.ts`), persisted to `localStorage["xnoria-theme"]` with system-preference fallback
+  - Never hardcode light-incompatible colors (`text-white`, `bg-white/5`, `border-white/10`, `bg-black/40`): use semantic vars (`--text-primary`, `--chip-surface`, `--chip-border`, `--overlay-light`, `--gridline*`) so both themes work
+  - `text-white` is only acceptable on accent/solid fills (buttons, chips, colored badges); `bg-black/*` only for modal/drawer overlays
+  - The theme switch (`ThemeToggle` in `src/components/theme/ThemeToggle.tsx` — a Sun icon + `ToggleSwitch` + Moon icon, accent-colored, `aria-checked` reflects `theme === "dark"`) lives in `TenacitOS/TopBar.tsx` and on the login page; label strings via `topbar.themeToLight`/`themeToDark` (and `login.*`)
 - Use CSS hover classes (`hover:bg-...`) instead of `onMouseEnter/onMouseLeave` DOM mutation
 - Use Recharts for data visualization
 - Use Lucide React for icons

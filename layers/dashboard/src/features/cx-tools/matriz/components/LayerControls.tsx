@@ -58,7 +58,7 @@ export const LayerControls: React.FC<LayerControlsProps> = ({
 
   return (
     <div className="flex items-center gap-4">
-      <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/10">
+      <div className="flex gap-2 p-1 bg-[var(--chip-surface)] rounded-xl border border-[var(--chip-border)]">
         {controls.map((control) => {
           const isActive = activeLayers[control.id];
           const Icon = control.icon;
@@ -73,7 +73,9 @@ export const LayerControls: React.FC<LayerControlsProps> = ({
                 "flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 border mb-2 sm:mb-0",
                 isActive
                   ? cn(control.activeBg, "text-white border-transparent shadow-lg shadow-black/20")
-                  : cn("bg-transparent text-white/60 border-transparent hover:bg-white/5")
+                  : cn(
+                      "bg-transparent text-[var(--text-secondary)] border-transparent hover:bg-[var(--chip-surface)]"
+                    )
               )}
             >
               <div

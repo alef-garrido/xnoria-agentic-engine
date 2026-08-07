@@ -47,7 +47,7 @@ export default function DetailPanel() {
             {/* Close button */}
             <button
               onClick={handleClose}
-              className="absolute top-4 right-4 p-2 rounded-md hover:bg-white/10 transition-colors"
+              className="absolute top-4 right-4 p-2 rounded-md hover:bg-[var(--chip-surface)] transition-colors"
               aria-label={t("closeDetail")}
             >
               <X className="w-5 h-5" />

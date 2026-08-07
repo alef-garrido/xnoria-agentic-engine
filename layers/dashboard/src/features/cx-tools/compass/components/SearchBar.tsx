@@ -69,7 +69,7 @@ export default function SearchBar() {
             <button
               key={r.cause.id}
               onMouseDown={() => handleSelect(r)}
-              className="w-full text-left px-3 py-2 text-xs hover:bg-white/10 flex items-center gap-2 transition-colors"
+              className="w-full text-left px-3 py-2 text-xs hover:bg-[var(--chip-surface)] flex items-center gap-2 transition-colors"
             >
               <span
                 className="font-mono font-bold text-[11px] shrink-0"

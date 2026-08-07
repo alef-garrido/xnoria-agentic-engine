@@ -19,14 +19,7 @@ export default function CenterHub() {
       aria-label={t("resetHome")}
       onKeyDown={(e) => e.key === "Enter" && resetToHome()}
     >
-      <circle
-        cx={0}
-        cy={0}
-        r={120}
-        fill="hsl(260, 33%, 4%)"
-        stroke="hsl(240, 3%, 25%)"
-        strokeWidth={2}
-      />
+      <circle cx={0} cy={0} r={120} fill="var(--surface)" stroke="var(--border)" strokeWidth={2} />
       <foreignObject x={-95} y={-65} width={190} height={130}>
         <div className="flex flex-col items-center justify-center h-full text-center">
           <AnimatePresence mode="wait">
@@ -36,7 +29,7 @@ export default function CenterHub() {
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
-                className="text-xl font-semibold text-[#D1D1D6] font-[var(--font-heading)]"
+                className="text-xl font-semibold text-[var(--text-primary)] font-[var(--font-heading)]"
               >
                 {hoveredLabel}
               </motion.span>
@@ -48,11 +41,11 @@ export default function CenterHub() {
                 exit={{ opacity: 0 }}
                 className="flex flex-col items-center gap-1"
               >
-                <span className="text-lg font-bold uppercase tracking-widest text-[#D1D1D6] font-[var(--font-heading)]">
+                <span className="text-lg font-bold uppercase tracking-widest text-[var(--text-primary)] font-[var(--font-heading)]">
                   {center.name}
                 </span>
                 {viewState === "home" && (
-                  <span className="text-sm leading-tight px-2 text-[#9898A0]">
+                  <span className="text-sm leading-tight px-2 text-[var(--text-secondary)]">
                     {center.description}
                   </span>
                 )}

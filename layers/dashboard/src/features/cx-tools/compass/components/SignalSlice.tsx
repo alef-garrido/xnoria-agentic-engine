@@ -65,7 +65,7 @@ export default function SignalSlice({
         y={labelY}
         textAnchor="middle"
         dominantBaseline="central"
-        fill="#FFFFFF"
+        fill="var(--foreground)"
         fontSize={10}
         fontWeight={700}
         fontFamily="'SF Mono', 'Fira Code', 'Cascadia Code', monospace"

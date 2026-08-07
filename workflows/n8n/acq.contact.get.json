@@ -1,0 +1,139 @@
+{
+  "id": "acq-contact-get",
+  "name": "W-ACQ-15 - Acq.contact.get",
+  "nodes": [
+    {
+      "id": "n1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "acq-contact-get",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "n2",
+      "name": "Code -- build lookup request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\nconst p = body.payload || {};\nconst contact_id = p.contact_id || body.contact_id || null;\nconst email = p.email || body.email || null;\n\nif (!contact_id && !email) {\n  throw new Error('Either contact_id or email is required');\n}\n\n// Build the batch read request\n// If we have contact_id, use 'hs_object_id' as idProperty\n// If we only have email, use 'email' as idProperty\nconst idProperty = contact_id ? 'hs_object_id' : 'email';\nconst idValue = contact_id || email;\n\nreturn [{\n  json: {\n    idProperty,\n    idValue,\n    email,\n    contact_id,\n    session_id: body.session_id || null\n  }\n}];"
+      }
+    },
+    {
+      "id": "n3",
+      "name": "HubSpot -- batch read contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.hubapi.com/crm/v3/objects/contacts/batch/read",
+        "authentication": "none",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.HUBSPOT_PRIVATE_APP_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ properties: ['email', 'firstname', 'lastname', 'phone', 'company', 'industry', 'city', 'address', 'zip', 'website', 'hs_linkedin_url', 'hs_facebookid', 'instagram', 'hs_whatsapp_phone_number', 'jobtitle', 'cx_pain_points', 'cx_pci', 'lifecyclestage', 'hs_lead_status', 'fuente', 'colonia', 'secondary_phone', 'contact_linkedin', 'last_com_reengage_at', 'last_exp_expand_at', 'xnoria_outreach_channel', 'xnoria_expansion_ready'], inputs: [{ id: $json.idValue }], idProperty: $json.idProperty }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "n4",
+      "name": "Code -- extract contact data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "parameters": {
+        "jsCode": "const lookup = $('Code -- build lookup request').item.json;\nconst response = $json;\n\n// Handle not-found or error responses\nif (response.status === 207 || response.errors?.length > 0 || !response.results?.length) {\n  return [{\n    json: {\n      status: 'not_found',\n      action_id: 'acq.contact.get',\n      email: lookup.email,\n      contact_id: lookup.contact_id,\n      session_id: lookup.session_id\n    }\n  }];\n}\n\nconst contact = response.results[0];\nconst props = contact.properties || {};\n\nreturn [{\n  json: {\n    status: 'executed',\n    action_id: 'acq.contact.get',\n    contact_id: contact.id,\n    email: props.email || lookup.email,\n    first_name: props.firstname || null,\n    last_name: props.lastname || null,\n    phone: props.phone || null,\n    company: props.company || null,\n    industry: props.industry || null,\n    city: props.city || null,\n    address: props.address || null,\n    colonia: props.colonia || null,\n    postal_code: props.zip || null,\n    website: props.website || null,\n    linkedin: props.hs_linkedin_url || null,\n    contact_linkedin: props.contact_linkedin || null,\n    facebook: props.hs_facebookid || null,\n    instagram: props.instagram || null,\n    whatsapp: props.hs_whatsapp_phone_number || null,\n    secondary_phone: props.secondary_phone || null,\n    job_title: props.jobtitle || null,\n    pain_points: props.cx_pain_points || null,\n    pci: props.cx_pci ? Number(props.cx_pci) : null,\n    source: props.fuente || null,\n    lead_status: props.hs_lead_status || null,\n    lifecycle_stage: props.lifecyclestage || null,\n    session_id: lookup.session_id\n  }\n}];"
+      }
+    },
+    {
+      "id": "n5",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 300],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code -- build lookup request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code -- build lookup request": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- batch read contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- batch read contact": {
+      "main": [
+        [
+          {
+            "node": "Code -- extract contact data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code -- extract contact data": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true
+  }
+}

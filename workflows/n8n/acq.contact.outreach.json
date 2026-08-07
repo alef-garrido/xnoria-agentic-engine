@@ -1,0 +1,209 @@
+{
+  "name": "W-ACQ-3 - Acq.contact.outreach",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "acq-contact-outreach",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-acq-contact-outreach",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "acq-contact-outreach"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Exnoria - acq.contact.outreach\n// Build WhatsApp outreach payload from filter payload\n// contact_id, phone, email, name provided by cognitive layer\n\nconst body = $json.body;\n\nconst contact_id = body.contact_id;\nconst phone      = (body.phone ?? '').replace(/[^\\d]/g, '');\nconst email      = body.email ?? '';\nconst name       = body.name  ?? 'Contact';\nconst signal_id  = body.signal_id ?? '';\n\nconst wa_payload = phone ? {\n  messaging_product: 'whatsapp',\n  to: phone,\n  type: 'template',\n  template: { name: 'greeting', language: { code: 'en' } }\n} : null;\n\nconst gmail_subject = 'Quick Introduction';\nconst gmail_body    = 'Hello ' + name + ',\\n\\nI just sent you a message on WhatsApp, but wanted to reach out here as well. We would love to learn more about how we can help you.\\n\\n— Exnoria';\n\nreturn [{ json: { contact_id, signal_id, phone, email, name, wa_payload, gmail_subject, gmail_body } }];"
+      },
+      "id": "code-build-outreach",
+      "name": "Code -- build outreach payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendTemplate",
+        "phoneNumberId": "={{ $env.META_PHONE_NUMBER_ID }}",
+        "recipientPhoneNumber": "={{ $('Code -- build outreach payload').item.json.phone }}",
+        "template": "greeting"
+      },
+      "id": "whatsapp-outbound",
+      "name": "WhatsAppOutbound",
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1,
+      "position": [720, 200],
+      "continueOnFail": true,
+      "credentials": {
+        "whatsAppApi": {
+          "id": "sETmIzapp65pmP2F",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      },
+      "id": "wait-short",
+      "name": "WaitShort",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [960, 200]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $('Code -- build outreach payload').item.json.email }}",
+        "subject": "={{ $('Code -- build outreach payload').item.json.gmail_subject }}",
+        "emailType": "text",
+        "message": "={{ $('Code -- build outreach payload').item.json.gmail_body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "gmail-outbound",
+      "name": "GmailOutbound",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [1200, 200],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YMxwY3u929C0wtWe",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "resource": "contact",
+        "operation": "upsert",
+        "email": "={{ $('Code -- build outreach payload').item.json.email }}",
+        "additionalFields": {
+          "firstName": "={{ $('Code -- build outreach payload').item.json.name }}",
+          "phoneNumber": "={{ $('Code -- build outreach payload').item.json.phone }}",
+          "customPropertiesUi": {
+            "customPropertiesValues": [
+              {
+                "property": "hs_lead_status",
+                "value": "ATTEMPTED_TO_CONTACT"
+              },
+              {
+                "property": "xnoria_outreach_channel",
+                "value": "whatsapp_gmail"
+              }
+            ]
+          }
+        }
+      },
+      "id": "hubspot-sync-outreach",
+      "name": "HubSpot -- update contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [1440, 200],
+      "credentials": {
+        "hubspotAppToken": {
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'executed', action_id: 'acq.contact.outreach', contact_id: $('Code -- build outreach payload').item.json.contact_id, channels: ['whatsapp', 'email'], crm_updated: true }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-acq-contact-outreach",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1680, 200]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code -- build outreach payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code -- build outreach payload": {
+      "main": [
+        [
+          {
+            "node": "WhatsAppOutbound",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsAppOutbound": {
+      "main": [
+        [
+          {
+            "node": "WaitShort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WaitShort": {
+      "main": [
+        [
+          {
+            "node": "GmailOutbound",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GmailOutbound": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- update contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- update contact": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "id": "7e050a27fb594926"
+}

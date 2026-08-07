@@ -1,0 +1,169 @@
+{
+  "name": "W-SUP-1 - Sup.ticket.escalate",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sup-ticket-escalate",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-sup-ticket-escalate",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "sup-ticket-escalate"
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "operation": "get",
+        "contactId": "={{ $json.body.contact_id }}",
+        "additionalFields": {}
+      },
+      "id": "hubspot-get-contact-w4",
+      "name": "HubSpot -- get contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "credentials": {
+        "hubspotAppToken": {
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Exnoria - sup.ticket.escalate\n// Build escalation task and tag contact\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, ticket_id, signal_id, signal_severity, open_days, reason } = webhook;\n\nconst firstname = contact.properties?.firstname?.value ?? 'Contact';\nconst lastname  = contact.properties?.lastname?.value  ?? '';\nconst email     = contact.properties?.email?.value     ?? '';\nconst company   = contact.properties?.company?.value   ?? '';\n\n// Determine urgency tier based on severity and open days\nlet urgency = 'normal';\nif (signal_severity > 0.8 || open_days > 7) urgency = 'critical';\nelse if (signal_severity > 0.6 || open_days > 3) urgency = 'high';\n\nconst escalatedAt = new Date(new Date().setUTCHours(0,0,0,0)).getTime();\n\nconst taskBody = [\n  '[ESCALATION] ' + firstname + ' ' + lastname + ' - ' + company,\n  'Ticket: ' + (ticket_id || 'N/A'),\n  'Signal: ' + signal_id + ' (severity: ' + signal_severity + ')',\n  'Open days: ' + open_days,\n  'Urgency: ' + urgency,\n  'Reason: ' + (reason || 'Auto-escalated by Exnoria'),\n  'Email: ' + email,\n  'Contact ID: ' + contact_id\n].join('\\n');\n\nreturn [{\n  json: {\n    contact_id,\n    ticket_id: ticket_id || 'N/A',\n    signal_id,\n    email,\n    firstname,\n    lastname,\n    company,\n    urgency,\n    escalated_at: escalatedAt,\n    task_subject: '[Exnoria Escalation] ' + firstname + ' ' + lastname + ' - ' + urgency.toUpperCase(),\n    task_body: taskBody,\n    reason: reason || 'Auto-escalated by Exnoria'\n  }\n}];"
+      },
+      "id": "code-escalation-logic",
+      "name": "Code -- escalation logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "resource": "engagement",
+        "operation": "create",
+        "type": "task",
+        "dueDate": "={{ new Date().toISOString() }}",
+        "metadata": {
+          "subject": "={{ $(\"Code -- escalation logic\").item.json.task_subject }}",
+          "body": "={{ $(\"Code -- escalation logic\").item.json.task_body }}",
+          "status": "NOT_STARTED",
+          "forObjectType": "CONTACT"
+        }
+      },
+      "id": "hubspot-create-task-w4",
+      "name": "HubSpot -- create task",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [960, 300],
+      "credentials": {
+        "hubspotAppToken": {
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "email": "={{ $(\"Code -- escalation logic\").item.json.email }}",
+        "additionalFields": {},
+        "options": {}
+      },
+      "id": "hubspot-update-contact-w4",
+      "name": "HubSpot -- update contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [1200, 300],
+      "credentials": {
+        "hubspotAppToken": {
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"sup.ticket.escalate\",\n  \"contact_id\": \"{{ $(\"Code -- escalation logic\").item.json.contact_id }}\",\n  \"ticket_id\": \"{{ $(\"Code -- escalation logic\").item.json.ticket_id }}\",\n  \"urgency\": \"{{ $(\"Code -- escalation logic\").item.json.urgency }}\",\n  \"task_created\": true,\n  \"escalated_at\": {{ $(\"Code -- escalation logic\").item.json.escalated_at }}\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-w4",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1440, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- get contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- get contact": {
+      "main": [
+        [
+          {
+            "node": "Code -- escalation logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code -- escalation logic": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- create task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- create task": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- update contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- update contact": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "id": "3d991cbbbe8942af"
+}

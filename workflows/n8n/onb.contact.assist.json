@@ -1,0 +1,211 @@
+{
+  "name": "W-ONB-4 - Onb.contact.assist",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "onb-contact-assist",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-onb-contact-assist",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "onb-contact-assist"
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "operation": "get",
+        "contactId": "={{ $json.body.contact_id }}",
+        "additionalFields": {}
+      },
+      "id": "hubspot-get-contact-onb4",
+      "name": "HubSpot -- get contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "credentials": {
+        "hubspotAppToken": {
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Exnoria - onb.contact.assist\n// Build white-glove assist payload (executes after HITL approval)\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, signal_id, signal_severity } = webhook;\nconst triggered_by = webhook.meta?.triggered_by ?? 'system';\n\nconst firstname = contact.properties?.firstname?.value ?? 'there';\nconst lastname  = contact.properties?.lastname?.value  ?? '';\nconst email     = contact.properties?.email?.value     ?? '';\nconst phone     = contact.properties?.phone?.value     ?? '';\nconst company   = contact.properties?.company?.value   ?? '';\n\nconst cleanPhone = phone.replace(/[^\\d]/g, '');\n\nconst message = [\n  'Hi ' + firstname + ',',\n  '',\n  'I noticed you might need some help getting set up — I\\'d like to personally assist you.',\n  '',\n  'Would you have 15 minutes this week for a quick call? I can walk you through everything and make sure you\\'re fully set up.',\n  '',\n  'Just reply to this message and we\\'ll get it scheduled!',\n  '',\n  '-- Your Onboarding Specialist'\n].join('\\n');\n\nconst whatsapp_payload = cleanPhone ? {\n  messaging_product: 'whatsapp',\n  to: cleanPhone,\n  type: 'text',\n  text: { body: message }\n} : null;\n\nconst assistedAt = new Date(new Date().setUTCHours(0,0,0,0)).getTime();\n\nreturn [{\n  json: {\n    contact_id,\n    signal_id,\n    signal_severity,\n    email,\n    firstname,\n    lastname,\n    company,\n    phone: cleanPhone,\n    whatsapp_payload,\n    task_subject: '[Exnoria ONB Assist] Follow up: ' + firstname + ' ' + lastname + ' - ' + company,\n    task_body: 'White-glove assist requested. Signal: ' + signal_id + ' (severity: ' + signal_severity + '). Contact: ' + email,\n    assisted_at: assistedAt\n  }\n}];"
+      },
+      "id": "code-assist-logic-onb4",
+      "name": "Code -- assist logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/{{ $env.META_PHONE_NUMBER_ID }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($(\"Code -- assist logic\").item.json.whatsapp_payload) }}",
+        "options": {}
+      },
+      "id": "http-meta-whatsapp-onb4",
+      "name": "Meta WA -- send assist offer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [960, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Meta WhatsApp Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "resource": "engagement",
+        "operation": "create",
+        "type": "task",
+        "dueDate": "={{ new Date().toISOString() }}",
+        "metadata": {
+          "subject": "={{ $(\"Code -- assist logic\").item.json.task_subject }}",
+          "body": "={{ $(\"Code -- assist logic\").item.json.task_body }}",
+          "status": "NOT_STARTED",
+          "forObjectType": "CONTACT"
+        }
+      },
+      "id": "hubspot-create-task-onb4",
+      "name": "HubSpot -- create task",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [1200, 300],
+      "credentials": {
+        "hubspotAppToken": {
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "email": "={{ $(\"Code -- assist logic\").item.json.email }}",
+        "additionalFields": {},
+        "options": {}
+      },
+      "id": "hubspot-update-contact-onb4",
+      "name": "HubSpot -- update contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [1440, 300],
+      "credentials": {
+        "hubspotAppToken": {
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"onb.contact.assist\",\n  \"contact_id\": \"{{ $(\"Code -- assist logic\").item.json.contact_id }}\",\n  \"signal_id\": \"{{ $(\"Code -- assist logic\").item.json.signal_id }}\",\n  \"task_created\": true,\n  \"assisted_at\": {{ $(\"Code -- assist logic\").item.json.assisted_at }}\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-onb4",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1680, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- get contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- get contact": {
+      "main": [
+        [
+          {
+            "node": "Code -- assist logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code -- assist logic": {
+      "main": [
+        [
+          {
+            "node": "Meta WA -- send assist offer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta WA -- send assist offer": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- create task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- create task": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- update contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- update contact": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "id": "8e1e5196d3974073"
+}

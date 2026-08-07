@@ -1,0 +1,54 @@
+services:
+  postgres:
+    # NOT exposed externally — internal network only
+    expose:
+      - "5432"
+    ports: []
+    restart: always
+
+  n8n:
+    # NOT exposed externally — proxied by Caddy
+    expose:
+      - "5678"
+    ports: []
+    restart: always
+    environment:
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+
+  filter:
+    # NOT exposed externally — called only by n8n and dashboard internally
+    expose:
+      - "3000"
+    ports: []
+    restart: always
+
+  dashboard:
+    # NOT exposed externally — proxied by Caddy
+    expose:
+      - "4000"
+    ports: []
+    restart: always
+
+  cognitive:
+    restart: always
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: ${PROJECT_ID:-exnoria}_caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/environments/vps/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_certs:/etc/caddy/certs
+    networks:
+      - ${PROJECT_ID:-exnoria}_internal
+    depends_on:
+      - n8n
+      - dashboard
+
+volumes:
+  caddy_data:
+  caddy_certs:

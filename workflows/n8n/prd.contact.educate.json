@@ -1,0 +1,198 @@
+{
+  "name": "W-PRD-2 - Prd.contact.educate",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "prd-contact-educate",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-prd-contact-educate",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "prd-contact-educate"
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "operation": "get",
+        "contactId": "={{ $json.body.contact_id }}",
+        "additionalFields": {}
+      },
+      "id": "hubspot-get-contact-prd2",
+      "name": "HubSpot -- get contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Exnoria - prd.contact.educate\n// Feature education for contacts using workarounds (PRD_CAP_01)\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, signal_id } = webhook;\nconst feature_area = webhook.payload?.feature_area ?? webhook.feature_area ?? 'your workflow';\n\nconst firstname = contact.properties?.firstname?.value ?? 'there';\nconst email     = contact.properties?.email?.value     ?? '';\nconst phone     = contact.properties?.phone?.value     ?? '';\n\nconst cleanPhone = phone.replace(/[^\\d]/g, '');\n\nconst message = [\n  'Hi ' + firstname + ',',\n  '',\n  'Did you know there\\'s a built-in way to handle ' + feature_area + '?',\n  '',\n  'We noticed you might be using a workaround — here\\'s a quick guide to the native feature that can save you time: [Feature Guide Link]',\n  '',\n  'Let us know if you have any questions!',\n  '',\n  '-- Exnoria Product Team'\n].join('\\n');\n\nconst whatsapp_payload = cleanPhone ? {\n  messaging_product: 'whatsapp',\n  to: cleanPhone,\n  type: 'text',\n  text: { body: message }\n} : null;\n\nconst educatedAt = new Date(new Date().setUTCHours(0,0,0,0)).getTime();\n\nreturn [{\n  json: {\n    contact_id,\n    signal_id,\n    feature_area,\n    email,\n    firstname,\n    phone: cleanPhone,\n    whatsapp_payload,\n    csm_task_subject: '[Exnoria PRD] Check in on feature adoption for ' + contact_id,\n    csm_task_due_days: 7,\n    educated_at: educatedAt\n  }\n}];"
+      },
+      "id": "code-educate-logic-prd2",
+      "name": "Code -- educate logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/{{ $env.META_PHONE_NUMBER_ID }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($(\"Code -- educate logic\").item.json.whatsapp_payload) }}",
+        "options": {}
+      },
+      "id": "http-meta-whatsapp-prd2",
+      "name": "Meta WA -- send education",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [960, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Meta WhatsApp Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simulate -- HubSpot task creation for CSM follow-up in 7 days\n// Replace with real HubSpot task API when ready\n\nconst data = $(\"Code -- educate logic\").first().json;\n\nreturn [{\n  json: {\n    ...data,\n    task_created: true,\n    task_id: 'task_sim_' + Date.now(),\n    simulated: true\n  }\n}];"
+      },
+      "id": "simulate-create-task-prd2",
+      "name": "Simulate -- create CSM task",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "email": "={{ $(\"Code -- educate logic\").item.json.email }}",
+        "additionalFields": {},
+        "options": {}
+      },
+      "id": "hubspot-update-contact-prd2",
+      "name": "HubSpot -- update contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [1440, 300],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"prd.contact.educate\",\n  \"contact_id\": \"{{ $(\"Code -- educate logic\").item.json.contact_id }}\",\n  \"signal_id\": \"{{ $(\"Code -- educate logic\").item.json.signal_id }}\",\n  \"feature_area\": \"{{ $(\"Code -- educate logic\").item.json.feature_area }}\",\n  \"task_created\": {{ $(\"Simulate -- create CSM task\").item.json.task_created }},\n  \"educated_at\": {{ $(\"Code -- educate logic\").item.json.educated_at }},\n  \"simulated\": {{ $(\"Simulate -- create CSM task\").item.json.simulated }}\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-prd2",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1680, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- get contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- get contact": {
+      "main": [
+        [
+          {
+            "node": "Code -- educate logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code -- educate logic": {
+      "main": [
+        [
+          {
+            "node": "Meta WA -- send education",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta WA -- send education": {
+      "main": [
+        [
+          {
+            "node": "Simulate -- create CSM task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simulate -- create CSM task": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- update contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- update contact": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "id": "8ff11e72724f4e84"
+}

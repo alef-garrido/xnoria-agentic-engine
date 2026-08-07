@@ -1,0 +1,25 @@
+# ==============================================================================
+# Exnoria Edge Device — Caddyfile
+# deploy/environments/edge/Caddyfile
+#
+# Serves via local hostnames (mDNS .local or router-assigned DNS).
+# Uses Caddy's internal CA for self-signed TLS certificates.
+# Browsers must trust the Caddy root CA — see edge runbook for instructions.
+# ==============================================================================
+
+{
+    # Use Caddy's internal CA — no ACME/Let's Encrypt on local network
+    local_certs
+}
+
+{$N8N_HOST} {
+    tls internal
+    reverse_proxy n8n:5678
+    encode gzip
+}
+
+{$DASHBOARD_HOST} {
+    tls internal
+    reverse_proxy dashboard:4000
+    encode gzip
+}

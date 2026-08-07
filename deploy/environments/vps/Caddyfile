@@ -1,0 +1,25 @@
+# ==============================================================================
+# Exnoria VPS — Caddyfile
+# deploy/environments/vps/Caddyfile
+#
+# Subdomain-based routing. Caddy handles TLS automatically via Let's Encrypt.
+# N8N_HOST and DASHBOARD_HOST must match DNS A records pointing to this server.
+# ==============================================================================
+
+{$N8N_HOST} {
+    reverse_proxy n8n:5678
+    encode gzip
+
+    log {
+        output file /var/log/caddy/n8n-access.log
+    }
+}
+
+{$DASHBOARD_HOST} {
+    reverse_proxy dashboard:4000
+    encode gzip
+
+    log {
+        output file /var/log/caddy/dashboard-access.log
+    }
+}

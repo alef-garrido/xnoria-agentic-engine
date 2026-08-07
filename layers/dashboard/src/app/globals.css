@@ -1,0 +1,203 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* ============================================
+   Exnoria Design System
+   Based on tenacios-design.json (Pencil)
+   Updated: 2026-04-06
+   ============================================ */
+
+:root {
+  /* Theme-neutral grid/overlay aliases (consumed by cx-tools) */
+  --gridline: rgba(255, 255, 255, 0.14);
+  --gridline-soft: rgba(255, 255, 255, 0.1);
+  --chip-border: rgba(255, 255, 255, 0.12);
+  --chip-surface: rgba(255, 255, 255, 0.06);
+  --overlay-light: rgba(0, 0, 0, 0.4);
+
+  /* Core Colors */
+  --bg: #0c0c0c;
+  --background: #0c0c0c; /* alias for compatibility */
+  --foreground: #ffffff;
+
+  /* Surface Colors */
+  --surface: #1a1a1a;
+  --surface-elevated: #242424;
+  --surface-hover: #2e2e2e;
+  --card: #1a1a1a; /* alias */
+  --card-elevated: #242424; /* alias */
+
+  /* Borders */
+  --border: #2a2a2a;
+  --border-strong: #3a3a3a;
+
+  /* Accent */
+  --accent: #ff3b30;
+  --accent-soft: rgba(255, 59, 48, 0.125);
+  --accent-hover: #ff524a;
+
+  /* Radar signal severity */
+  --severity-low: #4ade80;
+  --severity-mid: #facc15;
+  --severity-high: #f87171;
+
+  /* Text Colors */
+  --text-primary: #ffffff;
+  --text-secondary: #8a8a8a;
+  --text-muted: #525252;
+
+  /* Semantic Colors */
+  --positive: #32d74b;
+  --positive-soft: rgba(50, 215, 75, 0.125);
+  --negative: #ff453a;
+  --negative-soft: rgba(255, 69, 58, 0.125);
+  --warning: #ffd60a;
+  --warning-soft: rgba(255, 214, 10, 0.125);
+  --info: #0a84ff;
+  --info-soft: rgba(10, 132, 255, 0.125);
+
+  /* Activity Type Colors */
+  --type-file: #64d2ff;
+  --type-file-bg: rgba(100, 210, 255, 0.125);
+  --type-search: #ffd60a;
+  --type-search-bg: rgba(255, 214, 10, 0.125);
+  --type-message: #32d74b;
+  --type-message-bg: rgba(50, 215, 75, 0.125);
+  --type-command: #bf5af2;
+  --type-command-bg: rgba(191, 90, 242, 0.125);
+  --type-cron: #ff375f;
+  --type-cron-bg: rgba(255, 55, 95, 0.125);
+  --type-security: #ff453a;
+  --type-security-bg: rgba(255, 69, 58, 0.125);
+  --type-build: #ff9f0a;
+  --type-build-bg: rgba(255, 159, 10, 0.125);
+
+  /* Typography - uses Next.js font variables */
+  --font-heading: var(--font-sora), system-ui, sans-serif;
+  --font-body: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), monospace;
+
+  /* Spacing */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+
+  /* Layout chrome (single source of truth for dashboard shell dimensions) */
+  --layout-topbar-h: 48px;
+  --layout-statusbar-h: 32px;
+  --layout-main-pad-y: 24px;
+  --layout-sidebar-w: 256px;
+  --layout-main-inset-y: calc(
+    var(--layout-topbar-h) + var(--layout-statusbar-h) + var(--layout-main-pad-y) * 2
+  );
+}
+
+/* ============================================
+   Light theme — activated via <html class="light">
+   Overrides the dark :root defaults. Keeps accent,
+   severity, semantic, and activity-type colors
+   theme-neutral so they stay brand-consistent.
+   ============================================ */
+html.light {
+  --gridline: rgba(24, 24, 27, 0.14);
+  --gridline-soft: rgba(24, 24, 27, 0.1);
+  --chip-border: rgba(24, 24, 27, 0.14);
+  --chip-surface: rgba(24, 24, 27, 0.05);
+  --overlay-light: rgba(0, 0, 0, 0.1);
+
+  --bg: #f4f4f5;
+  --background: #f5f5f7; /* alias for compatibility */
+  --foreground: #18181b;
+
+  --surface: #ffffff;
+  --surface-elevated: #fafafa;
+  --surface-hover: #ececec;
+  --card: #ffffff; /* alias */
+  --card-elevated: #fafafa; /* alias */
+
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
+
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #a1a1aa;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Base Styles */
+body {
+  background-color: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Heading styles */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+
+/* Code/Mono */
+code,
+pre,
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Smooth transitions */
+* {
+  transition-property: background-color, border-color, color, fill, stroke, opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Accent line for section headers */
+.accent-line {
+  width: 24px;
+  height: 2px;
+  background-color: var(--accent);
+  border-radius: 1px;
+}
+
+/* Lifting card for journey stage summaries — accent color set via --stage-accent */
+.stage-card {
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.stage-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--stage-accent) 13%, transparent);
+}

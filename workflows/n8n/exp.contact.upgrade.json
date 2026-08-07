@@ -1,0 +1,202 @@
+{
+  "name": "W-EXP-2 - Exp.contact.upgrade",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "exp-contact-upgrade",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-exp-contact-upgrade",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "exp-contact-upgrade"
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "operation": "get",
+        "contactId": "={{ $json.body.contact_id }}",
+        "additionalFields": {}
+      },
+      "id": "hubspot-get-contact-exp-2",
+      "name": "HubSpot -- get contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "credentials": {
+        "hubspotAppToken": {
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Exnoria - exp.contact.upgrade\n// Branch based on signal_id to handle different upgrade scenarios\n// Primary: email via Gmail\n// Localized: en/es via APP_LOCALE\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, signal_id, signal_severity } = webhook;\n\nconst firstname = contact.properties?.firstname?.value ?? 'Contact';\nconst lastname  = contact.properties?.lastname?.value  ?? '';\nconst email     = contact.properties?.email?.value     ?? '';\n\nconst es = $env.APP_LOCALE === 'es';\n\nlet tags = [];\nlet gmailSubject = '';\nlet gmailBody = '';\nlet taskSubject = null;\nlet taskPriority = 'MEDIUM';\n\n// Branch based on signal_id\nif (signal_id === 'EXP_VAL_01') {\n  // Unwilling to pay more - send upgrade prompt with tier comparison\n  tags.push('exp-upgrade-initiated');\n  gmailSubject = es ? 'Desbloquea más valor con nuestro plan premium' : 'Unlock more value with our premium tier';\n  gmailBody = es\n    ? 'Hola ' + firstname + ', gracias por ser un cliente valioso. Nos encantaría mostrarte cómo puedes obtener aún más de nuestra plataforma. Aquí tienes una comparación de nuestros planes: [ENLACE]'\n    : 'Hi ' + firstname + ', thanks for being a valued customer! We\\'d love to show you how you can get even more from our platform. Here\\'s a comparison of our tiers: [LINK]';\n} else if (signal_id === 'EXP_VAL_02') {\n  // Low ROI perception - co-create business case\n  tags.push('exp-roi-case');\n  gmailSubject = es ? 'Construyamos juntos tu caso de negocio de ROI' : 'Let\\'s build your ROI business case together';\n  gmailBody = es\n    ? 'Hola ' + firstname + ', creemos que nuestra plataforma está aportando valor y nos gustaría ayudarte a cuantificarlo. Agendemos una llamada para construir un caso de negocio juntos.'\n    : 'Hi ' + firstname + ', we believe our platform is delivering value and we\\'d like to help you quantify it. Let\\'s schedule a call to build a business case together.';\n  taskSubject = (es ? 'Co-crear caso de negocio ROI con ' : 'Co-create ROI business case with ') + contact_id;\n  taskPriority = 'HIGH';\n}\n\nreturn [{\n  json: {\n    contact_id,\n    signal_id,\n    signal_severity,\n    email,\n    firstname,\n    lastname,\n    tags,\n    gmail_subject: gmailSubject,\n    gmail_body: gmailBody,\n    task_subject: taskSubject,\n    task_priority: taskPriority\n  }\n}];"
+      },
+      "id": "code-branching-logic-exp-2",
+      "name": "Code -- branching logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $(\"Code -- branching logic\").item.json.email }}",
+        "subject": "={{ $(\"Code -- branching logic\").item.json.gmail_subject }}",
+        "emailType": "text",
+        "message": "={{ $(\"Code -- branching logic\").item.json.gmail_body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "gmail-send-exp-2",
+      "name": "Gmail -- send upgrade offer",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [960, 300],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YMxwY3u929C0wtWe",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "email": "={{ $(\"Code -- branching logic\").item.json.email }}",
+        "additionalFields": {},
+        "options": {}
+      },
+      "id": "hubspot-update-contact-exp-2",
+      "name": "HubSpot -- update contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [1200, 300],
+      "credentials": {
+        "hubspotAppToken": {
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "operation": "create",
+        "subject": "={{ $(\"Code -- branching logic\").item.json.task_subject }}",
+        "contactId": "={{ $(\"Code -- branching logic\").item.json.contact_id }}",
+        "status": "NOT_STARTED",
+        "priority": "={{ $(\"Code -- branching logic\").item.json.task_priority }}",
+        "additionalFields": {},
+        "options": {}
+      },
+      "id": "hubspot-create-task-exp-2",
+      "name": "HubSpot -- create task (CSM)",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [1440, 300],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"exp.contact.upgrade\",\n  \"contact_id\": \"{{ $(\"Code -- branching logic\").item.json.contact_id }}\",\n  \"signal_id\": \"{{ $(\"Code -- branching logic\").item.json.signal_id }}\",\n  \"email_sent\": true,\n  \"task_created\": {{ $(\"Code -- branching logic\").item.json.task_subject != null }}\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-exp-2",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1680, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- get contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- get contact": {
+      "main": [
+        [
+          {
+            "node": "Code -- branching logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code -- branching logic": {
+      "main": [
+        [
+          {
+            "node": "Gmail -- send upgrade offer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail -- send upgrade offer": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- update contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- update contact": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- create task (CSM)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- create task (CSM)": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "id": "exp-contact-upgrade-id"
+}

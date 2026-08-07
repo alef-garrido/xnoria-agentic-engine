@@ -1,0 +1,63 @@
+"use client";
+import { useWheel } from "@/features/cx-tools/compass/context/WheelContext";
+import { useCompassData } from "@/features/cx-tools/compass/context/CompassDataContext";
+import { ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
+
+export default function Breadcrumbs() {
+  const {
+    viewState,
+    selectedDomain,
+    selectedCause,
+    selectedSignal,
+    resetToHome,
+    selectDomain,
+    selectCause,
+  } = useWheel();
+  const { uiStrings } = useCompassData();
+  const t = useTranslations("cxtools");
+
+  return (
+    <nav className="flex items-center gap-1 text-xs" aria-label={t("breadcrumb")}>
+      <button
+        onClick={resetToHome}
+        className="hover:underline transition-colors text-[var(--text-primary)]"
+      >
+        {uiStrings.home}
+      </button>
+      {selectedDomain && (
+        <>
+          <ChevronRight className="w-3 h-3 text-[var(--text-primary)]" />
+          <button
+            onClick={() => selectDomain(selectedDomain)}
+            className="hover:underline transition-colors"
+            style={{ color: selectedDomain.color }}
+          >
+            {selectedDomain.name}
+          </button>
+        </>
+      )}
+      {selectedCause && (viewState === "cause" || viewState === "signal") && (
+        <>
+          <ChevronRight className="w-3 h-3 text-[var(--text-primary)]" />
+          {viewState === "signal" ? (
+            <button
+              onClick={() => selectCause(selectedCause)}
+              className="hover:underline transition-colors text-[var(--text-primary)]"
+            >
+              {selectedCause.name}
+            </button>
+          ) : (
+            <span className="text-[var(--text-primary)]">{selectedCause.name}</span>
+          )}
+        </>
+      )}
+      {selectedSignal && viewState === "signal" && (
+        <>
+          <ChevronRight className="w-3 h-3 text-[var(--text-primary)]" />
+          <span className="text-[var(--text-primary)]">{selectedSignal.name}</span>
+        </>
+      )}
+    </nav>
+  );
+}

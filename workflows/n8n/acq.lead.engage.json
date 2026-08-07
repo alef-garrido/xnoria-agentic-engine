@@ -1,0 +1,139 @@
+{
+  "name": "W-ACQ-1 - Acq.lead.engage",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "acq-lead-engage",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-acq-lead-engage",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "acq-lead-engage"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Exnoria - acq.lead.engage\n// Receive filter payload and build WhatsApp acknowledgment\n// contact_id, phone, name provided by cognitive layer — no fallback generation\n// Localized: en/es via APP_LOCALE\n\nconst body = $json.body;\n\nconst contact_id = body.contact_id;\nconst phone      = body.phone      ?? '';\nconst name       = body.name       ?? 'Contact';\nconst signal_id  = body.signal_id  ?? '';\n\nconst es = $env.APP_LOCALE === 'es';\n\nif (!phone) {\n  return [{ json: { contact_id, signal_id, ack_sent: false, reason: 'no_phone_number' } }];\n}\n\nconst cleanPhone = phone.replace(/[^\\d]/g, '');\n\nconst message = es ? [\n  '¡Hola ' + name + '!',\n  '',\n  'Gracias por escribirnos. Hemos recibido tu mensaje y nuestro equipo se pondrá en contacto contigo en breve.',\n  '',\n  '— Exnoria'\n].join('\\n') : [\n  'Hi ' + name + '!',\n  '',\n  'Thank you for reaching out. We have received your message and our team will be in touch shortly.',\n  '',\n  '— Exnoria'\n].join('\\n');\n\nconst whatsapp_payload = {\n  messaging_product: 'whatsapp',\n  to: cleanPhone,\n  type: 'text',\n  text: { body: message }\n};\n\nreturn [{ json: { contact_id, signal_id, phone: cleanPhone, name, whatsapp_payload, ack_sent: true } }];"
+      },
+      "id": "code-build-ack-w-acq-1",
+      "name": "Code -- build ack payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/{{ $env.META_PHONE_NUMBER_ID }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Code -- build ack payload').item.json.whatsapp_payload) }}",
+        "options": {}
+      },
+      "id": "http-meta-whatsapp-acq-1",
+      "name": "Meta WA -- send ack",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [720, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Meta WhatsApp Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": "DPTr6Vy1ETbR7frR",
+        "options": {}
+      },
+      "id": "log-result-analytics",
+      "name": "LogResult",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [960, 500]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'executed', action_id: 'acq.lead.engage', contact_id: $('Code -- build ack payload').item.json.contact_id, ack_sent: true, channel: 'whatsapp' }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-acq-lead-engage",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code -- build ack payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code -- build ack payload": {
+      "main": [
+        [
+          {
+            "node": "Meta WA -- send ack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta WA -- send ack": {
+      "main": [
+        {
+          "node": "LogResult",
+          "type": "main",
+          "index": 0
+        }
+      ]
+    },
+    "LogResult": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveDataOnSuccess": "all",
+    "saveDataOnError": "all"
+  },
+  "id": "22b850f2c4664360"
+}

@@ -1,0 +1,201 @@
+{
+  "name": "W-UTIL-1 - Analytics Metrics",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "trigger-execute-workflow",
+      "name": "WorkflowInputTrigger",
+      "type": "n8n-nodes-base.workflowTrigger",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Accept both structured and unstructured inputs\nconst input = $json || {};\n\nreturn {\n  json: {\n    type: input.type || 'event',\n    name: input.name || 'unknown_event',\n    source: input.source || 'unknown_workflow',\n    contact_id: input.contact_id || null,\n    session_id: input.session_id || null,\n    action_id: input.action_id || null,\n    stage: input.stage || null,\n    value: input.value || 1,\n    metadata: input.metadata || {},\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "normalize-event-code",
+      "name": "NormalizeEvent",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value": "={{ $json.type }}",
+        "rules": {
+          "rules": [
+            {
+              "value": "counter",
+              "output": 0
+            },
+            {
+              "value": "event",
+              "output": 1
+            }
+          ]
+        },
+        "fallbackOutput": 2
+      },
+      "id": "route-by-type-switch",
+      "name": "RouteByType",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Counter events track cumulative metrics\nreturn {\n  json: {\n    ...$json,\n    log_type: 'counter',\n    log_entry: `[COUNTER] ${$json.name} +${$json.value} | source: ${$json.source} | ${$json.timestamp}`\n  }\n};"
+      },
+      "id": "increment-counter-code",
+      "name": "IncrementCounter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Event records track discrete occurrences with full context\nreturn {\n  json: {\n    ...$json,\n    log_type: 'event',\n    log_entry: `[EVENT] ${$json.name} | contact: ${$json.contact_id} | stage: ${$json.stage} | action: ${$json.action_id} | ${$json.timestamp}`\n  }\n};"
+      },
+      "id": "build-event-record-code",
+      "name": "BuildEventRecord",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Primary logging destination\nconsole.log('[cxEngine_Analytics]', JSON.stringify($json));\n\nreturn {\n  json: {\n    logged: true,\n    log_type: $json.log_type || 'default',\n    name: $json.name,\n    timestamp: $json.timestamp\n  }\n};"
+      },
+      "id": "log-to-store-code",
+      "name": "LogToStore",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "logged",
+              "value": "true"
+            },
+            {
+              "name": "event_name",
+              "value": "={{ $json.name }}"
+            },
+            {
+              "name": "timestamp",
+              "value": "={{ $json.timestamp }}"
+            }
+          ]
+        }
+      },
+      "id": "respond-to-parent-set",
+      "name": "RespondToParent",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [1340, 300]
+    }
+  ],
+  "connections": {
+    "WorkflowInputTrigger": {
+      "main": [
+        [
+          {
+            "node": "NormalizeEvent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NormalizeEvent": {
+      "main": [
+        [
+          {
+            "node": "RouteByType",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RouteByType": {
+      "main": [
+        [
+          [
+            {
+              "node": "IncrementCounter",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ],
+        [
+          [
+            {
+              "node": "BuildEventRecord",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ],
+        [
+          [
+            {
+              "node": "LogToStore",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      ]
+    },
+    "IncrementCounter": {
+      "main": [
+        [
+          {
+            "node": "LogToStore",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BuildEventRecord": {
+      "main": [
+        [
+          {
+            "node": "LogToStore",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LogToStore": {
+      "main": [
+        [
+          {
+            "node": "RespondToParent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "saveDataOnSuccess": "all",
+    "saveDataOnError": "all",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "001",
+  "id": "util.analytics.log",
+  "meta": {
+    "instanceId": "xnoria-cognitive"
+  }
+}

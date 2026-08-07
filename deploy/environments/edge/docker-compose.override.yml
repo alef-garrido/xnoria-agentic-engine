@@ -1,0 +1,74 @@
+services:
+  postgres:
+    expose:
+      - "5432"
+    ports: []
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  n8n:
+    expose:
+      - "5678"
+    ports: []
+    restart: always
+    environment:
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  filter:
+    expose:
+      - "3000"
+    ports: []
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+
+  dashboard:
+    expose:
+      - "4000"
+    ports: []
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+  cognitive:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: ${PROJECT_ID:-exnoria}_caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/environments/edge/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_certs:/etc/caddy/certs
+    networks:
+      - ${PROJECT_ID:-exnoria}_internal
+    depends_on:
+      - n8n
+      - dashboard
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+
+volumes:
+  caddy_data:
+  caddy_certs:

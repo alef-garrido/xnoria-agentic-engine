@@ -1,0 +1,57 @@
+{
+  "name": "W-MVP-2 - Sal.sequence.enroll (simplified)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sal-sequence-enroll",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-sal-sequence-enroll-v1",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "aa167af5-3628-40be-9feb-a4c2bdcf4189"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\nreturn {\n  json: {\n    contact_id: body.contact_id || body.payload?.contact_id || null,\n    session_id: body.session_id || null,\n    signal_id: body.signal_id || null\n  }\n};"
+      },
+      "id": "normalize-payload-code",
+      "name": "NormalizePayload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'executed', action_id: 'sal.sequence.enroll', contact_id: $('NormalizePayload').item.json.contact_id, note: 'Manual action — operator must complete enrollment in HubSpot' }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-to-webhook",
+      "name": "RespondToFilter",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [680, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{ "node": "NormalizePayload", "type": "main", "index": 0 }]]
+    },
+    "NormalizePayload": {
+      "main": [[{ "node": "RespondToFilter", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {},
+  "versionId": "002",
+  "id": "mvp-sal-sequence-enroll-v1",
+  "meta": {
+    "instanceId": "xnoria-cognitive"
+  }
+}

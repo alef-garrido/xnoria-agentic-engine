@@ -1,0 +1,177 @@
+{
+  "name": "W-SUP-2 - Sup.contact.notify",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sup-contact-notify",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-sup-contact-notify",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "sup-contact-notify"
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "operation": "get",
+        "contactId": "={{ $json.body.contact_id }}",
+        "additionalFields": {}
+      },
+      "id": "hubspot-get-contact-w5",
+      "name": "HubSpot -- get contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [480, 300],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Exnoria - sup.contact.notify\n// Build WhatsApp notification payload for contact resolution update\n// Localized: en/es via APP_LOCALE\n\nconst webhook = $(\"Webhook\").first().json.body;\nconst contact = $input.first().json;\n\nconst { contact_id, ticket_id, signal_id, message_context } = webhook;\n\nconst firstname = contact.properties?.firstname?.value ?? 'Customer';\nconst phone     = contact.properties?.phone?.value ?? '';\nconst email     = contact.properties?.email?.value ?? '';\n\nconst es = $env.APP_LOCALE === 'es';\n\nif (!phone) {\n  return [{\n    json: {\n      contact_id,\n      ticket_id,\n      notified: false,\n      reason: 'no_phone_number',\n      email,\n      firstname,\n      simulated: false\n    }\n  }];\n}\n\n// Clean phone number (remove +, spaces, dashes)\nconst cleanPhone = phone.replace(/[^\\d]/g, '');\n\nconst message = es ? [\n  'Hola' + (firstname !== 'Customer' ? ' ' + firstname : '') + ',',\n  '',\n  'Actualización sobre tu solicitud de soporte (' + (ticket_id || 'consulta reciente') + '):',\n  '',\n  message_context,\n  '',\n  'Si tienes más preguntas, responde a este mensaje.',\n  '',\n  '— Soporte Exnoria'\n].join('\\n') : [\n  'Hi ' + firstname + ',',\n  '',\n  'Update on your support request (' + (ticket_id || 'recent inquiry') + '):',\n  '',\n  message_context,\n  '',\n  'If you have further questions, please reply to this message.',\n  '',\n  '-- Exnoria Support'\n].join('\\n');\n\nconst whatsapp_payload = {\n  messaging_product: 'whatsapp',\n  to: cleanPhone,\n  type: 'text',\n  text: { body: message }\n};\n\nconst notifiedAt = new Date(new Date().setUTCHours(0,0,0,0)).getTime();\n\nreturn [{\n  json: {\n    contact_id,\n    ticket_id,\n    signal_id,\n    email,\n    firstname,\n    phone: cleanPhone,\n    whatsapp_payload,\n    notified_at: notifiedAt,\n    message_preview: message.substring(0, 100) + '...'\n  }\n}];"
+      },
+      "id": "code-build-message-w5",
+      "name": "Code -- build message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/{{ $env.META_PHONE_NUMBER_ID }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($(\"Code -- build message\").item.json.whatsapp_payload) }}",
+        "options": {}
+      },
+      "id": "http-meta-whatsapp-w5",
+      "name": "Meta WA -- notify contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [960, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Meta WhatsApp Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "appToken",
+        "email": "={{ $(\"Code -- build message\").item.json.email }}",
+        "additionalFields": {},
+        "options": {}
+      },
+      "id": "hubspot-update-contact-w5",
+      "name": "HubSpot -- update contact",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 2,
+      "position": [1200, 300],
+      "credentials": {
+        "hubspotAppToken": {
+          "id": "6qYgnpaGAK1L9USv",
+          "name": "HubSpot Private App"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"executed\",\n  \"action_id\": \"sup.contact.notify\",\n  \"contact_id\": \"{{ $(\"Code -- build message\").item.json.contact_id }}\",\n  \"ticket_id\": \"{{ $(\"Code -- build message\").item.json.ticket_id }}\",\n  \"notified\": true,\n  \"notification_channel\": \"whatsapp\",\n  \"message_preview\": \"{{ $(\"Code -- build message\").item.json.message_preview }}\",\n  \"notified_at\": {{ $(\"Code -- build message\").item.json.notified_at }}\n}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-w5",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1440, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- get contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- get contact": {
+      "main": [
+        [
+          {
+            "node": "Code -- build message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code -- build message": {
+      "main": [
+        [
+          {
+            "node": "Meta WA -- notify contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta WA -- notify contact": {
+      "main": [
+        [
+          {
+            "node": "HubSpot -- update contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot -- update contact": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "id": "5fb6c8f981d942a1"
+}

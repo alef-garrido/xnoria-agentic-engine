@@ -1,0 +1,277 @@
+services:
+
+  # ---------------------------------------------------------------------------
+  # Postgres — shared database for n8n and the filter service
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: ${PROJECT_ID:-exnoria}_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${PROJECT_ID:-exnoria}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-exnoria}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./layers/orchestration/filter/db/migrations:/docker-entrypoint-initdb.d
+      - ./layers/cognitive/db/migrations:/docker-entrypoint-initdb.d/cognitive
+    ports:
+      - "5433:5432"                         # exposed for local DB inspection only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PROJECT_ID:-exnoria} -d ${POSTGRES_DB:-exnoria}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ${PROJECT_ID:-exnoria}_internal
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  # n8n — workflow orchestration engine
+  # ---------------------------------------------------------------------------
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: ${PROJECT_ID:-exnoria}_n8n
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Database
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB:-exnoria}
+      DB_POSTGRESDB_USER: ${PROJECT_ID:-exnoria}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+      # Encryption
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      # Host config
+      N8N_HOST: ${N8N_HOST:-localhost}
+      N8N_PORT: 5678
+      N8N_PROTOCOL: ${N8N_PROTOCOL:-http}
+      WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://localhost:5678}
+      # Execution settings
+      EXECUTIONS_DATA_SAVE_ON_ERROR: all
+      EXECUTIONS_DATA_SAVE_ON_SUCCESS: all
+      EXECUTIONS_DATA_SAVE_MANUAL_EXECUTIONS: true
+      # Disable telemetry
+      N8N_DIAGNOSTICS_ENABLED: false
+      N8N_VERSION_NOTIFICATIONS_ENABLED: false
+      # Allow workflows to read env vars via $env
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: false
+      # Deployment locale — drives localized message templates in Code nodes
+      APP_LOCALE: ${APP_LOCALE:-en}
+      # -------------------------------------------------------------------------
+      # Meta WhatsApp Business API
+      # W3 · sal.contact.prioritize — readable inside workflows via $env
+      # -------------------------------------------------------------------------
+      META_WA_TOKEN: ${META_WA_TOKEN}
+      META_PHONE_NUMBER_ID: ${META_PHONE_NUMBER_ID}
+      SDR_WHATSAPP_NUMBER: ${SDR_WHATSAPP_NUMBER}
+      # COM Publish variables
+      THREADS_ACCESS_TOKEN: ${THREADS_ACCESS_TOKEN}
+      # -------------------------------------------------------------------------
+      # HubSpot
+      # W1 · acq.lead.score  W2 · sal.sequence.enroll  W3 · sal.contact.prioritize
+      # readable inside workflows via $env
+      # -------------------------------------------------------------------------
+      HUBSPOT_PRIVATE_APP_TOKEN: ${HUBSPOT_PRIVATE_APP_TOKEN}
+      HUBSPOT_PORTAL_ID: ${HUBSPOT_PORTAL_ID}
+      HUBSPOT_DEVELOPER_API_KEY: ${HUBSPOT_DEVELOPER_API_KEY}
+      HUBSPOT_PERSONAL_ACCESS_KEY: ${HUBSPOT_PERSONAL_ACCESS_KEY}
+    volumes:
+      - n8n_data:/home/node/.n8n
+    ports:
+      - "5678:5678"
+    networks:
+      - ${PROJECT_ID:-exnoria}_internal
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5678/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  # Filter service — deterministic allowlist enforcement
+  # Uncomment when layers/orchestration/filter/ is ready (Phase 3)
+  # ---------------------------------------------------------------------------
+  filter:
+    build:
+      context: .
+      dockerfile: layers/orchestration/filter/Dockerfile
+    container_name: ${PROJECT_ID:-exnoria}_filter
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      n8n:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      FILTER_PORT: ${FILTER_PORT:-3000}
+      POSTGRES_URL: postgresql://${PROJECT_ID:-exnoria}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
+      N8N_BASE_URL: http://n8n:5678
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_OPERATOR_CHAT_ID: ${TELEGRAM_OPERATOR_CHAT_ID}
+      DASHBOARD_URL: ${DASHBOARD_URL:-http://localhost:4000}
+      # Deployment locale — localization of user-facing strings (en | es)
+      APP_LOCALE: ${APP_LOCALE:-en}
+      # COM_CONTENT_SHEET_ID — used by W-COM-1 · com.content.publish
+      COM_CONTENT_SHEET_ID: ${COM_CONTENT_SHEET_ID}
+    ports:
+      - "${FILTER_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ${PROJECT_ID:-exnoria}_internal
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+
+
+  # ---------------------------------------------------------------------------
+  # Cognitive layer — OpenClaw agentic core (persistent runtime)
+  # ---------------------------------------------------------------------------
+  cognitive:
+    build:
+      context: .
+      dockerfile: layers/cognitive/Dockerfile
+    container_name: ${PROJECT_ID:-exnoria}_cognitive
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /root/.mcp-auth
+      - /root/.npm
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    volumes:
+      - engram_data:/root/.engram
+      - ./backups:/backups  # bind mount — survives docker compose down -v
+    depends_on:
+      filter:
+        condition: service_healthy
+    ports:
+      - "${COGNITIVE_MEMORY_PORT:-3001}:3001"
+    environment:
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://generativelanguage.googleapis.com/v1beta/openai}
+      LLM_API_KEY: ${LLM_API_KEY}
+      LLM_MODEL: ${LLM_MODEL:-gemini-2.0-flash}
+      GROQ_BASE_URL: ${GROQ_BASE_URL:-https://api.groq.com/openai/v1}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      GROQ_MODEL: ${GROQ_MODEL:-qwen/qwen3-32b}
+      LLM_COORDINATOR_MODEL: ${LLM_COORDINATOR_MODEL:-llama-3.1-8b-instant}
+      LLM_ACQSAL_MODEL: ${LLM_ACQSAL_MODEL:-llama-3.3-70b-versatile}
+      LLM_ACQSAL_BASE_URL: ${LLM_ACQSAL_BASE_URL:-https://api.groq.com/openai/v1}
+      LLM_ACQSAL_API_KEY: ${LLM_ACQSAL_API_KEY:-${LLM_API_KEY}}
+      LLM_LIFECYCLE_MODEL: ${LLM_LIFECYCLE_MODEL:-claude-sonnet-4-6}
+      LLM_LIFECYCLE_BASE_URL: ${LLM_LIFECYCLE_BASE_URL:-https://openrouter.ai/api/v1}
+      LLM_LIFECYCLE_API_KEY: ${LLM_LIFECYCLE_API_KEY:-${LLM_API_KEY}}
+      LLM_ESCALATION_MODEL: ${LLM_ESCALATION_MODEL:-claude-sonnet-4-6}
+      LLM_ESCALATION_BASE_URL: ${LLM_ESCALATION_BASE_URL:-https://openrouter.ai/api/v1}
+      LLM_ESCALATION_API_KEY: ${LLM_ESCALATION_API_KEY:-${LLM_API_KEY}}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY}
+      COGNITIVE_MEMORY_PORT: ${COGNITIVE_MEMORY_PORT:-3001}
+      FILTER_URL: http://filter:3000
+      # Deployment locale — localization of agent-facing strings (en | es)
+      APP_LOCALE: ${APP_LOCALE:-en}
+      POSTGRES_URL: postgresql://${PROJECT_ID:-exnoria}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      # PostHog MCP (optional — cognitive degrades gracefully if not set)
+      POSTHOG_API_KEY: ${POSTHOG_API_KEY}
+      POSTHOG_AUTH_HEADER: ${POSTHOG_API_KEY}  # Bearer token format is handled by mcp-remote
+      POSTHOG_HOST: ${POSTHOG_HOST}
+      POSTHOG_PROJECT_ID: ${POSTHOG_PROJECT_ID}
+      # Engram memory namespace — set per-client to prevent cross-instance collision
+      ENGRA_PROJECT: ${ENGRA_PROJECT:-xnoria-agentic-engine}
+    networks:
+      - ${PROJECT_ID:-exnoria}_internal
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  # Dashboard — execution layer, CX Tool Dock
+  # ---------------------------------------------------------------------------
+  dashboard:
+    build:
+      context: .
+      dockerfile: layers/dashboard/Dockerfile
+      args:
+        # Build-time locale — NEXT_PUBLIC_APP_LOCALE is inlined into client bundles
+        APP_LOCALE: ${APP_LOCALE:-en}
+    container_name: ${PROJECT_ID:-exnoria}_dashboard
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PROJECT_ID: ${PROJECT_ID:-exnoria}
+      NEXT_PUBLIC_PROJECT_SUBTITLE: ${NEXT_PUBLIC_PROJECT_SUBTITLE:-}
+      # Deployment locale (en | es) — must match build arg
+      NEXT_PUBLIC_APP_LOCALE: ${APP_LOCALE:-en}
+      POSTGRES_URL: postgresql://${PROJECT_ID:-exnoria}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-exnoria}
+      ADMIN_PASSWORD: ${DASHBOARD_ADMIN_PASSWORD}
+      AUTH_SECRET: ${DASHBOARD_AUTH_SECRET}
+      FILTER_URL: http://filter:3000
+      COGNITIVE_MEMORY_URL: http://cognitive:3001
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./backups:/backups  # bind mount — survives docker compose down -v
+    ports:
+      - "${DASHBOARD_PORT:-4000}:4000"
+    networks:
+      - ${PROJECT_ID:-exnoria}_internal
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# -----------------------------------------------------------------------------
+# Volumes — persistent data survives container restarts
+# -----------------------------------------------------------------------------
+volumes:
+  # CRITICAL VOLUMES — NEVER DESTROY WITH docker compose down -v IN PRODUCTION
+  # Contains irreplaceable customer data, audit logs, and CRM records
+  postgres_data:
+    driver: local
+  
+  # MANAGED VOLUMES — Can be recreated but contains operational configuration
+  # Export all workflows to source control before destroying
+  n8n_data:
+    driver: local
+  
+  # SEMI-EPHEMERAL — Contact memory can be regenerated but loses context
+  # Recoverable from filter_log but loses session-specific context
+  engram_data:
+    driver: local
+
+# -----------------------------------------------------------------------------
+# Networks — all services communicate on an isolated internal network
+# No service reaches another except through declared dependencies
+# -----------------------------------------------------------------------------
+networks:
+  exnoria_internal:
+    name: exnoria_internal
+    driver: bridge

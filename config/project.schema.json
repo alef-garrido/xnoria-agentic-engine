@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Xnoria Project Configuration Schema",
+  "type": "object",
+  "required": ["project", "branding", "enabled_stages", "llm_defaults"],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "project": {
+      "type": "object",
+      "required": ["id", "name", "version", "environment"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the project instance"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable project name"
+        },
+        "version": {
+          "type": "string",
+          "description": "Project version tag"
+        },
+        "environment": {
+          "type": "string",
+          "enum": ["development", "staging", "production"]
+        }
+      }
+    },
+    "branding": {
+      "type": "object",
+      "required": ["title"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Dashboard title bar header"
+        },
+        "subtitle": {
+          "type": "string",
+          "description": "Instance subtitle (e.g. 'Bajio Outbound') — shown next to agent name in top bar"
+        },
+        "logo_url": {
+          "type": "string",
+          "description": "URL or path to logo asset"
+        },
+        "primary_color": {
+          "type": "string",
+          "description": "Hex color for dashboard accents"
+        }
+      }
+    },
+    "enabled_stages": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["ACQ", "SAL", "ONB", "PRD", "SUP", "COM", "RET", "EXP"]
+      },
+      "description": "List of active CX journey stages for this project"
+    },
+    "llm_defaults": {
+      "type": "object",
+      "properties": {
+        "coordinator_model": {
+          "type": "string"
+        },
+        "acqsal_model": {
+          "type": "string"
+        },
+        "lifecycle_model": {
+          "type": "string"
+        },
+        "escalation_model": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

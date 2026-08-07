@@ -1,0 +1,57 @@
+{
+  "name": "W-COM-3 - Com.feedback.request (simplified)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "com-feedback-request",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-com-feedback-request",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "com-feedback-request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\nreturn {\n  json: {\n    contact_id: body.contact_id || body.payload?.contact_id || null,\n    session_id: body.session_id || null,\n    signal_id: body.signal_id || null\n  }\n};"
+      },
+      "id": "normalize-payload-com-3",
+      "name": "NormalizePayload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'executed', action_id: 'com.feedback.request', contact_id: $('NormalizePayload').item.json.contact_id, note: 'Manual action — operator must follow up on feedback in HubSpot' }) }}",
+        "options": { "responseCode": 200 }
+      },
+      "id": "respond-com-3",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [680, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "NormalizePayload", "type": "main", "index": 0 }]]
+    },
+    "NormalizePayload": {
+      "main": [[{ "node": "Respond", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "id": "com-feedback-request-id"
+}

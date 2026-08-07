@@ -1,0 +1,175 @@
+{
+  "name": "W-SAL-1 - Sal.contact.message",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sal-contact-message",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-sal-contact-message",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "sal-contact-message"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Exnoria - sal.contact.message\n// Send a personalized message to a SAL stage contact.\n// Primary: email via Gmail, Optional: WhatsApp (if phone available)\n\nconst body = $json.body;\n\nconst contact_id = body.contact_id;\nconst email = body.email ?? '';\nconst message = body.message ?? '';\nconst name = body.name ?? 'Contact';\nconst phone = (body.phone ?? '').replace(/[^\\d]/g, '');\nconst signal_id = body.signal_id ?? '';\n\nconst wa_payload = phone ? {\n  messaging_product: 'whatsapp',\n  to: phone,\n  type: 'text',\n  text: { body: message }\n} : null;\n\nconst gmail_subject = 'Message from Exnoria';\nconst gmail_body = 'Hello ' + name + ',\\n\\n' + message + '\\n\\n\\u2014 Exnoria';\n\nreturn [{ json: { contact_id, signal_id, phone, email, name, wa_payload, gmail_subject, gmail_body } }];"
+      },
+      "id": "code-build-message-sal-1",
+      "name": "Code -- build message payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/{{ $env.META_PHONE_NUMBER_ID }}/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Code -- build message payload').item.json.wa_payload) }}",
+        "options": {}
+      },
+      "id": "http-send-whatsapp-sal-1",
+      "name": "Meta WA -- send message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "continueOnFail": true,
+      "position": [720, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Meta WhatsApp Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      },
+      "id": "wait-sal-message-gmail",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [960, 200]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $('Code -- build message payload').item.json.email }}",
+        "subject": "={{ $('Code -- build message payload').item.json.gmail_subject }}",
+        "emailType": "text",
+        "message": "={{ $('Code -- build message payload').item.json.gmail_body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "gmail-send-sal-message",
+      "name": "Gmail -- send message",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [1200, 200],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YMxwY3u929C0wtWe",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: 'executed', action_id: 'sal.contact.message', contact_id: $('Code -- build message payload').item.json.contact_id, channels: ['whatsapp', 'email'] }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-sal-contact-message",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1440, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code -- build message payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code -- build message payload": {
+      "main": [
+        [
+          {
+            "node": "Meta WA -- send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Meta WA -- send message": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Gmail -- send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail -- send message": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "id": "b29c5eaaa133415b"
+}

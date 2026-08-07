@@ -39,13 +39,13 @@ export default function CompassNeedle({ radius }: CompassNeedleProps) {
     >
       <path
         d={`M -5 ${-radius} L 5 ${-radius} L 0 ${-radius + 20} Z`}
-        fill="#FFFFFF"
+        fill="var(--foreground)"
         opacity={compassTokens.needle.opacity}
       />
       {/* Outer chevron marker */}
       <path
         d={`M -8 ${-radius - 2} L 0 ${-radius - 12} L 8 ${-radius - 2}`}
-        stroke="#FFFFFF"
+        stroke="var(--foreground)"
         strokeWidth={compassTokens.needle.width}
         fill="none"
         opacity={0.8}

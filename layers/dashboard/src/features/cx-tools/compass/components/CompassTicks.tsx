@@ -30,7 +30,7 @@ export default function CompassTicks({ radius }: CompassTicksProps) {
               y1={-radius}
               x2={0}
               y2={-(radius + compassTokens.tick.minor.length)}
-              stroke="#FFFFFF"
+              stroke="var(--foreground)"
               strokeWidth={compassTokens.tick.minor.width}
               opacity={compassTokens.tick.minor.opacity}
               transform={`rotate(${boundaryAngleDeg}, 0, 0)`}
@@ -41,7 +41,7 @@ export default function CompassTicks({ radius }: CompassTicksProps) {
               y1={-radius}
               x2={0}
               y2={-(radius + compassTokens.tick.major.length)}
-              stroke="#FFFFFF"
+              stroke="var(--foreground)"
               strokeWidth={compassTokens.tick.major.width}
               animate={{
                 opacity: selectedDomain?.id === domain.id ? 0.8 : compassTokens.tick.major.opacity,

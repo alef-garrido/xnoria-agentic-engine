@@ -15,7 +15,7 @@ export default function CompassRing({ radius }: CompassRingProps) {
       cy={0}
       r={radius * ((i + 1) / (numRings + 1))}
       fill="none"
-      stroke="#FFFFFF"
+      stroke="var(--foreground)"
       strokeWidth={compassTokens.innerGrid?.strokeWidth || 1}
       opacity={compassTokens.innerGrid?.opacity || 0.05}
     />
@@ -30,7 +30,7 @@ export default function CompassRing({ radius }: CompassRingProps) {
         cy={0}
         r={radius}
         fill="none"
-        stroke="#FFFFFF"
+        stroke="var(--foreground)"
         strokeWidth={compassTokens.ring.strokeWidth}
         opacity={compassTokens.ring.opacity}
       />
@@ -40,7 +40,7 @@ export default function CompassRing({ radius }: CompassRingProps) {
         cy={0}
         r={radius - 4}
         fill="none"
-        stroke="#FFFFFF"
+        stroke="var(--foreground)"
         strokeWidth={1}
         opacity={0.1}
       />

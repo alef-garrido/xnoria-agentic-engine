@@ -85,7 +85,7 @@ export default function DomainSlice({
           y={labelY}
           textAnchor="middle"
           dominantBaseline="central"
-          fill="#D1D1D6"
+          fill="var(--text-secondary)"
           fontSize={24}
           fontWeight={700}
           fontFamily="'SF Mono', 'Fira Code', 'Cascadia Code', monospace"

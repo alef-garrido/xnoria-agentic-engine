@@ -38,7 +38,7 @@ export default function CompassLabels({ radius }: CompassLabelsProps) {
             <motion.text
               textAnchor="middle"
               dominantBaseline="central"
-              fill="#FFFFFF"
+              fill="var(--foreground)"
               fontSize={compassTokens.label.size}
               letterSpacing={compassTokens.label.tracking}
               fontFamily="'SF Mono', 'Fira Code', 'Cascadia Code', monospace"

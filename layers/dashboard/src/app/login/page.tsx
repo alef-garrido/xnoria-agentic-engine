@@ -125,7 +125,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 -ml-[var(--layout-sidebar-w)] bg-[var(--background)]">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--background)]">
       {/* Theme Toggle */}
       <ThemeToggle className="fixed top-4 right-4 z-50 px-2.5 py-2 rounded-lg bg-[var(--surface-elevated)] border border-[var(--border)]" />
       <div className="w-full max-w-md">

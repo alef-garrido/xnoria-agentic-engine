@@ -3,6 +3,7 @@ import { logger } from "@/lib/logger";
 
 const FILTER_URL = process.env.FILTER_URL ?? "http://filter:3000";
 const COGNITIVE_MEMORY_URL = process.env.COGNITIVE_MEMORY_URL ?? "http://cognitive:3001";
+const COGNITIVE_DIAGNOSE_URL = process.env.COGNITIVE_DIAGNOSE_URL ?? "http://cognitive:3002";
 
 interface ProxyOptions {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
@@ -60,7 +61,7 @@ async function proxyFetch(
   }
 }
 
-/** Proxy to the filter service (POST /filter/execute is NOT routed here). */
+/** Proxy to the filter service (POST /filter/execute is only routed via /api/diagnose/plan/[planId]/execute — plan-item executions). */
 export function filterFetch(path: string, options: ProxyOptions = {}): Promise<NextResponse> {
   return proxyFetch(path, options, {
     baseUrl: FILTER_URL,
@@ -75,6 +76,16 @@ export function memoryFetch(path: string, options: ProxyOptions = {}): Promise<N
     baseUrl: COGNITIVE_MEMORY_URL,
     serviceName: "Memory service",
     failMessage: "Failed to reach memory service",
+    detailsAsJson: true,
+  });
+}
+
+/** Proxy to the cognitive diagnosis service (on-demand diagnose + action plans). */
+export function cognitiveFetch(path: string, options: ProxyOptions = {}): Promise<NextResponse> {
+  return proxyFetch(path, options, {
+    baseUrl: COGNITIVE_DIAGNOSE_URL,
+    serviceName: "Diagnosis service",
+    failMessage: "Failed to reach diagnosis service",
     detailsAsJson: true,
   });
 }

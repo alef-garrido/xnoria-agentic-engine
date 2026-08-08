@@ -67,13 +67,41 @@ export async function getContactHistory(
 }
 
 function parseEngramResults(content: string, options: { maxEntries: number }): EngramResult[] {
-  // Simple parsing for Engram results
-  // Expected format: JSON array of { title, content, created_at } objects
+  // Engram MCP returns prose previews ("Found 3 memories: · [1] #ID (type) — title ...").
+  // Older Engram versions returned JSON arrays — kept as fallback.
   try {
-    const results = JSON.parse(content) as EngramResult[];
-    return results.slice(0, options.maxEntries);
+    const parsed = JSON.parse(content) as EngramResult[];
+    if (Array.isArray(parsed)) {
+      return parsed.slice(0, options.maxEntries);
+    }
   } catch {
-    // Fallback: treat as text lines
+    /* prose format — parse below */
+  }
+
+  const entries: EngramResult[] = [];
+  const blockRegex =
+    /\[(\d+)\]\s+#(\d+)\s+\(([^)]*)\)\s*—?\s*(.*?)\n([\s\S]*?)(?=\n\[\d+\]\s+#|\s*$)/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = blockRegex.exec(content)) !== null && entries.length < options.maxEntries) {
+    const rawTitle = match[4].trim();
+    const rawBody = match[5] ?? "";
+    const title =
+      rawTitle.length > 0 ? rawTitle : (rawBody.split("\n").find((l) => l.trim().length > 0) ?? "");
+    const dateMatch = rawBody.match(/(\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2})/);
+    const bodyLines = rawBody
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0 && !/^\d{4}-\d{2}-\d{2}/.test(l) && l !== "---");
+    entries.push({
+      title: title.trim(),
+      content: bodyLines.join("\n"),
+      created_at: dateMatch ? dateMatch[1].replace(" ", "T") + "Z" : new Date().toISOString(),
+    });
+  }
+
+  // Fallback: plain line-per-entry text
+  if (entries.length === 0) {
     return content
       .split("\n")
       .filter((line) => line.trim())
@@ -84,6 +112,7 @@ function parseEngramResults(content: string, options: { maxEntries: number }): E
         created_at: new Date().toISOString(),
       }));
   }
+  return entries;
 }
 
 function hasRecentNudge(history: EngramResult[], contactId: string, stage: string): boolean {
@@ -126,6 +155,99 @@ export async function recordSessionOutcome(
   } catch (err) {
     logger.warn({ err, action_id: actionId }, "Session outcome recording failed");
   }
+}
+
+// ------------------------------------------------------------------------------
+// Writing: Diagnosis + Action-Plan Recording (operator-triggered)
+// ------------------------------------------------------------------------------
+
+export interface DiagnosisMemoryInput {
+  diagnosisId: string;
+  contactId: string;
+  email: string | null;
+  summary?: string;
+  findings: { signal_id: string; severity: number; cause_code?: string | null }[];
+  stageHealth?: { stage: string; score: number }[];
+  model?: string | null;
+}
+
+export interface PlanMemoryInput {
+  planId: string;
+  items: {
+    rank: number;
+    action_id: string;
+    stage: string;
+    priority: string;
+    rationale?: string;
+    expected_outcome?: string;
+  }[];
+}
+
+/** Persist an operator-triggered diagnosis + its action plan into Engram. */
+export async function recordDiagnosisOutcome(
+  diagnosis: DiagnosisMemoryInput,
+  plan?: PlanMemoryInput
+): Promise<void> {
+  try {
+    const planSummary =
+      plan && plan.items.length > 0
+        ? ` | plan:${plan.items.length} actions`
+        : " | no plan generated";
+    const title = `${diagnosis.contactId} | DIAGNOSIS | ${diagnosis.findings.length} findings${planSummary} | operator`;
+    const content = buildDiagnosisMemoryContent(diagnosis, plan);
+
+    await executeMcpTool("mem_save", {
+      title,
+      content,
+      project: process.env.ENGRA_PROJECT || "xnoria-agentic-engine",
+    });
+  } catch (err) {
+    logger.warn(
+      { err, diagnosis_id: diagnosis.diagnosisId },
+      "Diagnosis outcome recording to Engram failed"
+    );
+  }
+}
+
+export function buildDiagnosisMemoryContent(
+  diagnosis: DiagnosisMemoryInput,
+  plan?: PlanMemoryInput
+): string {
+  const lines = [
+    `diagnosis_id: ${diagnosis.diagnosisId}`,
+    `contact_id: ${diagnosis.contactId}`,
+    `email: ${diagnosis.email ?? "unknown"}`,
+    `model: ${diagnosis.model ?? "unknown"}`,
+    `findings: ${diagnosis.findings.length}`,
+    `summary: ${diagnosis.summary ?? "none"}`,
+  ];
+
+  if (diagnosis.findings.length > 0) {
+    for (const f of diagnosis.findings) {
+      lines.push(
+        `  - ${f.signal_id} severity=${f.severity}${f.cause_code ? ` cause=${f.cause_code}` : ""}`
+      );
+    }
+  }
+
+  if (diagnosis.stageHealth && diagnosis.stageHealth.length > 0) {
+    lines.push("stage_health:");
+    for (const sh of diagnosis.stageHealth) {
+      lines.push(`  - ${sh.stage} score=${sh.score}`);
+    }
+  }
+
+  if (plan && plan.items.length > 0) {
+    lines.push(`plan_id: ${plan.planId}`, "plan_items:");
+    for (const item of plan.items) {
+      lines.push(`  - [${item.rank}] ${item.action_id} (${item.stage}, ${item.priority})`);
+    }
+  } else {
+    lines.push("plan: none");
+  }
+
+  lines.push(`timestamp: ${new Date().toISOString()}`);
+  return lines.join("\n");
 }
 
 // ------------------------------------------------------------------------------

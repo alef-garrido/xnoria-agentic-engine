@@ -361,12 +361,24 @@ try {
 
 ## Environment Variables
 
-| Variable               | Description                                                   |
-| ---------------------- | ------------------------------------------------------------- |
-| `DASHBOARD_PORT`       | Dashboard port (default: 4000)                                |
-| `FILTER_URL`           | Filter service URL (default: `http://filter:3000` in compose) |
-| `POSTGRES_*`           | Database connection (inherited from docker-compose)           |
-| `COM_CONTENT_SHEET_ID` | Google Sheets ID for content calendar (COM workflow)          |
+| Variable                 | Description                                                     |
+| ------------------------ | --------------------------------------------------------------- |
+| `DASHBOARD_PORT`         | Dashboard port (default: 4000)                                  |
+| `FILTER_URL`             | Filter service URL (default: `http://filter:3000` in compose)   |
+| `POSTGRES_*`             | Database connection (inherited from docker-compose)             |
+| `COM_CONTENT_SHEET_ID`   | Google Sheets ID for content calendar (COM workflow)            |
+| `COGNITIVE_MEMORY_URL`   | Cognitive memory endpoint (default: `http://cognitive:3001`)    |
+| `COGNITIVE_DIAGNOSE_URL` | Cognitive diagnosis endpoint (default: `http://cognitive:3002`) |
+
+## On-Demand Diagnosis (Radar)
+
+The Radar tool (`/tools/radar`) embeds `DiagnosisPanel` (`features/cx-tools/radar/components/diagnosis/`): an operator-facing flow to diagnose a tracked contact or an arbitrary **email** and generate a prioritized action plan.
+
+- **Data flow:** dashboard reads `diagnosis` + `action_plan` tables directly (read-only `query()`) for history lists; job create/status/plan generation proxy to the cognitive service via `cognitiveFetch` (`lib/service-client.ts`).
+- **API routes:** `/api/diagnose` (list by contact_id + POST create), `/api/diagnose/[id]` (status), `/api/diagnose/[id]/plan` (generate), `/api/diagnose/plan/[planId]` (fetch), `/api/diagnose/plan/[planId]/execute` (runs a single plan item **through the filter** — allowlist/HITL still enforced; persists `meta.triggered_by: "action-plan"`).
+- **DTOs:** shared shapes in `lib/diagnosis.ts` (DiagnosisDto, PlanDto, PlanItemDto…) — keep in sync with cognitive `src/diagnosis/types.ts`.
+- **PDF export:** `features/cx-tools/shared/pdf/generateDiagnosisPdf.ts` (dark style, mirrors `generateActionPlanPdf`).
+- **i18n:** all diagnosis strings live in the `diagnosis` namespaces of `messages/{en,es}.json`.
 
 ## Auth Notes for Agents
 

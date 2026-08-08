@@ -19,8 +19,8 @@ RUN npm install
 RUN npm install -g mcp-remote@latest
 
 # Install Engram binary (Phase 3 C3 — Contact Memory)
-# Version pinned to v1.10.7 (stable) — do NOT use latest
-ENV ENGRAM_VERSION=1.10.7
+# v1.20.0 verified: mem_* MCP tool family + same release asset layout
+ENV ENGRAM_VERSION=1.20.0
 RUN curl -L "https://github.com/Gentleman-Programming/engram/releases/download/v${ENGRAM_VERSION}/engram_${ENGRAM_VERSION}_linux_amd64.tar.gz" \
     -o /tmp/engram.tar.gz \
     && tar -xzf /tmp/engram.tar.gz -C /tmp \

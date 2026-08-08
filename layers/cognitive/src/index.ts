@@ -7,6 +7,7 @@ import { initTelegram } from "./channels/telegram";
 import { createEventLoop } from "./events/loop";
 import { initMcpClients, shutdownMcpClients } from "./mcp/client";
 import * as memoryServer from "./memory/server";
+import { startDiagnosisServer } from "./diagnosis/server";
 import { createLogger } from "../../shared/logging";
 
 const db = new Pool({
@@ -41,6 +42,9 @@ async function main() {
   if (memoryPort > 0) {
     memoryServer.startServer(db);
   }
+
+  // Start on-demand diagnosis HTTP endpoint (operator-triggered)
+  startDiagnosisServer(db);
 
   // Create event loop
   const { processEvent } = createEventLoop(db);

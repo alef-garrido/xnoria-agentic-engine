@@ -25,8 +25,19 @@ const TOOL_SERVER_MAP: Record<string, string> = {
   compass_get_critical_signals: "compass",
 
   // Engram tools → local stdio (Phase 3 C3 — contact memory)
-  engram_search: "engram",
-  engram_add: "engram",
+  // Tool names match the Engram CLI MCP server (mem_* family):
+  //   mem_search, mem_save, mem_context, mem_get_observation, ...
+  mem_search: "engram",
+  mem_save: "engram",
+  mem_context: "engram",
+  mem_get_observation: "engram",
+  mem_session_summary: "engram",
+  mem_session_start: "engram",
+  mem_session_end: "engram",
+  mem_update: "engram",
+  mem_delete: "engram",
+  mem_stats: "engram",
+  mem_timeline: "engram",
 
   // PostHog tools → external API (optional)
   // requires posthog_distinct_id = contact_id mapping to be configured

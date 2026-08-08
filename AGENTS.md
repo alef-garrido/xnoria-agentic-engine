@@ -322,6 +322,26 @@ The AcqSal specialist supports sequential filter dispatches for chained operatio
   - Example: `acq.contact.upsert` must return `{ "contact_id": "..." }` so `sal.contact.prioritize` can use the real HubSpot ID.
 - **Verification test for chained actions:** inject a Telegram message with email + name but no existing contact ID, confirm logs show two sequential dispatches with `dispatch 1/3` and `dispatch 2/3`, and confirm the second payload carries the `contact_id` returned by the first.
 
+### On-Demand Diagnosis + Action Plans (Dashboard / Radar)
+
+Operators trigger an on-demand diagnosis for a lead from the dashboard's Radar
+tool (selected live contact or by email). The cognitive layer exposes a
+separate HTTP endpoint (`COGNITIVE_DIAGNOSE_PORT`, default 3002):
+
+- `POST /diagnose` — queue a diagnosis job (`{contact_id?, email?, triggered_by?}`); email is resolved through the filter (`acq.contact.get`) with `email:<addr>` fallback. Returns `202 {id}`.
+- `GET /diagnose/:id` — poll job status; result stored in the `diagnosis` table (summary, findings, stage_health, low_data) + optional `fail_reason`.
+- `POST /diagnose/:id/plan` — generate prioritized action plan (LLM), validated against the filter allowlist (`filter_action`); items that are not allowlisted/enabled are dropped. Persists to `action_plan` (max 5 items).
+- `GET /diagnose/plan/:planId` — fetch a persisted plan.
+
+The dashboard proxies these via `/api/diagnose/*` (`cognitiveFetch` in
+`layers/dashboard/src/lib/service-client.ts`). Plan items execute through the
+**filter** (`POST /filter/execute` with `meta: { triggered_by: "action-plan" }`),
+never directly — allowlist and HITL gates still apply. DTO types live in
+`layers/dashboard/src/lib/diagnosis.ts`; schema in the cognitive migration
+`003_diagnosis_plan_tables.sql`. Diagnosis itself is a cognitive read-only
+service — plan execution is the only external side effect, and it goes through
+the filter.
+
 ### Environment Variables
 
 | Variable                    | Service       | Description                                                                                          |
@@ -339,6 +359,9 @@ The AcqSal specialist supports sequential filter dispatches for chained operatio
 | `PROJECT_ID`                | all           | Project namespace for service identity strings, logging, and Docker networks (default: xnoria)       |
 | `ENGRA_PROJECT`             | cognitive     | Engram memory namespace — isolates contact memory between instances (default: xnoria-agentic-engine) |
 | `PROJECT_SUBTITLE`          | dashboard     | Subtitle shown next to agent name in dashboard top bar                                               |
+| `COGNITIVE_MEMORY_PORT`     | cognitive     | Memory search endpoint port (default: 3001)                                                          |
+| `COGNITIVE_DIAGNOSE_PORT`   | cognitive     | On-demand diagnosis endpoint port (default: 3002)                                                    |
+| `COGNITIVE_DIAGNOSE_URL`    | dashboard     | Dashboard proxy target for the diagnosis endpoint (default: `http://cognitive:3002`)                 |
 
 ### Running the Stack
 
@@ -465,7 +488,7 @@ make down-hard # ⚠️  NUCLEAR OPTION — completely wipes system
 - ✅ Stage-Aware Tool Filtering: Only 8 tools shown instead of 19+
 - ✅ Memory Persistence: Engram survives container restarts
 - ✅ Cooldown Logic: Avoids retrying same action within 48 hours
-- ✅ Structured Logging: Complete migration from console.* to structured logging across all services
+- ✅ Structured Logging: Complete migration from console.\* to structured logging across all services
 
 #### B3 Tool Recommendations (for evaluation before scoping B3)
 

@@ -52,9 +52,12 @@ function timeAgo(iso: string): string {
   }
 }
 
-export default function LiveSignalsPanel() {
+export default function LiveSignalsPanel(props: {
+  selectedContactId: string | null;
+  onSelectContact: (contactId: string) => void;
+}) {
+  const { selectedContactId, onSelectContact } = props;
   const t = useTranslations("cxtools");
-  const [selectedContact, setSelectedContact] = useState<string | null>(null);
   const [signals, setSignals] = useState<RadarSignalEvent[]>([]);
 
   const {
@@ -89,11 +92,11 @@ export default function LiveSignalsPanel() {
   };
 
   const handleSelectContact = (contactId: string) => {
-    setSelectedContact(contactId);
+    onSelectContact(contactId);
     void fetchSignals(contactId);
   };
 
-  const selected = contacts.find((c) => c.contact_id === selectedContact) ?? null;
+  const selected = contacts.find((c) => c.contact_id === selectedContactId) ?? null;
 
   return (
     <section className="rounded-2xl bg-[var(--card)] border border-[var(--border)]">
@@ -166,8 +169,8 @@ export default function LiveSignalsPanel() {
                   className="text-left rounded-xl p-3 transition-colors"
                   style={{
                     backgroundColor:
-                      selectedContact === c.contact_id ? "var(--card-elevated)" : "transparent",
-                    border: `1px solid ${selectedContact === c.contact_id ? "var(--border-strong)" : "var(--border)"}`,
+                      selectedContactId === c.contact_id ? "var(--card-elevated)" : "transparent",
+                    border: `1px solid ${selectedContactId === c.contact_id ? "var(--border-strong)" : "var(--border)"}`,
                   }}
                 >
                   <div className="flex items-center justify-between gap-2">

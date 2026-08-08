@@ -171,6 +171,7 @@ services:
         condition: service_healthy
     ports:
       - "${COGNITIVE_MEMORY_PORT:-3001}:3001"
+      - "${COGNITIVE_DIAGNOSE_PORT:-3002}:3002"
     environment:
       LLM_BASE_URL: ${LLM_BASE_URL:-https://generativelanguage.googleapis.com/v1beta/openai}
       LLM_API_KEY: ${LLM_API_KEY}
@@ -190,6 +191,7 @@ services:
       LLM_ESCALATION_API_KEY: ${LLM_ESCALATION_API_KEY:-${LLM_API_KEY}}
       EMBEDDING_API_KEY: ${EMBEDDING_API_KEY}
       COGNITIVE_MEMORY_PORT: ${COGNITIVE_MEMORY_PORT:-3001}
+      COGNITIVE_DIAGNOSE_PORT: ${COGNITIVE_DIAGNOSE_PORT:-3002}
       FILTER_URL: http://filter:3000
       # Deployment locale — localization of agent-facing strings (en | es)
       APP_LOCALE: ${APP_LOCALE:-en}
@@ -235,6 +237,7 @@ services:
       AUTH_SECRET: ${DASHBOARD_AUTH_SECRET}
       FILTER_URL: http://filter:3000
       COGNITIVE_MEMORY_URL: http://cognitive:3001
+      COGNITIVE_DIAGNOSE_URL: http://cognitive:3002
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./backups:/backups  # bind mount — survives docker compose down -v

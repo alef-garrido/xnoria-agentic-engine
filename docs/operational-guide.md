@@ -6,16 +6,16 @@ Create, configure, and manage an Exnoria CX Intelligence Engine instance.
 
 ## 1. Prerequisites
 
-| Requirement | Minimum | Notes |
-|---|---|---|
-| Docker Engine | 24+ | [docs.docker.com](https://docs.docker.com/engine/install/) |
-| Docker Compose | v2.x (plugin) | Included with Docker Engine |
-| Git | any | System package manager |
-| openssl | any | Pre-installed on macOS/Linux |
-| curl | any | Pre-installed on macOS/Linux |
-| RAM | 4 GB (dev) / 2 GB (VPS min) / 8 GB (edge recommended) | Under 2 GB causes OOM kills |
-| OS | Linux x86-64 or ARM64 | Ubuntu 24.04 LTS recommended |
-| Disk | 20 GB+ | SSD strongly recommended (not SD card for 24/7) |
+| Requirement    | Minimum                                               | Notes                                                      |
+| -------------- | ----------------------------------------------------- | ---------------------------------------------------------- |
+| Docker Engine  | 24+                                                   | [docs.docker.com](https://docs.docker.com/engine/install/) |
+| Docker Compose | v2.x (plugin)                                         | Included with Docker Engine                                |
+| Git            | any                                                   | System package manager                                     |
+| openssl        | any                                                   | Pre-installed on macOS/Linux                               |
+| curl           | any                                                   | Pre-installed on macOS/Linux                               |
+| RAM            | 4 GB (dev) / 2 GB (VPS min) / 8 GB (edge recommended) | Under 2 GB causes OOM kills                                |
+| OS             | Linux x86-64 or ARM64                                 | Ubuntu 24.04 LTS recommended                               |
+| Disk           | 20 GB+                                                | SSD strongly recommended (not SD card for 24/7)            |
 
 Verify prerequisites:
 
@@ -44,6 +44,7 @@ make project-init
 ```
 
 This runs `scripts/scaffold-project.sh`, which:
+
 1. Copies `.env.example` to `.env` with auto-generated secure secrets (Postgres password, n8n encryption key, dashboard auth secret, admin password)
 2. Copies `config/project.config.example.json` to `config/project.config.json`
 3. Creates required directories (`backups/`, `tmp/`, `validation/`, `doc/rfcs/`)
@@ -89,7 +90,6 @@ THREADS_ACCESS_TOKEN=           # Threads API token for content publishing
 
 See section 3 for the full variable reference.
 
-
 ### 2.4 Customize branding (optional)
 
 Edit `config/project.config.json`:
@@ -103,7 +103,7 @@ Edit `config/project.config.json`:
     "logo_url": "/logo.svg",
     "primary_color": "#0F172A"
   },
-  "enabled_stages": ["ACQ","SAL","ONB","PRD","SUP","COM","RET","EXP"],
+  "enabled_stages": ["ACQ", "SAL", "ONB", "PRD", "SUP", "COM", "RET", "EXP"],
   "llm_defaults": {
     "coordinator_model": "llama-3.1-8b-instant",
     "acqsal_model": "llama-3.3-70b-versatile",
@@ -115,12 +115,12 @@ Edit `config/project.config.json`:
 
 Mapping to dashboard env vars:
 
-| project.config field | Env var | branding.ts field |
-|---|---|---|
-| `branding.title` | `NEXT_PUBLIC_APP_TITLE` | `appTitle` |
-| `branding.subtitle` | `NEXT_PUBLIC_PROJECT_SUBTITLE` | `subtitle` |
-| `branding.logo_url` | - | (static asset path, no env override) |
-| - | `NEXT_PUBLIC_AGENT_NAME` | `agentName` (default: "Exnoria") |
+| project.config field | Env var                        | branding.ts field                    |
+| -------------------- | ------------------------------ | ------------------------------------ |
+| `branding.title`     | `NEXT_PUBLIC_APP_TITLE`        | `appTitle`                           |
+| `branding.subtitle`  | `NEXT_PUBLIC_PROJECT_SUBTITLE` | `subtitle`                           |
+| `branding.logo_url`  | -                              | (static asset path, no env override) |
+| -                    | `NEXT_PUBLIC_AGENT_NAME`       | `agentName` (default: "Exnoria")     |
 
 Add any `NEXT_PUBLIC_*` vars to `.env` to override `branding.ts` defaults.
 
@@ -140,11 +140,12 @@ make verify-workflows
 
 Then visit:
 
-| Service | URL |
-|---|---|
-| Dashboard | http://localhost:4000 |
-| n8n | http://localhost:5678 |
-| Filter health | http://localhost:3000/health |
+| Service       | URL                            |
+| ------------- | ------------------------------ |
+| Dashboard     | http://localhost:4000          |
+| n8n           | http://localhost:5678          |
+| Filter health | http://localhost:3000/health   |
+| Diagnosis API | http://localhost:3002/diagnose |
 
 Login to the Dashboard with the password from `DASHBOARD_ADMIN_PASSWORD`. If that was not set before first startup, see section 5 (Admin Bootstrap).
 
@@ -169,118 +170,120 @@ All environment variables in `.env`. Copy from `.env.example` — never commit `
 
 ### 3.1 Project Identity
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `PROJECT_ID` | optional | `exnoria` | Namespaces containers, DB user, network. Change for multi-instance on same host. |
-| `PROJECT_SUBTITLE` | optional | empty | Displayed in dashboard TopBar. Set `NEXT_PUBLIC_PROJECT_SUBTITLE` for runtime override. |
-| `ENGRA_PROJECT` | optional | `exnoria` | Namespaces Engram contact memory per instance. Change when running multiple instances to prevent memory collision. |
+| Variable           | Required | Default                 | Description                                                                                                        |
+| ------------------ | -------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `PROJECT_ID`       | optional | `exnoria`               | Namespaces containers, DB user, network. Change for multi-instance on same host.                                   |
+| `PROJECT_SUBTITLE` | optional | empty                   | Displayed in dashboard TopBar. Set `NEXT_PUBLIC_PROJECT_SUBTITLE` for runtime override.                            |
+| `ENGRA_PROJECT`    | optional | `xnoria-agentic-engine` | Namespaces Engram contact memory per instance. Change when running multiple instances to prevent memory collision. |
 
 ### 3.2 Postgres
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `POSTGRES_PASSWORD` | **REQUIRED** | - | Password for the Postgres user (matches `PROJECT_ID`). |
-| `POSTGRES_DB` | optional | `exnoria` | Database name. |
+| Variable            | Required     | Default   | Description                                            |
+| ------------------- | ------------ | --------- | ------------------------------------------------------ |
+| `POSTGRES_PASSWORD` | **REQUIRED** | -         | Password for the Postgres user (matches `PROJECT_ID`). |
+| `POSTGRES_DB`       | optional     | `exnoria` | Database name.                                         |
 
 ### 3.3 n8n
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `N8N_ENCRYPTION_KEY` | **REQUIRED** (generated) | - | `openssl rand -hex 32`. Set once, never change — existing credentials become unreadable. |
-| `N8N_API_KEY` | **REQUIRED** | - | Generated in n8n UI (Settings > API Key). |
-| `N8N_HOST` | optional | `localhost` | Public hostname for webhook URLs. |
-| `N8N_PROTOCOL` | optional | `http` | `http` for local dev, `https` for production. |
-| `N8N_WEBHOOK_URL` | optional | `http://localhost:5678` | Full public URL n8n uses to construct webhook URLs. |
+| Variable             | Required                 | Default                 | Description                                                                              |
+| -------------------- | ------------------------ | ----------------------- | ---------------------------------------------------------------------------------------- |
+| `N8N_ENCRYPTION_KEY` | **REQUIRED** (generated) | -                       | `openssl rand -hex 32`. Set once, never change — existing credentials become unreadable. |
+| `N8N_API_KEY`        | **REQUIRED**             | -                       | Generated in n8n UI (Settings > API Key).                                                |
+| `N8N_HOST`           | optional                 | `localhost`             | Public hostname for webhook URLs.                                                        |
+| `N8N_PROTOCOL`       | optional                 | `http`                  | `http` for local dev, `https` for production.                                            |
+| `N8N_WEBHOOK_URL`    | optional                 | `http://localhost:5678` | Full public URL n8n uses to construct webhook URLs.                                      |
 
 ### 3.4 Meta WhatsApp Business API
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `META_WA_TOKEN` | **REQUIRED** | - | System User permanent token from Meta Business Manager. |
-| `META_PHONE_NUMBER_ID` | **REQUIRED** | - | Numeric ID of the WhatsApp Business sender number. |
-| `SDR_WHATSAPP_NUMBER` | **REQUIRED** | - | Recipient number for SDR notifications (international format). |
+| Variable               | Required     | Default | Description                                                    |
+| ---------------------- | ------------ | ------- | -------------------------------------------------------------- |
+| `META_WA_TOKEN`        | **REQUIRED** | -       | System User permanent token from Meta Business Manager.        |
+| `META_PHONE_NUMBER_ID` | **REQUIRED** | -       | Numeric ID of the WhatsApp Business sender number.             |
+| `SDR_WHATSAPP_NUMBER`  | **REQUIRED** | -       | Recipient number for SDR notifications (international format). |
 
 ### 3.5 HubSpot
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `HUBSPOT_PRIVATE_APP_TOKEN` | **REQUIRED** | - | Private App token with `crm.objects.contacts.read` + `write` scopes. |
-| `HUBSPOT_PORTAL_ID` | **REQUIRED** | - | Portal numeric ID from HubSpot account settings. |
-| `HUBSPOT_DEVELOPER_API_KEY` | **REQUIRED** | - | Developer API key from HubSpot Developer Portal. Used for app management and developer-level operations. |
-| `HUBSPOT_PERSONAL_ACCESS_KEY` | **REQUIRED** | - | Personal access key from HubSpot Private Apps settings. Used for CLI-based development and personal integrations. |
+| Variable                      | Required     | Default | Description                                                                                                       |
+| ----------------------------- | ------------ | ------- | ----------------------------------------------------------------------------------------------------------------- |
+| `HUBSPOT_PRIVATE_APP_TOKEN`   | **REQUIRED** | -       | Private App token with `crm.objects.contacts.read` + `write` scopes.                                              |
+| `HUBSPOT_PORTAL_ID`           | **REQUIRED** | -       | Portal numeric ID from HubSpot account settings.                                                                  |
+| `HUBSPOT_DEVELOPER_API_KEY`   | **REQUIRED** | -       | Developer API key from HubSpot Developer Portal. Used for app management and developer-level operations.          |
+| `HUBSPOT_PERSONAL_ACCESS_KEY` | **REQUIRED** | -       | Personal access key from HubSpot Private Apps settings. Used for CLI-based development and personal integrations. |
 
 ### 3.6 Filter Service
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `FILTER_PORT` | optional | `3000` | HTTP port for Express filter service. |
-| `N8N_BASE_URL` | optional | `http://n8n:5678` | Internal URL (Docker network) for n8n dispatch. |
-| `TELEGRAM_OPERATOR_CHAT_ID` | **REQUIRED** | - | Telegram chat ID for HITL operator notifications. Get from @userinfobot. |
-| `DASHBOARD_URL` | **REQUIRED** | `http://localhost:4000` | Public dashboard URL for HITL notification links. Never `localhost` in production. |
-| `COM_CONTENT_SHEET_ID` | **REQUIRED** | - | Google Sheets ID for content calendar (COM workflow). |
-| `THREADS_ACCESS_TOKEN` | **REQUIRED** | - | Threads API token for COM content publishing. |
+| Variable                    | Required     | Default                 | Description                                                                        |
+| --------------------------- | ------------ | ----------------------- | ---------------------------------------------------------------------------------- |
+| `FILTER_PORT`               | optional     | `3000`                  | HTTP port for Express filter service.                                              |
+| `N8N_BASE_URL`              | optional     | `http://n8n:5678`       | Internal URL (Docker network) for n8n dispatch.                                    |
+| `TELEGRAM_OPERATOR_CHAT_ID` | **REQUIRED** | -                       | Telegram chat ID for HITL operator notifications. Get from @userinfobot.           |
+| `DASHBOARD_URL`             | **REQUIRED** | `http://localhost:4000` | Public dashboard URL for HITL notification links. Never `localhost` in production. |
+| `COM_CONTENT_SHEET_ID`      | **REQUIRED** | -                       | Google Sheets ID for content calendar (COM workflow).                              |
+| `THREADS_ACCESS_TOKEN`      | **REQUIRED** | -                       | Threads API token for COM content publishing.                                      |
 
 ### 3.7 Cognitive Layer (LLM)
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `LLM_API_KEY` | **REQUIRED** | - | Groq API key (or any OpenAI-compatible provider). |
-| `LLM_BASE_URL` | optional | `https://api.groq.com/openai/v1` | Base URL for LLM provider. |
-| `LLM_MODEL` | optional | `llama-3.3-70b-versatile` | Primary model (single-agent mode). |
-| `AGENT_MODE` | optional | `single` | `single` or `multi`. Multi uses specialist models per cluster. |
-| `EMBEDDING_API_KEY` | **REQUIRED** | - | Google Generative Language API key for Engram embeddings. |
-| `TELEGRAM_BOT_TOKEN` | **REQUIRED** | - | Bot token from @BotFather. Long-polling only (no webhook port needed). |
+| Variable                  | Required     | Default                          | Description                                                                                                                                              |
+| ------------------------- | ------------ | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LLM_API_KEY`             | **REQUIRED** | -                                | Groq API key (or any OpenAI-compatible provider).                                                                                                        |
+| `LLM_BASE_URL`            | optional     | `https://api.groq.com/openai/v1` | Base URL for LLM provider.                                                                                                                               |
+| `LLM_MODEL`               | optional     | `llama-3.3-70b-versatile`        | Primary model (single-agent mode).                                                                                                                       |
+| `AGENT_MODE`              | optional     | `single`                         | `single` or `multi`. Multi uses specialist models per cluster.                                                                                           |
+| `EMBEDDING_API_KEY`       | **REQUIRED** | -                                | Google Generative Language API key for Engram embeddings.                                                                                                |
+| `TELEGRAM_BOT_TOKEN`      | **REQUIRED** | -                                | Bot token from @BotFather. Long-polling only (no webhook port needed).                                                                                   |
+| `COGNITIVE_DIAGNOSE_PORT` | optional     | `3002`                           | HTTP port for the on-demand diagnosis API (Radar tool). Set to `0` to disable the endpoint. Published to the host as `${COGNITIVE_DIAGNOSE_PORT:-3002}`. |
 
 Multi-agent specialist models (used when `AGENT_MODE=multi`):
 
-| Variable | Default | Role |
-|---|---|---|
+| Variable                | Default                   | Role                         |
+| ----------------------- | ------------------------- | ---------------------------- |
 | `LLM_COORDINATOR_MODEL` | `llama-3.3-70b-versatile` | Routes events to specialists |
-| `LLM_ACQSAL_MODEL` | `llama-3.3-70b-versatile` | Acquisition + Sales actions |
-| `LLM_LIFECYCLE_MODEL` | `llama-3.3-70b-versatile` | PRD, ONB, SUP actions |
-| `LLM_ESCALATION_MODEL` | `llama-3.3-70b-versatile` | Escalation decisions |
+| `LLM_ACQSAL_MODEL`      | `llama-3.3-70b-versatile` | Acquisition + Sales actions  |
+| `LLM_LIFECYCLE_MODEL`   | `llama-3.3-70b-versatile` | PRD, ONB, SUP actions        |
+| `LLM_ESCALATION_MODEL`  | `llama-3.3-70b-versatile` | Escalation decisions         |
 
 The `project.config.json` `llm_defaults` section serves as the project-level configuration source. Environment variables override when `AGENT_MODE=multi` — otherwise the coordinator model (`LLM_MODEL`) handles everything.
 
 Fallback provider (OpenRouter, used when Groq fails):
 
-| Variable | Default |
-|---|---|
-| `OPENROUTER_API_KEY` | - |
-| `OPENROUTER_BASE_URL` | `https://openrouter.ai/api/v1` |
-| `OPENROUTER_MODEL` | `meta-llama/llama-3.3-70b-instruct:free` |
+| Variable              | Default                                  |
+| --------------------- | ---------------------------------------- |
+| `OPENROUTER_API_KEY`  | -                                        |
+| `OPENROUTER_BASE_URL` | `https://openrouter.ai/api/v1`           |
+| `OPENROUTER_MODEL`    | `meta-llama/llama-3.3-70b-instruct:free` |
 
 ### 3.8 PostHog (product analytics)
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `POSTHOG_AUTH_HEADER` | optional | - | `Bearer phx_...` from PostHog user API settings. |
-| `POSTHOG_PROJECT_ID` | optional | - | PostHog project numeric ID. |
-| `POSTHOG_HOST` | optional | `https://app.posthog.com` | PostHog instance URL. |
-| `POSTHOG_PROJECT_TOKEN` | optional | - | Project API token. |
+| Variable                | Required | Default                   | Description                                      |
+| ----------------------- | -------- | ------------------------- | ------------------------------------------------ |
+| `POSTHOG_AUTH_HEADER`   | optional | -                         | `Bearer phx_...` from PostHog user API settings. |
+| `POSTHOG_PROJECT_ID`    | optional | -                         | PostHog project numeric ID.                      |
+| `POSTHOG_HOST`          | optional | `https://app.posthog.com` | PostHog instance URL.                            |
+| `POSTHOG_PROJECT_TOKEN` | optional | -                         | Project API token.                               |
 
 Note: PostHog returns empty data until the product instruments `posthog.identify(contact_id)` and `posthog.capture(...)` calls. Without instrumentation, the cognitive layer degrades gracefully to Engram memory. (See `layers/cognitive/AGENTS.md` §PostHog Signal Data Prerequisites for identity mapping details.)
 
 ### 3.9 Dashboard
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `DASHBOARD_PORT` | optional | `4000` | Host port for the Next.js dashboard. |
-| `DASHBOARD_ADMIN_PASSWORD` | **REQUIRED** | - | Minimum 8 chars. Used to seed admin account on first startup. |
-| `DASHBOARD_AUTH_SECRET` | **REQUIRED** (generated) | - | `openssl rand -hex 32`. Used to sign auth cookies. |
-| `NEXT_PUBLIC_PROJECT_SUBTITLE` | optional | - | Displayed in dashboard TopBar branding. |
+| Variable                       | Required                 | Default                 | Description                                                                                                                                                            |
+| ------------------------------ | ------------------------ | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DASHBOARD_PORT`               | optional                 | `4000`                  | Host port for the Next.js dashboard.                                                                                                                                   |
+| `DASHBOARD_ADMIN_PASSWORD`     | **REQUIRED**             | -                       | Minimum 8 chars. Used to seed admin account on first startup.                                                                                                          |
+| `DASHBOARD_AUTH_SECRET`        | **REQUIRED** (generated) | -                       | `openssl rand -hex 32`. Used to sign auth cookies.                                                                                                                     |
+| `NEXT_PUBLIC_PROJECT_SUBTITLE` | optional                 | -                       | Displayed in dashboard TopBar branding.                                                                                                                                |
+| `COGNITIVE_DIAGNOSE_URL`       | optional                 | `http://cognitive:3002` | Internal URL the dashboard backend uses to reach the diagnosis API. Pinned in `docker-compose.yml`; override only when the dashboard runs outside the compose network. |
 
 ### 3.10 Deployment
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `N8N_HOST` | VPS/Edge | - | Public hostname (e.g. `n8n.yourdomain.com`). |
-| `DASHBOARD_HOST` | VPS/Edge | - | Public hostname (e.g. `dashboard.yourdomain.com`). |
-| `BACKUP_PASSPHRASE` | backups | - | AES-256 encryption passphrase for backup.sh. |
-| `BACKUP_S3_BUCKET` | optional | - | S3 bucket for off-site backup upload. |
-| `BACKUP_S3_REGION` | optional | `us-east-1` | S3 region. |
-| `BACKUP_S3_ACCESS_KEY` | optional | - | S3 access key. |
-| `BACKUP_S3_SECRET_KEY` | optional | - | S3 secret key. |
+| Variable               | Required | Default     | Description                                        |
+| ---------------------- | -------- | ----------- | -------------------------------------------------- |
+| `N8N_HOST`             | VPS/Edge | -           | Public hostname (e.g. `n8n.yourdomain.com`).       |
+| `DASHBOARD_HOST`       | VPS/Edge | -           | Public hostname (e.g. `dashboard.yourdomain.com`). |
+| `BACKUP_PASSPHRASE`    | backups  | -           | AES-256 encryption passphrase for backup.sh.       |
+| `BACKUP_S3_BUCKET`     | optional | -           | S3 bucket for off-site backup upload.              |
+| `BACKUP_S3_REGION`     | optional | `us-east-1` | S3 region.                                         |
+| `BACKUP_S3_ACCESS_KEY` | optional | -           | S3 access key.                                     |
+| `BACKUP_S3_SECRET_KEY` | optional | -           | S3 secret key.                                     |
 
 ---
 
@@ -294,6 +297,7 @@ chmod +x deploy/init.sh
 ```
 
 The init script:
+
 1. Copies the environment template for the chosen target
 2. Generates `N8N_ENCRYPTION_KEY` and `DASHBOARD_AUTH_SECRET`
 3. Prompts for all required credentials
@@ -314,11 +318,11 @@ export POSTGRES_PASSWORD=... LLM_API_KEY=...  # all required vars
 
 **Services:**
 
-| Service | URL |
-|---|---|
-| n8n | http://localhost:5678 |
-| Filter | http://localhost:3000/health |
-| Dashboard | http://localhost:4000 |
+| Service   | URL                          |
+| --------- | ---------------------------- |
+| n8n       | http://localhost:5678        |
+| Filter    | http://localhost:3000/health |
+| Dashboard | http://localhost:4000        |
 
 For external webhook testing with Meta/HubSpot:
 
@@ -336,6 +340,7 @@ Full details in `deploy/runbooks/local-dev.md`.
 Target: `vps` — Caddy reverse proxy with automatic Let's Encrypt TLS. Requires public domain.
 
 **Prerequisites:**
+
 - VPS with 2 vCPU, 2 GB+ RAM, 20 GB+ SSD
 - Ubuntu 24.04 LTS (fresh install)
 - Domain with DNS A records:
@@ -372,6 +377,7 @@ Full details in `deploy/runbooks/vps.md`.
 Target: `edge` — Intel NUC, Beelink mini PC, Raspberry Pi 4/5. Self-signed Caddy TLS, mDNS for local network discovery.
 
 **Prerequisites:**
+
 - 4 GB+ RAM (8 GB recommended), SSD strongly recommended
 - Ubuntu Server 24.04 LTS (x86-64) or Raspberry Pi OS Lite 64-bit
 - Internet for LLM API calls and Telegram (dashboard accessible on LAN)
@@ -444,9 +450,63 @@ docker compose exec postgres psql -U exnoria -d exnoria -c \
 
 ---
 
-## 6. Day-2 Operations
+## 6. On-Demand Diagnosis + Action Plans (Radar)
 
-### 6.1 View logs
+Operators can trigger a one-off CX diagnosis from the Dashboard's **Radar** tool and turn it into a prioritized, filter-governed action plan.
+
+### 6.1 How it works
+
+1. **Diagnose** — In Radar, select a live contact or type an email address and run a diagnosis. The dashboard calls the cognitive layer's diagnosis service (`POST /diagnose`). Email addresses are resolved through the filter (`acq.contact.get`, fallback `email:<addr>`).
+2. **Job queue** — Diagnosis runs asynchronously (`queued → running → completed|failed`); the dashboard polls until done. Output (summary, per-stage health, findings) is stored in the `diagnosis` table in Postgres. It is **read-only** — nothing is dispatched to external systems at this stage.
+3. **Generate plan** — Clicking _Generate plan_ asks the LLM for up to 5 prioritized items. Each item is validated against the filter allowlist — `action_id`s that are not enabled in `filter_action` are dropped. The plan persists in `action_plan` (status `generated`).
+4. **Execute** — Each plan item has an _Execute_ button. Execution goes through the **filter** (`POST /filter/execute` with `meta.triggered_by: "action-plan"`) — it is **never** dispatched directly, so the normal allowlist, HITL, and audit gates apply:
+   - `executed` (200) — forwarded to n8n;
+   - `pending_hitl` (202) — requires operator approval (HITL items route via Telegram + dashboard queue);
+   - rejection — standard `filter_log` rejection codes (`ACTION_NOT_IN_ALLOWLIST`, `STAGE_MISMATCH`, ...).
+
+Completed diagnoses and generated plans are also recorded to the Engram contact memory (project namespace `ENGRA_PROJECT`), so later conversations/services see the diagnosis history.
+
+### 6.2 Architecture endpoints (cognitive)
+
+| Endpoint                     | Description                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------ |
+| `POST /diagnose`             | Queue a job: `{ contact_id?, email?, triggered_by? }` → `202 { id }`                 |
+| `GET /diagnose/:id`          | Poll job status; includes result once `completed`                                    |
+| `POST /diagnose/:id/plan`    | Generate + persist action plan (validated vs allowlist, max 5 items) → `{ plan_id }` |
+| `GET /diagnose/plan/:planId` | Fetch a persisted plan                                                               |
+
+The dashboard proxies these via `/api/diagnose/*`; the cognitive endpoint is exposed on the host at `http://localhost:3002` (port via `COGNITIVE_DIAGNOSE_PORT`, disable with `0`).
+
+### 6.3 Verify the feature
+
+```bash
+# Queue a diagnosis by email
+curl -s -X POST http://localhost:3002/diagnose \
+  -H "Content-Type: application/json" \
+  -d '{"email":"lead@example.com","triggered_by":"operator"}'
+# → {"id":"<diagnosis_id>", ...}
+
+# Poll status (repeat until "completed")
+curl -s http://localhost:3002/diagnose/<diagnosis_id>
+
+# Generate the action plan
+curl -s -X POST http://localhost:3002/diagnose/<diagnosis_id>/plan
+```
+
+In the dashboard: **Radar** tab → select a contact or enter an email → _Diagnose_ → _Generate plan_ → _Execute_ individual items. Execution status appears as toasts (`executed` / `pending_hitl` / rejected) and every attempt lands in `filter_log` like any other action.
+
+### 6.4 Related data
+
+| Table         | Purpose                                                                                                                          |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `diagnosis`   | One row per job — contact/email, status (`queued → running → completed/failed`), result (findings + flags), model, `fail_reason` |
+| `action_plan` | One row per plan — `diagnosis_id`, `contact_id`, `items` (jsonb: rank, action_id, priority, rationale…), `status`                |
+
+---
+
+## 7. Day-2 Operations
+
+### 7.1 View logs
 
 ```bash
 docker compose logs -f cognitive   # agentic core reasoning
@@ -455,7 +515,7 @@ docker compose logs -f n8n         # workflow execution
 docker compose logs -f dashboard   # Next.js server
 ```
 
-### 6.2 Rebuild a single service
+### 7.2 Rebuild a single service
 
 ```bash
 docker compose up -d --build cognitive
@@ -463,7 +523,9 @@ docker compose up -d --build filter
 docker compose up -d --build dashboard
 ```
 
-### 6.3 Health check
+Note: rebuilding `cognitive` also reinstalls the pinned Engram memory binary (`ENGRAM_VERSION` in `layers/cognitive/Dockerfile`) — the contact-memory MCP server (`mem_*` tools) is served from there.
+
+### 7.3 Health check
 
 ```bash
 ./deploy/health-check.sh
@@ -471,7 +533,7 @@ docker compose up -d --build dashboard
 
 Expected: all checks pass (Postgres, n8n, filter, dashboard, cognitive, pgvector, Telegram bot).
 
-### 6.4 Backups
+### 7.4 Backups
 
 ```bash
 # Manual backup
@@ -495,38 +557,54 @@ Export audit log before destructive operations:
 make export-all
 ```
 
-### 6.5 Credential rotation
+### 7.5 Credential rotation
 
 1. Update the value in `.env`
 2. Restart the affected service: `docker compose up -d <service-name>`
 
 **Never rotate `N8N_ENCRYPTION_KEY`** — existing n8n credentials become permanently unreadable.
 
-### 6.6 Update the stack
+### 7.6 Update the stack
 
 ```bash
 git pull
 docker compose up -d --build
 ```
 
-If new migrations were added:
+New migrations do **not** apply automatically to an existing instance — they run only on a fresh Postgres volume (mounted into `docker-entrypoint-initdb.d`). Apply them manually, in order, for each change set:
 
 ```bash
 git pull
 docker compose up -d postgres
+
+# Filter schema (allowlist / audit)
 docker compose exec postgres psql -U exnoria -d exnoria \
   < layers/orchestration/filter/db/migrations/<NNN_description>.sql
+
+# Cognitive schema (memory, diagnosis, action_plan — e.g. 003_diagnosis_plan_tables.sql)
+docker compose exec postgres psql -U exnoria -d exnoria \
+  < layers/cognitive/db/migrations/<NNN_description>.sql
+
 docker compose up -d --build
 ```
 
-### 6.7 Run a SQL query
+### 7.7 Run a SQL query
 
 ```bash
 docker compose exec postgres psql -U exnoria -d exnoria \
   -c "SELECT action_id, status, created_at FROM filter_log ORDER BY created_at DESC LIMIT 20;"
 ```
 
-### 6.8 Teardown
+Diagnosis and action-plan history (Radar tool, section 6):
+
+```bash
+docker compose exec postgres psql -U exnoria -d exnoria \
+  -c "SELECT id, contact_id, status, model, created_at FROM diagnosis ORDER BY created_at DESC LIMIT 20;"
+docker compose exec postgres psql -U exnoria -d exnoria \
+  -c "SELECT id, diagnosis_id, contact_id, status FROM action_plan ORDER BY created_at DESC LIMIT 20;"
+```
+
+### 7.8 Teardown
 
 **Safe (preserves all volumes):**
 
@@ -541,15 +619,15 @@ make down-hard
 # Requires typing DESTROY to confirm
 ```
 
-Before any teardown: run `make export-all` and `make verify-workflows`. (See section 8.)
+Before any teardown: run `make export-all` and `make verify-workflows`. (See section 9.)
 
 ---
 
-## 7. Multi-Instance
+## 8. Multi-Instance
 
 Run multiple isolated Exnoria instances on the same host.
 
-### 7.1 Per-instance configuration
+### 8.1 Per-instance configuration
 
 Each instance needs:
 
@@ -559,14 +637,14 @@ Each instance needs:
 
 The `PROJECT_ID` env var namespaces:
 
-| Resource | Naming pattern | Example |
-|---|---|---|
+| Resource        | Naming pattern           | Example                  |
+| --------------- | ------------------------ | ------------------------ |
 | Container names | `{PROJECT_ID}_{service}` | `exnoria_bajio_postgres` |
-| Docker network | `{PROJECT_ID}_internal` | `exnoria_bajio_internal` |
-| Postgres user | `{PROJECT_ID}` | `exnoria_bajio` |
-| Postgres DB | `POSTGRES_DB` or default | `exnoria_bajio` |
+| Docker network  | `{PROJECT_ID}_internal`  | `exnoria_bajio_internal` |
+| Postgres user   | `{PROJECT_ID}`           | `exnoria_bajio`          |
+| Postgres DB     | `POSTGRES_DB` or default | `exnoria_bajio`          |
 
-### 7.2 Engram memory isolation
+### 8.2 Engram memory isolation
 
 Set `ENGRA_PROJECT` to a unique value per instance to prevent cross-instance memory collision (it is defined in `.env.example`, uncomment and set a unique value per instance):
 
@@ -575,7 +653,7 @@ Set `ENGRA_PROJECT` to a unique value per instance to prevent cross-instance mem
 ENGRA_PROJECT=client-bajio
 ```
 
-### 7.3 Port conflicts
+### 8.3 Port conflicts
 
 Each instance needs unique host port mappings for services that bind to host ports. Override in a local `docker-compose.override.yml`:
 
@@ -594,31 +672,31 @@ services:
 
 ---
 
-## 8. Safety Procedures
+## 9. Safety Procedures
 
-### 8.1 The Makefile-only rule
+### 9.1 The Makefile-only rule
 
 **Never use raw `docker compose down -v`.** Always use `make` targets:
 
-| Command | Effect |
-|---|---|
-| `make up` | Start services (safe) |
-| `make down` | Stop services (safe — preserves volumes) |
-| `make restart` | Restart services (safe) |
-| `make rebuild` | Rebuild **all** services and restart (safe — uses `docker compose build` then `docker compose up -d`) |
-| `make down-hard` | Nuclear option — destroys ALL volumes (IRREVERSIBLE) |
+| Command          | Effect                                                                                                |
+| ---------------- | ----------------------------------------------------------------------------------------------------- |
+| `make up`        | Start services (safe)                                                                                 |
+| `make down`      | Stop services (safe — preserves volumes)                                                              |
+| `make restart`   | Restart services (safe)                                                                               |
+| `make rebuild`   | Rebuild **all** services and restart (safe — uses `docker compose build` then `docker compose up -d`) |
+| `make down-hard` | Nuclear option — destroys ALL volumes (IRREVERSIBLE)                                                  |
 
 `make down-hard` requires typing `DESTROY` as confirmation.
 
-### 8.2 Volume classification
+### 9.2 Volume classification
 
-| Volume | Criticality | Content | Recovery |
-|---|---|---|---|
-| `postgres_data` | **CRITICAL** | filter_log, audit history, CRM data | Manual backup only (`make export-all` / `deploy/backup.sh`) |
-| `n8n_data` | **MANAGED** | Workflow configs, credentials | Must be exported to `workflows/n8n/*.json` |
-| `engram_data` | **EPHEMERAL** | Contact memory, session state | Regeneratable but loses context |
+| Volume          | Criticality   | Content                             | Recovery                                                    |
+| --------------- | ------------- | ----------------------------------- | ----------------------------------------------------------- |
+| `postgres_data` | **CRITICAL**  | filter_log, audit history, CRM data | Manual backup only (`make export-all` / `deploy/backup.sh`) |
+| `n8n_data`      | **MANAGED**   | Workflow configs, credentials       | Must be exported to `workflows/n8n/*.json`                  |
+| `engram_data`   | **EPHEMERAL** | Contact memory, session state       | Regeneratable but loses context                             |
 
-### 8.3 Pre-shutdown checklist
+### 9.3 Pre-shutdown checklist
 
 Before any shutdown (especially `make down-hard`):
 
@@ -627,7 +705,7 @@ Before any shutdown (especially `make down-hard`):
 3. **Backup audit log:** `make export-all`
 4. **Only then** use `make down` (safe) or `make down-hard` (destructive)
 
-### 8.4 The source-control rule
+### 9.4 The source-control rule
 
 **If it's not in source control, it doesn't exist.**
 
@@ -641,11 +719,12 @@ Before any shutdown (especially `make down-hard`):
 
 ### Service URLs (local dev)
 
-| Service | URL |
-|---|---|
-| Dashboard | http://localhost:4000 |
-| n8n | http://localhost:5678 |
+| Service       | URL                          |
+| ------------- | ---------------------------- |
+| Dashboard     | http://localhost:4000        |
+| n8n           | http://localhost:5678        |
 | Filter health | http://localhost:3000/health |
+| Diagnosis API | http://localhost:3002        |
 
 ### Common commands
 

@@ -6,7 +6,7 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "csv-parse": "^7.0.0"
+    "csv-parse": "^7.0.2"
   },
   "devDependencies": {
     "@types/csv-parse": "^1.1.12",
